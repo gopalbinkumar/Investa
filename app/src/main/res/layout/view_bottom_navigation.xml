@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"
+    android:background="@drawable/bg_bottom_navigation">
+
+    <LinearLayout android:id="@+id/nav_home" style="@style/BottomNavItem">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_house" android:tint="@color/investa_icon_primary" android:contentDescription="@string/home" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Home" android:textSize="10sp" android:textColor="@color/investa_mint" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/nav_assets" style="@style/BottomNavItem">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_wallet_cards" android:tint="@color/investa_icon_inactive" android:contentDescription="@string/assets" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Assets" android:textSize="10sp" android:textColor="@color/investa_text_secondary" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/nav_reports" style="@style/BottomNavItem">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_chart_pie" android:tint="@color/investa_icon_inactive" android:contentDescription="@string/reports" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Reports" android:textSize="10sp" android:textColor="@color/investa_text_secondary" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/nav_settings" style="@style/BottomNavItem">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_settings" android:tint="@color/investa_icon_inactive" android:contentDescription="@string/settings" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Settings" android:textSize="10sp" android:textColor="@color/investa_text_secondary" />
+    </LinearLayout>
+</LinearLayout>

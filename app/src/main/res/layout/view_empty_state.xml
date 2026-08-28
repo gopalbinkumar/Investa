@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingTop="50dp"
+    android:paddingBottom="50dp">
+
+    <ImageView
+        android:id="@+id/empty_icon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:src="@drawable/ic_lucide_search"
+        android:tint="@color/investa_icon_secondary"
+        android:contentDescription="@string/search" />
+
+    <TextView
+        android:id="@+id/empty_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="No assets found"
+        android:textColor="@color/investa_text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/empty_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Try another category"
+        android:textColor="@color/investa_text_secondary"
+        android:textSize="13sp" />
+</LinearLayout>

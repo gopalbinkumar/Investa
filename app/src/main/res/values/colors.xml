@@ -9,7 +9,7 @@
     <color name="investa_text_secondary">#FF40A2D8</color>
     <color name="investa_border">#FF0B60B0</color>
     <color name="investa_loss">#FFE39A9A</color>
-    <color name="investa_icon_primary">#FFB0E4CC</color>
-    <color name="investa_icon_secondary">#FF408A71</color>
-    <color name="investa_icon_inactive">#FF6E9385</color>
+    <color name="investa_icon_primary">#FFF0EDCF</color>
+    <color name="investa_icon_secondary">#FF40A2D8</color>
+    <color name="investa_icon_inactive">#FF0B60B0</color>
 </resources>

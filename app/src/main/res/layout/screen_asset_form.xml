@@ -1,15 +1,197 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/investa_background" android:orientation="vertical">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="70dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="20dp" android:paddingEnd="20dp"><ImageView android:id="@+id/form_back" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_arrow_left" android:tint="@color/investa_icon_primary" android:contentDescription="@string/back" /><TextView android:id="@+id/form_title" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:textColor="@color/investa_text" android:textSize="16sp" android:textStyle="bold" /><ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_x" android:tint="@color/investa_icon_primary" android:contentDescription="@string/close" /></LinearLayout>
-    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingBottom="25dp">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Asset Name" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><EditText android:id="@+id/form_name" style="@style/FormInput" android:hint="Ex: Bitcoin" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Symbol" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><EditText android:id="@+id/form_symbol" style="@style/FormInput" android:hint="Ex: BTC" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Category" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><Spinner android:id="@+id/form_category" style="@style/FormSpinner" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quantity" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><EditText android:id="@+id/form_quantity" style="@style/FormInput" android:hint="Ex: 0.045" android:inputType="numberDecimal" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Invested Amount" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><EditText android:id="@+id/form_invested" style="@style/FormInput" android:hint="Ex: 5000000" android:inputType="number" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Current Price" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><EditText android:id="@+id/form_current_price" style="@style/FormInput" android:hint="Ex: 120000000" android:inputType="number" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Currency" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><Spinner android:id="@+id/form_currency" style="@style/FormSpinner" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Notes (Optional)" android:textColor="@color/investa_text_secondary" android:textSize="11sp" /><EditText android:id="@+id/form_notes" style="@style/FormInput" android:gravity="top" android:hint="Ex: My long term investment" android:inputType="textMultiLine" android:minLines="3" />
-        <TextView android:id="@+id/form_save" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="6dp" android:background="@drawable/bg_primary_button" android:gravity="center" android:textColor="@color/investa_background" android:textSize="14sp" android:textStyle="bold" />
-    </LinearLayout></ScrollView>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/investa_background"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <ImageView
+            android:id="@+id/form_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="start|center_vertical"
+            android:contentDescription="@string/back"
+            android:src="@drawable/ic_lucide_arrow_left"
+            android:tint="@color/investa_icon_primary" />
+
+        <TextView
+            android:id="@+id/form_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/investa_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="25dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Asset Name"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <EditText
+                android:id="@+id/form_name"
+                style="@style/FormInput"
+                android:hint="Ex: Bitcoin" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Symbol"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <EditText
+                android:id="@+id/form_symbol"
+                style="@style/FormInput"
+                android:hint="Ex: BTC"
+                android:inputType="textCapCharacters" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <Spinner
+                android:id="@+id/form_category"
+                style="@style/FormSpinner" />
+
+            <LinearLayout
+                android:id="@+id/asset_fields_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quantity"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/bg_input"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <EditText
+                    android:id="@+id/form_quantity"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:gravity="center_vertical|start"
+                    android:hint="Ex: 0.045"
+                    android:inputType="numberDecimal"
+                    android:padding="0dp"
+                    android:singleLine="true"
+                    android:textColor="@color/investa_text"
+                    android:textColorHint="@color/investa_text_secondary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/form_quantity_unit_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical|end"
+                    android:textColor="@color/investa_text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Invested Amount"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <EditText
+                android:id="@+id/form_invested"
+                style="@style/FormInput"
+                android:hint="Ex: 5000000"
+                android:inputType="number" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current Price"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <EditText
+                android:id="@+id/form_current_price"
+                style="@style/FormInput"
+                android:hint="Ex: 120000000"
+                android:inputType="number" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Currency"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <Spinner
+                android:id="@+id/form_currency"
+                style="@style/FormSpinner" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notes (Optional)"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <EditText
+                android:id="@+id/form_notes"
+                style="@style/FormInput"
+                android:gravity="center_vertical|start"
+                android:hint="Ex: My long term investment"
+                android:inputType="textMultiLine"
+                android:minLines="3" />
+
+            <TextView
+                android:id="@+id/form_save"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_primary_button"
+                android:gravity="center"
+                android:textColor="@color/investa_background"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

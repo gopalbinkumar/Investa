@@ -15,7 +15,7 @@
         android:id="@+id/bottom_navigation"
         layout="@layout/view_bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="56dp"
         android:layout_gravity="bottom" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
+        android:layout_marginBottom="72dp"
         android:contentDescription="@string/submit"
         android:src="@drawable/ic_lucide_plus"
         android:tint="@color/investa_background"

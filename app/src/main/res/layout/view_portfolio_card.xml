@@ -1,6 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:background="@drawable/bg_surface_elevated" android:orientation="vertical" android:padding="20dp">
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Total Portfolio Value" android:textColor="@color/investa_text_secondary" android:textSize="13sp" />
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Rp 125.650.000" android:textColor="@color/investa_text" android:textSize="28sp" android:textStyle="bold" />
-    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal"><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="+Rp 18.750.000" android:textColor="@color/investa_mint" android:textSize="14sp" android:textStyle="bold" /><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="+17.56%" android:textColor="@color/investa_mint" android:textSize="14sp" /></LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="18dp"
+    android:background="@drawable/bg_surface_elevated"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Total Portfolio Value"
+        android:textColor="@color/investa_text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="Rp 125.650.000"
+        android:textColor="@color/investa_text"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+Rp 18.750.000"
+            android:textColor="@color/investa_mint"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="+17.56%"
+            android:textColor="@color/investa_mint"
+            android:textSize="14sp" />
+    </LinearLayout>
 </LinearLayout>

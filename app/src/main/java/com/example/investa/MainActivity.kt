@@ -4,9 +4,12 @@ import android.app.Activity
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputFilter
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageView
@@ -16,6 +19,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 
 private enum class AppScreen { HOME, ASSETS, REPORTS, SETTINGS, DETAIL, ADD, EDIT }
+private const val SELECT_CATEGORY = "Select Category"
 
 private data class Asset(
     val name: String,
@@ -136,6 +140,7 @@ class MainActivity : Activity() {
     private var currentScreen = AppScreen.HOME
     private var selectedAssetIndex = 0
     private var selectedCategory = "All"
+    private var assetsRoot: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,6 +151,15 @@ class MainActivity : Activity() {
         bottomNavigation = findViewById(R.id.bottom_navigation)
         setupBottomNavigation()
         showScreen(AppScreen.HOME)
+    }
+
+    override fun onBackPressed() {
+        when (currentScreen) {
+            AppScreen.DETAIL -> showScreen(AppScreen.ASSETS)
+            AppScreen.ADD -> showScreen(AppScreen.ASSETS)
+            AppScreen.EDIT -> showScreen(AppScreen.DETAIL)
+            else -> super.onBackPressed()
+        }
     }
 
     private fun setupBottomNavigation() {
@@ -165,9 +179,10 @@ class MainActivity : Activity() {
             AppScreen.SETTINGS
         )
         bottomNavigation.visibility = if (isMainScreen) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.fab).visibility = if (isMainScreen) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.fab).visibility =
+            if (screen == AppScreen.ASSETS) View.VISIBLE else View.GONE
         val contentParams = contentContainer.layoutParams as ViewGroup.MarginLayoutParams
-        contentParams.bottomMargin = if (isMainScreen) dp(64) else 0
+        contentParams.bottomMargin = if (isMainScreen) dp(56) else 0
         contentContainer.layoutParams = contentParams
         contentContainer.removeAllViews()
         when (screen) {
@@ -222,34 +237,48 @@ class MainActivity : Activity() {
     }
 
     private fun renderAssets() {
-        val root = inflate(R.layout.screen_assets)
-        attach(root)
+        val root = assetsRoot ?: inflate(R.layout.screen_assets).also { assetsRoot = it }
+        if (root.parent == null) attach(root)
         val categoryContainer = root.findViewById<LinearLayout>(R.id.category_container)
-        (listOf("All") + assetCategories).forEach { category ->
-            val chip = TextView(this).apply {
-                text = category
-                textSize = 12f
-                setPadding(dp(17), dp(9), dp(17), dp(9))
-                setOnClickListener { selectedCategory = category; renderAssets() }
+        if (categoryContainer.childCount == 0) {
+            (listOf("All") + assetCategories).forEach { category ->
+                val chip = TextView(this).apply {
+                    text = category
+                    textSize = 12f
+                    setPadding(dp(17), dp(9), dp(17), dp(9))
+                    setOnClickListener {
+                        selectedCategory = category
+                        updateCategorySelection(categoryContainer)
+                        populateAssetList(root)
+                    }
+                }
+                val params = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                params.marginEnd = dp(8)
+                categoryContainer.addView(chip, params)
             }
+        }
+        updateCategorySelection(categoryContainer)
+        populateAssetList(root)
+    }
+
+    private fun updateCategorySelection(categoryContainer: ViewGroup) {
+        for (index in 0 until categoryContainer.childCount) {
+            val chip = categoryContainer.getChildAt(index) as TextView
+            val isSelected = chip.text.toString() == selectedCategory
             chip.background = ContextCompat.getDrawable(
                 this,
-                if (category == selectedCategory) R.drawable.bg_chip_selected else R.drawable.bg_chip
+                if (isSelected) R.drawable.bg_chip_selected else R.drawable.bg_chip
             )
             chip.setTextColor(
                 ContextCompat.getColor(
                     this,
-                    if (category == selectedCategory) R.color.investa_background else R.color.investa_text_secondary
+                    if (isSelected) R.color.investa_background else R.color.investa_text_secondary
                 )
             )
-            val params = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            params.marginEnd = dp(8)
-            categoryContainer.addView(chip, params)
         }
-        populateAssetList(root)
     }
 
     private fun populateAssetList(root: View) {
@@ -301,29 +330,68 @@ class MainActivity : Activity() {
     private fun renderForm(asset: Asset?) {
         val root = inflate(R.layout.screen_asset_form)
         attach(root)
+        val symbolInput = root.findViewById<EditText>(R.id.form_symbol)
+        val quantityInput = root.findViewById<EditText>(R.id.form_quantity)
+        val quantityUnitHintView = root.findViewById<TextView>(R.id.form_quantity_unit_hint)
+        val categorySpinner = root.findViewById<Spinner>(R.id.form_category)
+        val assetFieldsContainer = root.findViewById<View>(R.id.asset_fields_container)
+        symbolInput.filters = arrayOf(InputFilter.AllCaps())
         root.findViewById<TextView>(R.id.form_title).text =
             if (asset == null) "Add Asset" else "Edit Asset"
         root.findViewById<TextView>(R.id.form_save).text =
             if (asset == null) "Save Asset" else "Save Changes"
         root.findViewById<View>(R.id.form_back)
-            .setOnClickListener { showScreen(if (asset == null) AppScreen.HOME else AppScreen.DETAIL) }
+            .setOnClickListener { showScreen(if (asset == null) AppScreen.ASSETS else AppScreen.DETAIL) }
         root.findViewById<View>(R.id.form_save)
             .setOnClickListener { showScreen(if (asset == null) AppScreen.HOME else AppScreen.DETAIL) }
         root.findViewById<EditText>(R.id.form_name).setText(asset?.name.orEmpty())
-        root.findViewById<EditText>(R.id.form_symbol).setText(asset?.symbol.orEmpty())
-        root.findViewById<EditText>(R.id.form_quantity)
-            .setText(asset?.quantity?.substringBeforeLast(" ").orEmpty())
+        symbolInput.setText(asset?.symbol.orEmpty())
+        quantityInput.setText(asset?.quantity?.substringBeforeLast(" ").orEmpty())
         root.findViewById<EditText>(R.id.form_invested)
             .setText(asset?.invested?.removePrefix("Rp ")?.replace(".", "").orEmpty())
         root.findViewById<EditText>(R.id.form_current_price)
             .setText(asset?.currentPrice?.removePrefix("Rp ")?.replace(".", "").orEmpty())
         root.findViewById<EditText>(R.id.form_notes).setText(asset?.notes.orEmpty())
         setupSpinner(
-            root.findViewById(R.id.form_category),
-            assetCategories,
-            asset?.category ?: "Crypto"
+            categorySpinner,
+            listOf(SELECT_CATEGORY) + assetCategories,
+            asset?.category ?: SELECT_CATEGORY
         )
         setupSpinner(root.findViewById(R.id.form_currency), listOf("IDR", "USD"), "IDR")
+
+        fun updateQuantityUnitHint() {
+            quantityUnitHintView.text = quantityUnitHint(
+                categorySpinner.selectedItem?.toString().orEmpty(),
+                symbolInput.text.toString()
+            )
+            quantityUnitHintView.visibility = View.VISIBLE
+            assetFieldsContainer.visibility =
+                if (categorySpinner.selectedItem?.toString() == SELECT_CATEGORY) {
+                    View.GONE
+                } else {
+                    View.VISIBLE
+                }
+        }
+
+        categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) = updateQuantityUnitHint()
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = updateQuantityUnitHint()
+        }
+        symbolInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) =
+                updateQuantityUnitHint()
+
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
+        updateQuantityUnitHint()
     }
 
     private fun renderReports() {
@@ -483,11 +551,19 @@ class MainActivity : Activity() {
     private fun setupSpinner(spinner: Spinner, values: List<String>, selected: String) {
         val adapter = ArrayAdapter(
             this,
-            android.R.layout.simple_spinner_item,
+            R.layout.spinner_item,
             values
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         spinner.adapter = adapter
         spinner.setSelection(values.indexOf(selected).coerceAtLeast(0))
+    }
+
+    private fun quantityUnitHint(category: String, symbol: String): String = when (category) {
+        "Crypto" -> symbol.trim().ifEmpty { "[symbol]" }
+        "ID Stocks", "US Stocks" -> "share(s)"
+        "Mutual Fund", "Bonds" -> "Unit(s)"
+        "Gold" -> "gr"
+        else -> ""
     }
 
     private fun setReportToggle(category: TextView, asset: TextView, categorySelected: Boolean) {

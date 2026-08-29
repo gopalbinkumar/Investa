@@ -7,7 +7,7 @@
     </item>
     <item android:gravity="top" android:height="1dp">
         <shape android:shape="rectangle">
-            <solid android:color="@color/investa_border" />
+            <solid android:color="@color/investa_icon_inactive" />
         </shape>
     </item>
 </layer-list>

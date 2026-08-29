@@ -59,6 +59,7 @@
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/reports_invested_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Rp 106.900.000"
@@ -86,11 +87,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Current value"
+                        android:text="Current Value"
                         android:textColor="@color/investa_text_secondary"
                         android:textSize="12sp" />
 
                     <TextView
+                        android:id="@+id/reports_current_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Rp 125.650.000"
@@ -101,9 +103,17 @@
             </LinearLayout>
 
             <com.example.investa.PerformanceChartView
+                android:id="@+id/performance_chart"
                 android:layout_width="match_parent"
                 android:layout_height="160dp"
                 android:layout_marginTop="20dp" />
+
+            <LinearLayout
+                android:id="@+id/performance_month_labels"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -112,6 +122,7 @@
                 android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/reports_profit_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+Rp 18.750.000"
@@ -119,6 +130,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/reports_profit_percent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
@@ -131,7 +143,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Allocation"
+            android:text="Summary"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -165,38 +177,6 @@
                 android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_surface"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-            <com.example.investa.DonutChartView
-                android:layout_width="150dp"
-                android:layout_height="150dp"
-                android:tag="center" />
-
-            <include
-                android:id="@+id/report_legend_container"
-                layout="@layout/view_allocation_legend"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="18dp"
-                android:layout_weight="1" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Category Summary"
-            android:textColor="@color/investa_text"
-            android:textSize="16sp"
-            android:textStyle="bold" />
 
         <LinearLayout
             android:id="@+id/category_summary"

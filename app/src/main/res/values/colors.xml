@@ -8,7 +8,8 @@
     <color name="investa_text">#FFF0EDCF</color>
     <color name="investa_text_secondary">#FF40A2D8</color>
     <color name="investa_border">#FF0B60B0</color>
-    <color name="investa_loss">#FFE39A9A</color>
+    <color name="investa_loss">#B30000</color>
+    <color name="investa_buy">#059A0B</color>
     <color name="investa_icon_primary">#FFF0EDCF</color>
     <color name="investa_icon_secondary">#FF40A2D8</color>
     <color name="investa_icon_inactive">#FF0B60B0</color>

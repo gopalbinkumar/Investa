@@ -1,2 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="10dp" android:paddingBottom="10dp" android:gravity="center_vertical" android:orientation="horizontal"><TextView android:id="@+id/summary_dot" android:layout_width="9dp" android:layout_height="9dp" android:background="@drawable/bg_icon_circle" /><TextView android:id="@+id/summary_category" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:textColor="@color/investa_text" android:textSize="13sp" /><TextView android:id="@+id/summary_amount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/investa_text" android:textSize="12sp" /><TextView android:id="@+id/summary_percentage" android:layout_width="42dp" android:layout_height="wrap_content" android:gravity="end" android:textColor="@color/investa_mint" android:textSize="12sp" android:textStyle="bold" /></LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <TextView
+        android:id="@+id/summary_category"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/investa_text"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/summary_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/investa_text"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/summary_percentage"
+        android:layout_width="42dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textColor="@color/investa_mint"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+</LinearLayout>

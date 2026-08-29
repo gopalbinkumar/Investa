@@ -9,15 +9,15 @@
     android:background="@drawable/bg_bottom_navigation">
 
     <LinearLayout android:id="@+id/nav_home" style="@style/BottomNavItem">
-        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_house" android:tint="@color/investa_icon_primary" android:contentDescription="@string/home" />
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_house" android:tint="@color/nav_icon_tint" android:duplicateParentState="true" android:contentDescription="@string/home" />
     </LinearLayout>
     <LinearLayout android:id="@+id/nav_assets" style="@style/BottomNavItem">
-        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_wallet_cards" android:tint="@color/investa_icon_inactive" android:contentDescription="@string/assets" />
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_wallet_cards" android:tint="@color/nav_icon_tint" android:duplicateParentState="true" android:contentDescription="@string/assets" />
     </LinearLayout>
     <LinearLayout android:id="@+id/nav_reports" style="@style/BottomNavItem">
-        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_chart_pie" android:tint="@color/investa_icon_inactive" android:contentDescription="@string/reports" />
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_chart_pie" android:tint="@color/nav_icon_tint" android:duplicateParentState="true" android:contentDescription="@string/reports" />
     </LinearLayout>
     <LinearLayout android:id="@+id/nav_settings" style="@style/BottomNavItem">
-        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_settings" android:tint="@color/investa_icon_inactive" android:contentDescription="@string/settings" />
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_lucide_settings" android:tint="@color/nav_icon_tint" android:duplicateParentState="true" android:contentDescription="@string/settings" />
     </LinearLayout>
 </LinearLayout>

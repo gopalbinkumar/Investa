@@ -12,10 +12,10 @@ class AssetViewModel(private val repository: AssetRepository) : ViewModel() {
     val assets: StateFlow<List<AssetEntity>> = repository.observeAssets()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    fun addAsset(asset: AssetEntity, onSaved: () -> Unit) {
+    fun addAsset(asset: AssetEntity, onSaved: (Long) -> Unit) {
         viewModelScope.launch {
-            repository.addAsset(asset)
-            onSaved()
+            val assetId = repository.addAsset(asset)
+            onSaved(assetId)
         }
     }
 

@@ -49,7 +49,7 @@
             android:background="@android:color/transparent"
             android:gravity="center_vertical|start"
             android:hint="1.200.000.000"
-            android:inputType="number"
+            android:inputType="numberDecimal"
             android:padding="0dp" />
 
         <TextView

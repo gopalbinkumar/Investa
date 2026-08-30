@@ -8,6 +8,7 @@ import android.app.AlertDialog
 import android.text.Editable
 import android.text.InputFilter
 import android.text.TextWatcher
+import android.text.method.DigitsKeyListener
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,7 +43,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-private enum class AppScreen { HOME, ASSETS, REPORTS, SETTINGS, DETAIL, ADD, EDIT }
+private enum class AppScreen { HOME, ASSETS, REPORTS, SETTINGS, EXCHANGE_RATE, DETAIL, ADD, EDIT }
 private enum class ScreenTransition { FORWARD, BACKWARD }
 private const val SELECT_CATEGORY = "Select Category"
 
@@ -81,6 +82,13 @@ class MainActivity : ComponentActivity() {
             )
         )
     }
+    private val currencyViewModel: CurrencyViewModel by viewModels {
+        CurrencyViewModelFactory(
+            CurrencyRepository(
+                InvestaDatabase.getInstance(applicationContext).currencyDao()
+            )
+        )
+    }
     private lateinit var contentContainer: ViewGroup
     private lateinit var bottomNavigation: View
     private var currentScreen = AppScreen.HOME
@@ -88,7 +96,9 @@ class MainActivity : ComponentActivity() {
     private var assetsRoot: View? = null
     private var databaseAssets: List<AssetEntity> = emptyList()
     private var databaseTransactions: List<TransactionEntity> = emptyList()
+    private var databaseCurrencies: List<CurrencyEntity> = emptyList()
     private var selectedAsset: Asset? = null
+    private var hasRenderedInitialScreen = false
     private var transactionObservation: Job? = null
     private var observedTransactionAssetId: Long? = null
     private var currentTransactions: List<TransactionEntity> = emptyList()
@@ -101,6 +111,7 @@ class MainActivity : ComponentActivity() {
         contentContainer = findViewById(R.id.content_container)
         bottomNavigation = findViewById(R.id.bottom_navigation)
         setupBottomNavigation()
+        currencyViewModel.ensureDefaults()
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 assetViewModel.assets.collect { assets ->
@@ -127,11 +138,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                currencyViewModel.currencies.collect { currencies ->
+                    databaseCurrencies = currencies
+                    when (currentScreen) {
+                        AppScreen.HOME -> renderHome()
+                        AppScreen.ASSETS -> renderAssets()
+                        AppScreen.REPORTS -> renderReports()
+                        else -> Unit
+                    }
+                }
+            }
+        }
         showScreen(AppScreen.HOME)
     }
 
     override fun onBackPressed() {
         when (currentScreen) {
+            AppScreen.EXCHANGE_RATE -> showScreen(AppScreen.SETTINGS)
             AppScreen.DETAIL -> showScreen(AppScreen.ASSETS)
             AppScreen.ADD -> showScreen(AppScreen.ASSETS)
             AppScreen.EDIT -> showScreen(AppScreen.DETAIL)
@@ -148,6 +173,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showScreen(screen: AppScreen) {
+        if (screen == currentScreen && hasRenderedInitialScreen) return
+        val isInitialScreen = !hasRenderedInitialScreen
         val transition = when {
             screen == currentScreen -> ScreenTransition.FORWARD
             screenOrder(screen) >= screenOrder(currentScreen) -> ScreenTransition.FORWARD
@@ -167,18 +194,24 @@ class MainActivity : ComponentActivity() {
         contentParams.bottomMargin = if (isMainScreen) dp(56) else 0
         contentContainer.layoutParams = contentParams
         contentContainer.animate().cancel()
-        contentContainer.translationX = if (transition == ScreenTransition.FORWARD) {
-            resources.displayMetrics.widthPixels.toFloat() * 0.18f
+        if (isInitialScreen) {
+            contentContainer.translationX = 0f
+            contentContainer.alpha = 1f
         } else {
-            -resources.displayMetrics.widthPixels.toFloat() * 0.18f
+            contentContainer.translationX = if (transition == ScreenTransition.FORWARD) {
+                resources.displayMetrics.widthPixels.toFloat() * 0.18f
+            } else {
+                -resources.displayMetrics.widthPixels.toFloat() * 0.18f
+            }
+            contentContainer.alpha = 0.85f
         }
-        contentContainer.alpha = 0.85f
         contentContainer.removeAllViews()
         when (screen) {
             AppScreen.HOME -> renderHome()
             AppScreen.ASSETS -> renderAssets()
             AppScreen.REPORTS -> renderReports()
             AppScreen.SETTINGS -> renderSettings()
+            AppScreen.EXCHANGE_RATE -> renderExchangeRate()
             AppScreen.DETAIL -> renderDetail()
             AppScreen.ADD -> renderForm(null)
             AppScreen.EDIT -> {
@@ -191,12 +224,15 @@ class MainActivity : ComponentActivity() {
                 renderForm(entity.toUiAsset())
             }
         }
-        contentContainer.animate()
-            .translationX(0f)
-            .alpha(1f)
-            .setDuration(220L)
-            .setInterpolator(DecelerateInterpolator())
-            .start()
+        if (!isInitialScreen) {
+            contentContainer.animate()
+                .translationX(0f)
+                .alpha(1f)
+                .setDuration(220L)
+                .setInterpolator(DecelerateInterpolator())
+                .start()
+        }
+        hasRenderedInitialScreen = true
         if (isMainScreen) updateSelectedNavigation(screen)
     }
 
@@ -205,9 +241,10 @@ class MainActivity : ComponentActivity() {
         AppScreen.ASSETS -> 1
         AppScreen.REPORTS -> 2
         AppScreen.SETTINGS -> 3
-        AppScreen.DETAIL -> 4
-        AppScreen.ADD -> 5
-        AppScreen.EDIT -> 6
+        AppScreen.EXCHANGE_RATE -> 4
+        AppScreen.DETAIL -> 5
+        AppScreen.ADD -> 6
+        AppScreen.EDIT -> 7
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {
@@ -236,27 +273,33 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private fun exchangeRateFor(currency: String): Double {
+        if (currency != "USD") return 1.0
+        return databaseCurrencies.firstOrNull { it.code == "USD" }?.exchangeRate ?: 16500.0
+    }
+
     private fun renderHome() {
         contentContainer.removeAllViews()
         val root = inflate(R.layout.screen_home)
         attach(root)
+        val usdExchangeRate = exchangeRateFor("USD")
         val displayAssets = databaseAssets.map { asset ->
             asset.toUiAsset().withTransactionHistory(
                 databaseTransactions.filter { it.assetId == asset.id }
-            )
+            ).toIdrDisplay(usdExchangeRate)
         }
-        val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0L }
-        val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0L }
+        val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
+        val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
         val totalProfit = totalValue - totalInvested
-        val totalProfitPercentage = if (totalInvested == 0L) 0.0 else {
+        val totalProfitPercentage = if (totalInvested == 0.0) 0.0 else {
             totalProfit * 100.0 / totalInvested
         }
-        val displayCurrency = displayAssets.firstOrNull()?.currency ?: "IDR"
+        val displayCurrency = "IDR"
 
         root.findViewById<TextView>(R.id.portfolio_value).text =
-            formatAmount(totalValue, displayCurrency)
+            formatAmount(totalValue, displayCurrency, 0)
         root.findViewById<TextView>(R.id.portfolio_profit).apply {
-            text = formatSignedAmount(totalProfit, displayCurrency)
+            text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(
                 ContextCompat.getColor(
                     this@MainActivity,
@@ -277,7 +320,7 @@ class MainActivity : ComponentActivity() {
         val invested = root.findViewById<View>(R.id.summary_invested)
         invested.findViewById<TextView>(R.id.summary_title).text = "Total Invested"
         invested.findViewById<TextView>(R.id.summary_value).text =
-            formatAmount(totalInvested, displayCurrency)
+            formatAmount(totalInvested, displayCurrency, 0)
         invested.findViewById<TextView>(R.id.summary_percent).apply {
             text = "— last month"
             visibility = View.VISIBLE
@@ -285,7 +328,7 @@ class MainActivity : ComponentActivity() {
         val profit = root.findViewById<View>(R.id.summary_profit)
         profit.findViewById<TextView>(R.id.summary_title).text = "Total Profit"
         profit.findViewById<TextView>(R.id.summary_value).apply {
-            text = formatSignedAmount(totalProfit, displayCurrency)
+            text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(
                 ContextCompat.getColor(
                     this@MainActivity,
@@ -306,10 +349,10 @@ class MainActivity : ComponentActivity() {
         val categoryValues = assetCategories.map { category ->
             displayAssets
                 .filter { it.category == category }
-                .sumOf { parseMoneyInput(it.value) ?: 0L }
+                .sumOf { parseMoneyInput(it.value) ?: 0.0 }
         }
         val categoryPercentages = categoryValues.map { value ->
-            if (totalValue == 0L) 0f else value * 100f / totalValue
+            if (totalValue == 0.0) 0f else (value * 100.0 / totalValue).toFloat()
         }
         bindLegendRows(
             root.findViewById(R.id.legend_container),
@@ -322,12 +365,16 @@ class MainActivity : ComponentActivity() {
         val topAssets = root.findViewById<LinearLayout>(R.id.top_assets_container)
         displayAssets
             .map { it.withCalculatedCurrentValue() }
-            .sortedByDescending { parseMoneyInput(it.value) ?: 0L }
+            .sortedByDescending { parseMoneyInput(it.value) ?: 0.0 }
             .take(3)
             .forEach { topAsset ->
             addAssetRow(
                 topAssets,
-                topAsset,
+                topAsset.copy(
+                    value = parseMoneyInput(topAsset.value)?.let {
+                        formatAmount(it, topAsset.currency, 0)
+                    } ?: topAsset.value
+                ),
                 true,
                 topAsset.profitPercent
             )
@@ -382,14 +429,15 @@ class MainActivity : ComponentActivity() {
     private fun populateAssetList(root: View) {
         val list = root.findViewById<LinearLayout>(R.id.asset_list_container)
         list.removeAllViews()
+        val usdExchangeRate = exchangeRateFor("USD")
         val filteredAssets = databaseAssets
             .filter { asset -> selectedCategory == "All" || asset.category == selectedCategory }
             .sortedBy { it.symbol.trim().uppercase(Locale.ROOT) }
         root.findViewById<TextView>(R.id.asset_count).text = "${filteredAssets.size} Assets"
         filteredAssets.forEach { entity ->
-                val asset = entity.toUiAsset()
-                addAssetRow(list, asset, false) {
-                    selectedAsset = asset
+                val nativeAsset = entity.toUiAsset()
+                addAssetRow(list, nativeAsset.toIdrDisplay(usdExchangeRate), false) {
+                    selectedAsset = nativeAsset
                     showScreen(AppScreen.DETAIL)
                 }
             }
@@ -408,7 +456,14 @@ class MainActivity : ComponentActivity() {
             return
         }
         observeTransactions(asset)
-        val displayAsset = asset.withTransactionHistory(currentTransactions)
+        val currencySymbol = databaseCurrencies
+            .firstOrNull { it.code == asset.currency }
+            ?.symbol
+            ?.takeIf { it.isNotBlank() }
+            ?: currencySymbolFor(asset.currency)
+        val displayAsset = asset
+            .withTransactionHistory(currentTransactions, 2, currencySymbol)
+            .withAmountPrecision(2, currencySymbol)
         root.findViewById<TextView>(R.id.detail_name).text = displayAsset.name
         root.findViewById<TextView>(R.id.detail_symbol).text = displayAsset.symbol
         root.findViewById<TextView>(R.id.detail_value).text = displayAsset.value
@@ -431,7 +486,7 @@ class MainActivity : ComponentActivity() {
             "Average Price" to displayAsset.averagePrice,
             "Current Price" to displayAsset.currentPrice,
             "Category" to displayAsset.category,
-            "Notes" to displayAsset.notes,
+            "Notes" to displayAsset.notes.ifBlank { "-" },
             "Added On" to displayAsset.addedOn
         )
         val info = root.findViewById<LinearLayout>(R.id.detail_info_container)
@@ -440,7 +495,7 @@ class MainActivity : ComponentActivity() {
             row.findViewById<TextView>(R.id.detail_row_label).text = label
             row.findViewById<TextView>(R.id.detail_row_value).text = value
         }
-        populateTransactionHistory(root, displayAsset, currentTransactions)
+        populateTransactionHistory(root, displayAsset, currentTransactions, currencySymbol)
     }
 
     private fun refreshSelectedAsset(assets: List<AssetEntity>) {
@@ -523,7 +578,8 @@ class MainActivity : ComponentActivity() {
     private fun populateTransactionHistory(
         root: View,
         asset: Asset,
-        transactions: List<TransactionEntity>
+        transactions: List<TransactionEntity>,
+        currencySymbol: String = currencySymbolFor(asset.currency)
     ) {
         val historyContainer = root.findViewById<LinearLayout>(R.id.detail_history_container)
         if (transactions.isEmpty()) {
@@ -554,7 +610,7 @@ class MainActivity : ComponentActivity() {
             card.findViewById<TextView>(R.id.history_price_label).text =
                 "$action Price"
             card.findViewById<TextView>(R.id.history_price).text =
-                formatAmount(transaction.price, asset.currency)
+                formatAmount(transaction.price, asset.currency, currencySymbol, 2)
             card.setOnClickListener {
                 showTransactionDrawer(asset, transaction.action == "BUY", transaction)
             }
@@ -576,14 +632,16 @@ class MainActivity : ComponentActivity() {
         val saveButton = drawer.findViewById<View>(R.id.current_price_save)
 
         priceUnit.text = priceUnitSuffix(asset.category, asset.symbol)
-        priceInput.setText(parseMoneyInput(asset.currentPrice)?.let {
-            formatInputAmount(it, asset.currency)
-        }.orEmpty())
+        priceInput.setText(
+            parseMoneyInput(asset.currentPrice)?.let {
+                formatInputAmount(it, asset.currency)
+            }.orEmpty()
+        )
         installMoneyInputFormatter(priceInput) { asset.currency }
 
         saveButton.setOnClickListener {
             val currentPrice = parseMoneyInput(priceInput.text.toString())
-            if (currentPrice == null || currentPrice <= 0L) {
+            if (currentPrice == null || currentPrice <= 0.0) {
                 priceInput.error = "Enter a valid current price"
                 priceInput.requestFocus()
                 return@setOnClickListener
@@ -605,7 +663,7 @@ class MainActivity : ComponentActivity() {
                 }
                 selectedAsset = updatedEntity.toUiAsset()
                 dialog.dismiss()
-                showScreen(AppScreen.DETAIL)
+                renderDetail()
             }
         }
 
@@ -652,21 +710,22 @@ class MainActivity : ComponentActivity() {
                 ?: SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH).format(Date())
         )
         quantityInput.setText(
-            transaction?.let { formatQuantityValue(it.quantity) }
+            transaction?.let { formatEditableAmount(formatQuantityValue(it.quantity), "IDR") }
                 ?: ""
         )
         priceInput.setText(
             transaction?.let { formatInputAmount(it.price, asset.currency) } ?: ""
         )
         feeInput.setText(
-            transaction?.fee?.takeIf { it > 0 }?.let { formatInputAmount(it, asset.currency) }
+            transaction?.fee?.takeIf { it > 0.0 }?.let { formatInputAmount(it, asset.currency) }
                 ?: ""
         )
         notesInput.setText(transaction?.notes.orEmpty())
-        feeToggle.isChecked = transaction?.fee?.let { it > 0 } ?: false
+        feeToggle.isChecked = transaction?.fee?.let { it > 0.0 } ?: false
 
         installMoneyInputFormatter(priceInput) { asset.currency }
         installMoneyInputFormatter(feeInput) { asset.currency }
+        installDecimalInputFormatter(quantityInput)
 
         fun showDatePicker() {
             val selectedDate = Calendar.getInstance().apply {
@@ -690,9 +749,9 @@ class MainActivity : ComponentActivity() {
             val quantity = parseTransactionQuantity(quantityInput.text.toString())
             val price = parseMoneyInput(priceInput.text.toString())
             val fee = if (feeToggle.isChecked) {
-                parseMoneyInput(feeInput.text.toString()) ?: 0L
+                parseMoneyInput(feeInput.text.toString()) ?: 0.0
             } else {
-                0L
+                0.0
             }
             total.text = if (quantity != null && price != null) {
                 formatAmount(calculateTransactionTotal(isBuy, quantity, price, fee), asset.currency)
@@ -739,21 +798,21 @@ class MainActivity : ComponentActivity() {
             val quantity = parseTransactionQuantity(quantityInput.text.toString())
             val price = parseMoneyInput(priceInput.text.toString())
             val fee = if (feeToggle.isChecked) {
-                parseMoneyInput(feeInput.text.toString()) ?: 0L
+                parseMoneyInput(feeInput.text.toString()) ?: 0.0
             } else {
-                0L
+                0.0
             }
             val now = System.currentTimeMillis()
             when {
-                quantity == null || quantity <= 0 -> quantityInput.apply {
+                quantity == null || quantity <= 0.0 -> quantityInput.apply {
                     error = "Enter a valid quantity"
                     requestFocus()
                 }
-                price == null || price <= 0 -> priceInput.apply {
+                price == null || price <= 0.0 -> priceInput.apply {
                     error = "Enter a valid price"
                     requestFocus()
                 }
-                fee < 0 -> feeInput.apply {
+                fee < 0.0 -> feeInput.apply {
                     error = "Enter a valid fee"
                     requestFocus()
                 }
@@ -860,11 +919,11 @@ class MainActivity : ComponentActivity() {
             val name = nameInput.text.toString().trim()
             val symbol = symbolInput.text.toString().trim().uppercase(Locale.ROOT)
             val category = categorySpinner.selectedItem?.toString().orEmpty()
-            val quantity = quantityInput.text.toString().trim().toDoubleOrNull()
+            val quantity = parseTransactionQuantity(quantityInput.text.toString())
             val averagePrice = parseMoneyInput(averagePriceInput.text.toString())
             val currentPrice = parseMoneyInput(currentPriceInput.text.toString())
             val investedAmount = if (quantity != null && averagePrice != null) {
-                (quantity * averagePrice).roundToLong()
+                quantity * averagePrice
             } else {
                 null
             }
@@ -882,19 +941,19 @@ class MainActivity : ComponentActivity() {
                 }
                 category == SELECT_CATEGORY || category.isEmpty() ->
                     Toast.makeText(this, "Select a category", Toast.LENGTH_SHORT).show()
-                quantity == null || quantity <= 0 -> quantityInput.apply {
+                quantity == null || quantity <= 0.0 -> quantityInput.apply {
                     error = "Enter a valid quantity"
                     requestFocus()
                 }
-                investedAmount == null || investedAmount <= 0 -> investedInput.apply {
+                investedAmount == null || investedAmount <= 0.0 -> investedInput.apply {
                     error = "Enter a valid invested amount"
                     requestFocus()
                 }
-                averagePrice == null || averagePrice <= 0 -> averagePriceInput.apply {
+                averagePrice == null || averagePrice <= 0.0 -> averagePriceInput.apply {
                     error = "Enter a valid average price"
                     requestFocus()
                 }
-                currentPrice == null || currentPrice <= 0 -> currentPriceInput.apply {
+                currentPrice == null || currentPrice <= 0.0 -> currentPriceInput.apply {
                     error = "Enter a valid current price"
                     requestFocus()
                 }
@@ -917,7 +976,12 @@ class MainActivity : ComponentActivity() {
                         updatedAt = now
                     )
                     if (asset == null) {
-                        assetViewModel.addAsset(updatedEntity) { showScreen(AppScreen.ASSETS) }
+                        assetViewModel.addAsset(updatedEntity) { assetId ->
+                            val savedEntity = updatedEntity.copy(id = assetId)
+                            databaseAssets = databaseAssets + savedEntity
+                            selectedAsset = savedEntity.toUiAsset()
+                            showScreen(AppScreen.DETAIL)
+                        }
                     } else {
                         assetViewModel.updateAsset(updatedEntity) {
                             databaseAssets = databaseAssets.map { entity ->
@@ -932,10 +996,27 @@ class MainActivity : ComponentActivity() {
         }
         nameInput.setText(asset?.name.orEmpty())
         symbolInput.setText(asset?.symbol.orEmpty())
-        quantityInput.setText(asset?.quantity?.substringBeforeLast(" ").orEmpty())
+        quantityInput.setText(
+            formatEditableAmount(
+                asset?.quantity?.substringBeforeLast(" ").orEmpty(),
+                "IDR"
+            )
+        )
         investedInput.setText("")
-        averagePriceInput.setText(parseMoneyInput(asset?.averagePrice.orEmpty())?.toString().orEmpty())
-        currentPriceInput.setText(parseMoneyInput(asset?.currentPrice.orEmpty())?.toString().orEmpty())
+        averagePriceInput.setText(
+            asset?.let {
+                parseMoneyInput(it.averagePrice)?.let { value ->
+                    formatInputAmount(value, it.currency)
+                }
+            }.orEmpty()
+        )
+        currentPriceInput.setText(
+            asset?.let {
+                parseMoneyInput(it.currentPrice)?.let { value ->
+                    formatInputAmount(value, it.currency)
+                }
+            }.orEmpty()
+        )
         notesInput.setText(asset?.notes.orEmpty())
         setupSpinner(
             categorySpinner,
@@ -954,15 +1035,15 @@ class MainActivity : ComponentActivity() {
         val moneyInputs = listOf(averagePriceInput, currentPriceInput)
         fun selectedCurrency(): String = currencySpinner.selectedItem?.toString() ?: "IDR"
         fun updateInvestedAmount() {
-            val quantity = quantityInput.text.toString().trim().toDoubleOrNull()
+            val quantity = parseTransactionQuantity(quantityInput.text.toString())
             val averagePrice = parseMoneyInput(averagePriceInput.text.toString())
             val investedAmount = if (quantity != null && averagePrice != null) {
-                (quantity * averagePrice).roundToLong()
+                quantity * averagePrice
             } else {
                 null
             }
             investedInput.setText(
-                investedAmount?.takeIf { it > 0 }?.let {
+                investedAmount?.takeIf { it > 0.0 }?.let {
                     formatInputAmount(it, selectedCurrency())
                 } ?: ""
             )
@@ -971,6 +1052,7 @@ class MainActivity : ComponentActivity() {
             installMoneyInputFormatter(input) { selectedCurrency() }
             reformatMoneyInput(input, selectedCurrency())
         }
+        installDecimalInputFormatter(quantityInput)
         currencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -1063,25 +1145,26 @@ class MainActivity : ComponentActivity() {
         root.findViewById<ImageView>(R.id.reports_back)
             .setOnClickListener { showScreen(AppScreen.HOME) }
 
+        val usdExchangeRate = exchangeRateFor("USD")
         val displayAssets = databaseAssets.map { asset ->
             asset.toUiAsset().withTransactionHistory(
                 databaseTransactions.filter { it.assetId == asset.id }
-            )
+            ).toIdrDisplay(usdExchangeRate)
         }
-        val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0L }
-        val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0L }
+        val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
+        val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
         val totalProfit = totalValue - totalInvested
-        val totalProfitPercentage = if (totalInvested == 0L) 0.0 else {
+        val totalProfitPercentage = if (totalInvested == 0.0) 0.0 else {
             totalProfit * 100.0 / totalInvested
         }
-        val displayCurrency = displayAssets.firstOrNull()?.currency ?: "IDR"
+        val displayCurrency = "IDR"
 
         root.findViewById<TextView>(R.id.reports_invested_value).text =
-            formatAmount(totalInvested, displayCurrency)
+            formatAmount(totalInvested, displayCurrency, 0)
         root.findViewById<TextView>(R.id.reports_current_value).text =
-            formatAmount(totalValue, displayCurrency)
+            formatAmount(totalValue, displayCurrency, 0)
         root.findViewById<TextView>(R.id.reports_profit_value).apply {
-            text = formatSignedAmount(totalProfit, displayCurrency)
+            text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(
                 ContextCompat.getColor(
                     this@MainActivity,
@@ -1098,7 +1181,11 @@ class MainActivity : ComponentActivity() {
                 )
             )
         }
-        val performance = performanceSnapshots(databaseAssets, databaseTransactions)
+        val performance = performanceSnapshots(
+            databaseAssets,
+            databaseTransactions,
+            usdExchangeRate
+        )
         root.findViewById<PerformanceChartView>(R.id.performance_chart)
             .setPerformanceData(performance.first, performance.second)
 
@@ -1128,14 +1215,14 @@ class MainActivity : ComponentActivity() {
             summary.removeAllViews()
             if (byAsset) {
                 displayAssets.forEach { asset ->
-                    val value = parseMoneyInput(asset.value) ?: 0L
-                    val percentage = if (totalValue == 0L) 0 else {
+                    val value = parseMoneyInput(asset.value) ?: 0.0
+                    val percentage = if (totalValue == 0.0) 0 else {
                         ((value * 100.0) / totalValue).roundToInt()
                     }
                     addReportSummaryRow(
                         summary,
                         asset.symbol,
-                        formatAmount(value, displayCurrency),
+                        formatAmount(value, displayCurrency, 0),
                         "$percentage%"
                     )
                 }
@@ -1143,14 +1230,14 @@ class MainActivity : ComponentActivity() {
                 assetCategories.forEach { category ->
                     val value = displayAssets
                         .filter { it.category == category }
-                        .sumOf { parseMoneyInput(it.value) ?: 0L }
-                    val percentage = if (totalValue == 0L) 0 else {
+                        .sumOf { parseMoneyInput(it.value) ?: 0.0 }
+                    val percentage = if (totalValue == 0.0) 0 else {
                         ((value * 100.0) / totalValue).roundToInt()
                     }
                     addReportSummaryRow(
                         summary,
                         category,
-                        formatAmount(value, displayCurrency),
+                        formatAmount(value, displayCurrency, 0),
                         "$percentage%"
                     )
                 }
@@ -1172,7 +1259,8 @@ class MainActivity : ComponentActivity() {
 
     private fun performanceSnapshots(
         assets: List<AssetEntity>,
-        transactions: List<TransactionEntity>
+        transactions: List<TransactionEntity>,
+        usdExchangeRate: Double
     ): Pair<List<Long>, List<Long>> {
         val month = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_MONTH, 1)
@@ -1215,8 +1303,9 @@ class MainActivity : ComponentActivity() {
                                 (costBasis - averageCost * transaction.quantity).coerceAtLeast(0.0)
                         }
                     }
-                invested += costBasis
-                current += quantity * asset.currentPrice
+                val assetExchangeRate = if (asset.currency == "USD") usdExchangeRate else 1.0
+                invested += costBasis * assetExchangeRate
+                current += quantity * asset.currentPrice * assetExchangeRate
             }
 
             investedValues += invested.roundToLong()
@@ -1250,6 +1339,13 @@ class MainActivity : ComponentActivity() {
             "IDR",
             true
         )
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_circle_dollar,
+            "Exchange Rate",
+            "USD / IDR",
+            true
+        ) { showScreen(AppScreen.EXCHANGE_RATE) }
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
             R.drawable.ic_lucide_moon,
@@ -1308,12 +1404,51 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private fun renderExchangeRate() {
+        val root = inflate(R.layout.screen_exchange_rate)
+        attach(root)
+        val exchangeRateInput = root.findViewById<EditText>(R.id.exchange_rate_input)
+        val usd = databaseCurrencies.firstOrNull { it.code == "USD" }
+            ?: CurrencyEntity(
+                code = "USD",
+                name = "US Dollar",
+                symbol = "$",
+                exchangeRate = 16500.0,
+                updatedAt = 0L,
+                isActive = true
+            )
+        exchangeRateInput.setText(formatInputAmount(usd.exchangeRate, "IDR"))
+        exchangeRateInput.also { input ->
+            installMoneyInputFormatter(input) { "IDR" }
+        }
+        root.findViewById<View>(R.id.exchange_rate_save).setOnClickListener {
+            val exchangeRate = parseMoneyInput(exchangeRateInput.text.toString())
+            if (exchangeRate == null || exchangeRate <= 0.0) {
+                exchangeRateInput.error = "Enter a valid exchange rate"
+                exchangeRateInput.requestFocus()
+                return@setOnClickListener
+            }
+            val updatedUsd = usd.copy(
+                exchangeRate = exchangeRate,
+                updatedAt = System.currentTimeMillis()
+            )
+            currencyViewModel.update(updatedUsd) {
+                databaseCurrencies = databaseCurrencies
+                    .filterNot { it.code == updatedUsd.code } + updatedUsd
+                Toast.makeText(this, "Exchange rate saved", Toast.LENGTH_SHORT).show()
+            }
+        }
+        root.findViewById<View>(R.id.exchange_rate_back)
+            .setOnClickListener { showScreen(AppScreen.SETTINGS) }
+    }
+
     private fun addSettingsRow(
         parent: ViewGroup,
         iconRes: Int,
         label: String,
         value: String,
-        chevron: Boolean
+        chevron: Boolean,
+        onClick: (() -> Unit)? = null
     ) {
         val row = LayoutInflater.from(this).inflate(R.layout.view_settings_row, parent, false)
         row.findViewById<ImageView>(R.id.settings_icon).apply {
@@ -1329,6 +1464,8 @@ class MainActivity : ComponentActivity() {
         row.findViewById<TextView>(R.id.settings_value).text = value
         row.findViewById<ImageView>(R.id.settings_chevron).visibility =
             if (chevron) View.VISIBLE else View.GONE
+        row.setOnClickListener { onClick?.invoke() }
+        row.isClickable = onClick != null
         parent.addView(row)
     }
 
@@ -1444,9 +1581,9 @@ class MainActivity : ComponentActivity() {
 }
 
 private fun AssetEntity.toUiAsset(): Asset {
-    val currentValueAmount = (quantity * currentPrice).roundToLong()
-    val profitAmount = (quantity * (currentPrice - averagePrice)).roundToLong()
-    val profitPercentage = if (averagePrice == 0L) 0.0 else {
+    val currentValueAmount = quantity * currentPrice
+    val profitAmount = quantity * (currentPrice - averagePrice)
+    val profitPercentage = if (averagePrice == 0.0) 0.0 else {
         (currentPrice - averagePrice) * 100.0 / averagePrice
     }
     val currentValue = formatAmount(currentValueAmount, currency)
@@ -1477,12 +1614,37 @@ private fun AssetEntity.toUiAsset(): Asset {
     )
 }
 
-private fun Asset.withTransactionHistory(transactions: List<TransactionEntity>): Asset {
+private fun Asset.toIdrDisplay(usdExchangeRate: Double): Asset {
+    val multiplier = if (currency == "USD") usdExchangeRate else 1.0
+    fun convertAmount(value: String): String? = parseMoneyInput(value)?.let {
+        formatAmount(it * multiplier, "IDR")
+    }
+    fun convertSignedAmount(value: String): String? = parseMoneyInput(value)?.let { amount ->
+        val signedAmount = if (value.trimStart().startsWith("-")) -amount else amount
+        formatSignedAmount(signedAmount * multiplier, "IDR")
+    }
+    return copy(
+        value = convertAmount(value) ?: value,
+        invested = convertAmount(invested) ?: invested,
+        profit = convertSignedAmount(profit) ?: profit,
+        averagePrice = convertAmount(averagePrice) ?: averagePrice,
+        currentPrice = convertAmount(currentPrice) ?: currentPrice,
+        currency = "IDR"
+    )
+}
+
+private fun Asset.withTransactionHistory(
+    transactions: List<TransactionEntity>,
+    maxFractionDigits: Int = 8,
+    currencySymbol: String? = null
+): Asset {
     if (transactions.isEmpty()) return this
 
+    val displayCurrencySymbol = currencySymbol ?: currencySymbolFor(currency)
+
     var holdingQuantity = parseTransactionQuantity(quantity) ?: 0.0
-    var costBasis = (parseMoneyInput(invested) ?: 0L).toDouble()
-    val fallbackAveragePrice = (parseMoneyInput(averagePrice) ?: 0L).toDouble()
+    var costBasis = parseMoneyInput(invested) ?: 0.0
+    val fallbackAveragePrice = parseMoneyInput(averagePrice) ?: 0.0
     if (costBasis == 0.0 && fallbackAveragePrice > 0.0) {
         costBasis = holdingQuantity * fallbackAveragePrice
     }
@@ -1503,24 +1665,26 @@ private fun Asset.withTransactionHistory(transactions: List<TransactionEntity>):
             }
         }
 
-    val currentPriceAmount = parseMoneyInput(currentPrice) ?: 0L
-    val currentValueAmount = (holdingQuantity * currentPriceAmount).roundToLong()
-    val costBasisAmount = costBasis.roundToLong()
+    val currentPriceAmount = parseMoneyInput(currentPrice) ?: 0.0
+    val currentValueAmount = holdingQuantity * currentPriceAmount
+    val costBasisAmount = costBasis
     val profitAmount = currentValueAmount - costBasisAmount
-    val profitPercentage = if (costBasisAmount == 0L) 0.0 else {
+    val profitPercentage = if (costBasisAmount == 0.0) 0.0 else {
         profitAmount * 100.0 / costBasisAmount
     }
     val unit = quantity.substringAfter(" ", symbol)
 
     return copy(
         quantity = formatQuantityWithUnit(holdingQuantity, unit),
-        value = formatAmount(currentValueAmount, currency),
-        invested = formatAmount(costBasisAmount, currency),
-        profit = formatSignedAmount(profitAmount, currency),
+        value = formatAmount(currentValueAmount, currency, displayCurrencySymbol, maxFractionDigits),
+        invested = formatAmount(costBasisAmount, currency, displayCurrencySymbol, maxFractionDigits),
+        profit = formatSignedAmount(profitAmount, currency, displayCurrencySymbol, maxFractionDigits),
         profitPercent = String.format(Locale.US, "%+.2f%%", profitPercentage),
         averagePrice = formatAmount(
-            if (holdingQuantity > 0.0) (costBasis / holdingQuantity).roundToLong() else 0L,
-            currency
+            if (holdingQuantity > 0.0) costBasis / holdingQuantity else 0.0,
+            currency,
+            displayCurrencySymbol,
+            maxFractionDigits
         )
     )
 }
@@ -1529,16 +1693,16 @@ private fun Asset.withCalculatedCurrentValue(): Asset {
     val investedAmount = parseMoneyInput(invested)
     val averagePriceAmount = parseMoneyInput(averagePrice)
     val currentPriceAmount = parseMoneyInput(currentPrice)
-    if (investedAmount == null || averagePriceAmount == null || averagePriceAmount <= 0L ||
+    if (investedAmount == null || averagePriceAmount == null || averagePriceAmount <= 0.0 ||
         currentPriceAmount == null
     ) {
         return this
     }
 
     val currentValueAmount =
-        (investedAmount.toDouble() * currentPriceAmount / averagePriceAmount).roundToLong()
+        investedAmount * currentPriceAmount / averagePriceAmount
     val profitAmount = currentValueAmount - investedAmount
-    val profitPercentage = if (investedAmount == 0L) 0.0 else {
+    val profitPercentage = if (investedAmount == 0.0) 0.0 else {
         profitAmount * 100.0 / investedAmount
     }
     return copy(
@@ -1549,16 +1713,122 @@ private fun Asset.withCalculatedCurrentValue(): Asset {
 }
 
 private fun parseTransactionQuantity(value: String): Double? =
-    value.trim().substringBefore(" ").toDoubleOrNull()
+    parseMoneyInput(value.substringBefore(" "))
 
-private fun parseMoneyInput(value: String): Long? =
-    value.filter(Char::isDigit).toLongOrNull()
+private fun parseMoneyInput(value: String): Double? {
+    val source = value.trim()
+    val currency = if (source.contains('$') || source.startsWith("USD", ignoreCase = true)) {
+        "USD"
+    } else {
+        "IDR"
+    }
+    val parts = splitEditableAmount(source, currency) ?: return null
+    val normalized = parts.first + (parts.second?.let { ".${it}" } ?: "")
+    return normalized.toDoubleOrNull()
+}
+
+private fun Asset.withAmountPrecision(
+    maxFractionDigits: Int,
+    currencySymbol: String? = null
+): Asset {
+    val displayCurrencySymbol = currencySymbol ?: currencySymbolFor(currency)
+    val signedProfit = parseMoneyInput(profit)?.let { amount ->
+        if (profit.trimStart().startsWith("-")) -amount else amount
+    }
+    return copy(
+        value = parseMoneyInput(value)?.let {
+            formatAmount(it, currency, displayCurrencySymbol, maxFractionDigits)
+        } ?: value,
+        invested = parseMoneyInput(invested)?.let {
+            formatAmount(it, currency, displayCurrencySymbol, maxFractionDigits)
+        } ?: invested,
+        profit = signedProfit?.let {
+            formatSignedAmount(it, currency, displayCurrencySymbol, maxFractionDigits)
+        } ?: profit,
+        averagePrice = parseMoneyInput(averagePrice)?.let {
+            formatAmount(it, currency, displayCurrencySymbol, maxFractionDigits)
+        } ?: averagePrice,
+        currentPrice = parseMoneyInput(currentPrice)?.let {
+            formatAmount(it, currency, displayCurrencySymbol, maxFractionDigits)
+        } ?: currentPrice
+    )
+}
+
+private fun splitEditableAmount(
+    value: String,
+    currency: String,
+    decimalMode: Boolean? = null
+): Pair<String, String?>? {
+    val numeric = value.filter { it.isDigit() || it == '.' || it == ',' }
+    if (numeric.isEmpty()) return null
+
+    val primarySeparator = ','
+    val alternateSeparator = '.'
+    val primaryIndex = numeric.lastIndexOf(primarySeparator)
+    val alternateIndex = numeric.lastIndexOf(alternateSeparator)
+    val decimalIndex = if (decimalMode != null) {
+        if (!decimalMode) {
+            -1
+        } else if (primaryIndex >= 0) {
+            primaryIndex
+        } else if (
+            alternateIndex >= 0 &&
+            (numeric.startsWith("0$alternateSeparator") ||
+                numeric.endsWith(alternateSeparator) ||
+                numeric.substringAfterLast(alternateSeparator).length != 3)
+        ) {
+            alternateIndex
+        } else {
+            -1
+        }
+    } else {
+        when {
+            primaryIndex >= 0 && alternateIndex >= 0 -> maxOf(primaryIndex, alternateIndex)
+            primaryIndex >= 0 -> primaryIndex
+            alternateIndex >= 0 && numeric.startsWith("0$alternateSeparator") -> alternateIndex
+            alternateIndex >= 0 && numeric.count { it == alternateSeparator } == 1 &&
+                numeric.substringAfterLast(alternateSeparator).length != 3 -> alternateIndex
+            else -> -1
+        }
+    }
+
+    return if (decimalIndex >= 0) {
+        numeric.substring(0, decimalIndex).filter(Char::isDigit).ifEmpty { "0" } to
+            numeric.substring(decimalIndex + 1).filter(Char::isDigit)
+    } else {
+        numeric.filter(Char::isDigit) to null
+    }
+}
+
+private fun formatEditableAmount(
+    value: String,
+    currency: String,
+    decimalMode: Boolean? = null
+): String {
+    val parts = splitEditableAmount(value, currency, decimalMode) ?: return ""
+    val integerFormatter = NumberFormat.getIntegerInstance(Locale.GERMANY)
+    val integer = integerFormatter.format(BigDecimal(parts.first))
+    return integer + (parts.second?.let { ",$it" } ?: "")
+}
 
 private fun installMoneyInputFormatter(
     input: EditText,
     currencyProvider: () -> String
+) = installNumericInputFormatter(input, currencyProvider, true)
+
+private fun installDecimalInputFormatter(input: EditText) =
+    installNumericInputFormatter(input, { "IDR" }, false)
+
+private fun installNumericInputFormatter(
+    input: EditText,
+    currencyProvider: () -> String,
+    includeCurrencyPrefix: Boolean
 ) {
+    input.keyListener = DigitsKeyListener.getInstance("0123456789.,")
     var isFormatting = false
+    var decimalMode = input.text.toString().let { current ->
+        current.contains(',')
+    }
     input.addTextChangedListener(object : TextWatcher {
         override fun beforeTextChanged(
             s: CharSequence?,
@@ -1572,22 +1842,36 @@ private fun installMoneyInputFormatter(
             start: Int,
             before: Int,
             count: Int
-        ) = Unit
+        ) {
+            if (isFormatting) return
+            val insertedText = s?.toString()?.substring(start, (start + count).coerceAtMost(s.length))
+                .orEmpty()
+            val insertedDecimalSeparator = insertedText.contains('.') || insertedText.contains(',')
+            if (insertedDecimalSeparator) decimalMode = true
+            else if (s != null && !s.toString().contains(',')) decimalMode = false
+            if (s?.none(Char::isDigit) != false) decimalMode = false
+        }
 
         override fun afterTextChanged(editable: Editable?) {
             if (isFormatting) return
             val source = editable?.toString().orEmpty()
-            val digits = source.filter(Char::isDigit)
-            val formatted = when {
-                digits.isEmpty() -> ""
-                else -> digits.toLongOrNull()?.let {
-                    formatInputAmount(it, currencyProvider())
-                } ?: source
+            if (source.trimEnd().endsWith('.') || source.trimEnd().endsWith(',')) {
+                decimalMode = true
             }
-            if (source != formatted) {
+            val formattedBody = formatEditableAmount(
+                source,
+                currencyProvider(),
+                decimalMode
+            )
+            val formattedWithSeparator = if (includeCurrencyPrefix && formattedBody.isNotEmpty()) {
+                if (currencyProvider() == "IDR") "Rp $formattedBody" else "$ $formattedBody"
+            } else {
+                formattedBody
+            }
+            if (source != formattedWithSeparator) {
                 isFormatting = true
-                input.setText(formatted)
-                input.setSelection(formatted.length)
+                input.setText(formattedWithSeparator)
+                input.setSelection(formattedWithSeparator.length)
                 isFormatting = false
             }
         }
@@ -1603,9 +1887,13 @@ private fun reformatMoneyInput(input: EditText, currency: String) {
     }
 }
 
-private fun formatInputAmount(amount: Long, currency: String): String {
-    val locale = if (currency == "IDR") Locale.GERMANY else Locale.US
-    val formatted = NumberFormat.getIntegerInstance(locale).format(amount)
+private fun formatInputAmount(amount: Double, currency: String): String {
+    val locale = Locale.GERMANY
+    val formatter = NumberFormat.getNumberInstance(locale).apply {
+        minimumFractionDigits = 0
+        maximumFractionDigits = 8
+    }
+    val formatted = formatter.format(amount)
     return if (currency == "IDR") "Rp $formatted" else "\$ $formatted"
 }
 
@@ -1630,24 +1918,56 @@ private fun formatQuantityWithUnit(quantity: Double, unit: String): String =
 private fun calculateTransactionTotal(
     isBuy: Boolean,
     quantity: Double,
-    price: Long,
-    fee: Long
-): Long {
-    val gross = (quantity * price).roundToLong()
-    return if (isBuy) gross + fee else (gross - fee).coerceAtLeast(0L)
+    price: Double,
+    fee: Double
+): Double {
+    val gross = quantity * price
+    return if (isBuy) gross + fee else (gross - fee).coerceAtLeast(0.0)
 }
 
-private fun formatAmount(amount: Long, currency: String): String {
-    val locale = if (currency == "IDR") Locale.GERMANY else Locale.US
-    val formatted = NumberFormat.getIntegerInstance(locale).format(amount)
-    return if (currency == "IDR") "Rp $formatted" else "$currency $formatted"
+private fun formatAmount(
+    amount: Double,
+    currency: String,
+    maxFractionDigits: Int = 8
+): String = formatAmount(amount, currency, currencySymbolFor(currency), maxFractionDigits)
+
+private fun formatAmount(
+    amount: Double,
+    currency: String,
+    currencySymbol: String,
+    maxFractionDigits: Int = 8
+): String {
+    val locale = Locale.GERMANY
+    val formatter = NumberFormat.getNumberInstance(locale).apply {
+        minimumFractionDigits = 0
+        maximumFractionDigits = maxFractionDigits
+    }
+    val formatted = formatter.format(amount)
+    val prefix = currencySymbol.ifBlank { currencySymbolFor(currency) }
+    return "$prefix $formatted"
 }
 
-private fun formatSignedAmount(amount: Long, currency: String): String {
+private fun formatSignedAmount(
+    amount: Double,
+    currency: String,
+    maxFractionDigits: Int = 8
+): String = formatSignedAmount(amount, currency, currencySymbolFor(currency), maxFractionDigits)
+
+private fun formatSignedAmount(
+    amount: Double,
+    currency: String,
+    currencySymbol: String,
+    maxFractionDigits: Int = 8
+): String {
     val sign = when {
         amount > 0 -> "+"
         amount < 0 -> "-"
         else -> ""
     }
-    return sign + formatAmount(abs(amount), currency)
+    return sign + formatAmount(abs(amount), currency, currencySymbol, maxFractionDigits)
+}
+
+private fun currencySymbolFor(currency: String): String = when (currency) {
+    "USD" -> "$"
+    else -> "Rp"
 }

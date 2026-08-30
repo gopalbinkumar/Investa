@@ -24,9 +24,9 @@ data class TransactionEntity(
     val action: String,
     val date: Long,
     val quantity: Double,
-    val price: Long,
-    val fee: Long,
-    val total: Long,
+    val price: Double,
+    val fee: Double,
+    val total: Double,
     val notes: String,
     val createdAt: Long,
     val updatedAt: Long

@@ -27,6 +27,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
+            android:text="Realized Gain/Loss"
+            android:textColor="@color/investa_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_surface"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/reports_realized_pl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rp 0"
+                android:textColor="@color/investa_mint"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
             android:text="Portfolio Performance"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
@@ -102,7 +129,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <com.example.investa.PerformanceChartView
+            <com.example.investa.ui.home.PerformanceChartView
                 android:id="@+id/performance_chart"
                 android:layout_width="match_parent"
                 android:layout_height="160dp"

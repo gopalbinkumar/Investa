@@ -9,15 +9,31 @@
     android:paddingEnd="20dp"
     android:paddingBottom="28dp">
 
-    <TextView
-        android:id="@+id/current_price_title"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Change Current Price"
-        android:textColor="@color/investa_text"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:layout_height="32dp">
+
+        <TextView
+            android:id="@+id/current_price_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Change Current Price"
+            android:textColor="@color/investa_text"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageButton
+            android:id="@+id/current_price_refresh"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="end|center_vertical"
+            android:background="@android:color/transparent"
+            android:contentDescription="Refresh current price"
+            android:padding="4dp"
+            android:src="@drawable/ic_lucide_rotate_cw"
+            android:tint="@color/investa_icon_secondary" />
+    </FrameLayout>
 
     <TextView
         android:layout_width="wrap_content"

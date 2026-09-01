@@ -1,4 +1,4 @@
-package com.example.investa
+package com.example.investa.ui.home
 
 import android.content.Context
 import android.graphics.Canvas

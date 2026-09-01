@@ -1,4 +1,4 @@
-package com.example.investa
+package com.example.investa.data.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -27,6 +27,8 @@ data class TransactionEntity(
     val price: Double,
     val fee: Double,
     val total: Double,
+    val costBasis: Double = 0.0,
+    val currency: String,
     val notes: String,
     val createdAt: Long,
     val updatedAt: Long

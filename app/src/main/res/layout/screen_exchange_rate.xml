@@ -29,6 +29,15 @@
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/exchange_rate_refresh"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="end|center_vertical"
+            android:contentDescription="Refresh exchange rate"
+            android:src="@drawable/ic_lucide_rotate_cw"
+            android:tint="@color/investa_icon_primary" />
     </FrameLayout>
 
     <ScrollView

@@ -1,4 +1,6 @@
-package com.example.investa
+package com.example.investa.data.dao
+
+import com.example.investa.data.entity.CurrencyEntity
 
 import androidx.room.Dao
 import androidx.room.Insert

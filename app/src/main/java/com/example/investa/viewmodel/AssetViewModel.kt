@@ -1,4 +1,7 @@
-package com.example.investa
+package com.example.investa.viewmodel
+
+import com.example.investa.data.entity.AssetEntity
+import com.example.investa.data.repository.AssetRepository
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

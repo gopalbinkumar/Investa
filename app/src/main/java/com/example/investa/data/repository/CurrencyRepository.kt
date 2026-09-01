@@ -1,4 +1,7 @@
-package com.example.investa
+package com.example.investa.data.repository
+
+import com.example.investa.data.dao.CurrencyDao
+import com.example.investa.data.entity.CurrencyEntity
 
 import kotlinx.coroutines.flow.Flow
 

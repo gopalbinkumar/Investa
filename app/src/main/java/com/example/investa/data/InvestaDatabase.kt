@@ -1,4 +1,4 @@
-package com.example.investa
+package com.example.investa.data
 
 import android.content.Context
 import androidx.room.Database
@@ -6,14 +6,23 @@ import androidx.room.migration.Migration
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.investa.data.dao.AssetDao
+import com.example.investa.data.dao.CashAccountDao
+import com.example.investa.data.dao.CurrencyDao
+import com.example.investa.data.dao.TransactionDao
+import com.example.investa.data.entity.AssetEntity
+import com.example.investa.data.entity.CashAccountEntity
+import com.example.investa.data.entity.CurrencyEntity
+import com.example.investa.data.entity.TransactionEntity
 
 @Database(
-    entities = [AssetEntity::class, TransactionEntity::class, CurrencyEntity::class],
-    version = 6,
+    entities = [AssetEntity::class, TransactionEntity::class, CurrencyEntity::class, CashAccountEntity::class],
+    version = 8,
     exportSchema = false
 )
 abstract class InvestaDatabase : RoomDatabase() {
     abstract fun assetDao(): AssetDao
+    abstract fun cashAccountDao(): CashAccountDao
     abstract fun transactionDao(): TransactionDao
     abstract fun currencyDao(): CurrencyDao
 
@@ -181,6 +190,46 @@ abstract class InvestaDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS cash_accounts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        currencyCode TEXT NOT NULL,
+                        balance REAL NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_cash_accounts_currencyCode " +
+                        "ON cash_accounts(currencyCode)"
+                )
+                db.execSQL(
+                    "ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'IDR'"
+                )
+                db.execSQL(
+                    """
+                    UPDATE transactions
+                    SET currency = COALESCE(
+                        (SELECT currency FROM assets WHERE assets.id = transactions.assetId),
+                        'IDR'
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE transactions ADD COLUMN costBasis REAL NOT NULL DEFAULT 0.0"
+                )
+            }
+        }
+
         @Volatile
         private var instance: InvestaDatabase? = null
 
@@ -195,6 +244,8 @@ abstract class InvestaDatabase : RoomDatabase() {
                     .addMigrations(MIGRATION_3_4)
                     .addMigrations(MIGRATION_4_5)
                     .addMigrations(MIGRATION_5_6)
+                    .addMigrations(MIGRATION_6_7)
+                    .addMigrations(MIGRATION_7_8)
                     .build().also { instance = it }
             }
     }

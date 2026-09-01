@@ -1,4 +1,4 @@
-package com.example.investa
+package com.example.investa.data.entity
 
 import androidx.room.Entity
 import androidx.room.Index

@@ -79,5 +79,29 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/history_realized_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Realized Gain/Loss"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/history_realized"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/investa_mint"
+                android:textSize="12sp" />
+        </LinearLayout>
+
     </LinearLayout>
 </LinearLayout>

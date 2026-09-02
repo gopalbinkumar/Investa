@@ -7,11 +7,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.PopupMenu
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import com.example.investa.data.entity.TransactionEntity
@@ -49,7 +46,6 @@ internal class TransactionHandler(private val host: ScreenHost) {
         val title = drawer.findViewById<TextView>(R.id.transaction_title)
         val moreButton = drawer.findViewById<View>(R.id.transaction_more)
         val dateInput = drawer.findViewById<EditText>(R.id.transaction_date)
-        val currencySpinner = drawer.findViewById<Spinner>(R.id.transaction_currency)
         val quantityInput = drawer.findViewById<EditText>(R.id.transaction_quantity)
         val quantityUnit = drawer.findViewById<TextView>(R.id.transaction_quantity_unit)
         val priceInput = drawer.findViewById<EditText>(R.id.transaction_price)
@@ -69,19 +65,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
             transaction?.let { formatTransactionDate(it.date) }
                 ?: SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH).format(Date())
         )
-        val currencyCodes = host.databaseCurrencies
-            .filter { it.isActive }
-            .map { it.code }
-            .ifEmpty { listOf("IDR", "USD") }
-        currencySpinner.adapter = ArrayAdapter(
-            host.activity,
-            R.layout.spinner_item,
-            currencyCodes
-        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
-        currencySpinner.setSelection(
-            currencyCodes.indexOf(transaction?.currency ?: asset.currency).coerceAtLeast(0)
-        )
-        fun selectedCurrency(): String = currencySpinner.selectedItem?.toString() ?: asset.currency
+        fun selectedCurrency(): String = asset.currency
         quantityInput.setText(
             transaction?.let { formatEditableAmount(formatQuantityValue(it.quantity), "IDR") } ?: ""
         )
@@ -94,23 +78,6 @@ internal class TransactionHandler(private val host: ScreenHost) {
         installMoneyInputFormatter(priceInput) { selectedCurrency() }
         installMoneyInputFormatter(feeInput) { selectedCurrency() }
         installDecimalInputFormatter(quantityInput)
-
-        fun reformatCurrencyInput(input: EditText) {
-            val amount = parseMoneyInput(input.text.toString()) ?: return
-            val formatted = formatInputAmount(amount, selectedCurrency())
-            if (input.text.toString() != formatted) {
-                input.setText(formatted)
-                input.setSelection(formatted.length)
-            }
-        }
-        currencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                reformatCurrencyInput(priceInput)
-                reformatCurrencyInput(feeInput)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-        }
 
         fun showDatePicker() {
             val selectedDate = Calendar.getInstance().apply {
@@ -243,7 +210,6 @@ internal class TransactionHandler(private val host: ScreenHost) {
                     }
                     feeToggle.isClickable = true
                     feeToggle.isFocusable = true
-                    currencySpinner.isEnabled = true
                     saveButton.visibility = View.VISIBLE
                     input.requestFocus()
                 }
@@ -255,13 +221,11 @@ internal class TransactionHandler(private val host: ScreenHost) {
                 }
                 feeToggle.isClickable = true
                 feeToggle.isFocusable = true
-                currencySpinner.isEnabled = true
                 saveButton.visibility = View.VISIBLE
                 showDatePicker()
             }
             feeToggle.isClickable = false
             feeToggle.isFocusable = false
-            currencySpinner.isEnabled = false
         }
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)

@@ -224,10 +224,10 @@ internal class AssetDetailRenderer(
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                    .onFailure {
+                    .onFailure { error ->
                         Toast.makeText(
                             host.activity,
-                            "Failed to load current price",
+                            "Failed to load current price: ${error.message}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

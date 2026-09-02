@@ -94,10 +94,10 @@ internal fun tint(view: View, color: Int) {
 }
 
 private fun chartColor(index: Int) = intArrayOf(
-    0xFFFF9F43.toInt(),
-    0xFFFF6B6B.toInt(),
-    0xFFFFD166.toInt(),
-    0xFF4D96FF.toInt(),
-    0xFFA66CFF.toInt(),
-    0xFF00C2A8.toInt()
-)[index]
+    0xFFFF9F43.toInt(), // Orange
+    0xFFFF6B6B.toInt(), // Soft red
+    0xFFFFD166.toInt(), // Yellow
+    0xFF4D96FF.toInt(), // Blue
+    0xFFA66CFF.toInt(), // Purple
+    0xFF00C2A8.toInt()  // Teal
+)[index % 6]

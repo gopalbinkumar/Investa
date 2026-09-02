@@ -1,5 +1,6 @@
 package com.example.investa.utils
 
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -7,25 +8,48 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 internal object YahooFinanceApi {
-    private const val BASE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/"
+    private val BASE_URLS = listOf(
+        "https://query1.finance.yahoo.com/v8/finance/chart/",
+        "https://query2.finance.yahoo.com/v8/finance/chart/"
+    )
 
     suspend fun fetchUsdIdrRate(): Double = fetchQuote("IDR=X")
 
     suspend fun fetchQuote(apiSymbol: String): Double = withContext(Dispatchers.IO) {
-        val connection = (URL("$BASE_URL$apiSymbol?range=1d&interval=1d").openConnection() as HttpURLConnection)
-            .apply {
-                requestMethod = "GET"
-                connectTimeout = 10_000
-                readTimeout = 10_000
-                setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "Mozilla/5.0")
+        val normalizedSymbol = apiSymbol.trim().uppercase()
+        require(normalizedSymbol.isNotBlank()) { "Yahoo Finance symbol is empty" }
+        val encodedSymbol = Uri.encode(normalizedSymbol)
+        var lastError: Throwable? = null
+
+        for (baseUrl in BASE_URLS) {
+            try {
+                return@withContext fetchFromEndpoint("$baseUrl$encodedSymbol?range=1d&interval=5m&includePrePost=true&events=div%2Csplits&lang=en-US&region=US")
+            } catch (error: Throwable) {
+                lastError = error
             }
+        }
+        error("Yahoo Finance unavailable: ${lastError?.message ?: "unknown network error"}")
+    }
+
+    private fun fetchFromEndpoint(endpoint: String): Double {
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 15_000
+            readTimeout = 15_000
+            useCaches = false
+            instanceFollowRedirects = true
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Accept-Language", "en-US,en;q=0.9")
+            setRequestProperty("Cache-Control", "no-cache")
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) AppleWebKit/537.36 Chrome/120 Safari/537.36")
+        }
         try {
-            if (connection.responseCode !in 200..299) {
-                error("HTTP ${connection.responseCode}")
+            val responseCode = connection.responseCode
+            if (responseCode !in 200..299) {
+                error("HTTP $responseCode")
             }
             val response = connection.inputStream.bufferedReader().use { it.readText() }
-            parseQuote(response)
+            return parseQuote(response)
         } finally {
             connection.disconnect()
         }
@@ -41,10 +65,17 @@ internal object YahooFinanceApi {
         }
         val result = chart.optJSONArray("result")?.optJSONObject(0)
             ?: error("Yahoo Finance quote unavailable")
-        val metaPrice = result.optJSONObject("meta")
-            ?.optDouble("regularMarketPrice", Double.NaN)
-            ?: Double.NaN
-        if (metaPrice.isValidQuote()) return metaPrice
+        val meta = result.optJSONObject("meta")
+        listOf(
+            "regularMarketPrice",
+            "postMarketPrice",
+            "preMarketPrice",
+            "previousClose",
+            "chartPreviousClose"
+        ).forEach { key ->
+            val metaPrice = meta?.optDouble(key, Double.NaN) ?: Double.NaN
+            if (metaPrice.isValidQuote()) return metaPrice
+        }
 
         val closes = result.optJSONObject("indicators")
             ?.optJSONArray("quote")

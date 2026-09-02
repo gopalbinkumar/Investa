@@ -8,8 +8,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp">
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
 
         <ImageView
             android:id="@+id/form_back"
@@ -40,8 +40,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
             android:paddingBottom="25dp">
 
             <TextView

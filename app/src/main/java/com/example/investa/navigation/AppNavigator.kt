@@ -109,6 +109,7 @@ internal class AppNavigator(
     }
 
     fun handleBack(): Boolean = when (host.currentScreen) {
+        AppScreen.THEME -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.EXCHANGE_RATE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.DETAIL -> { showScreen(AppScreen.ASSETS); true }
         AppScreen.ADD -> { showScreen(AppScreen.ASSETS); true }
@@ -122,10 +123,11 @@ internal class AppNavigator(
         AppScreen.CASH -> 2
         AppScreen.REPORTS -> 3
         AppScreen.SETTINGS -> 4
-        AppScreen.EXCHANGE_RATE -> 5
-        AppScreen.DETAIL -> 6
-        AppScreen.ADD -> 7
-        AppScreen.EDIT -> 8
+        AppScreen.THEME -> 5
+        AppScreen.EXCHANGE_RATE -> 6
+        AppScreen.DETAIL -> 7
+        AppScreen.ADD -> 8
+        AppScreen.EDIT -> 9
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {

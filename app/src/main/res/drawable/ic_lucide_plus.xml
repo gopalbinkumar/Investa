@@ -7,6 +7,6 @@
         android:fillColor="@android:color/transparent"
         android:pathData="M12,5v14M5,12h14"
         android:strokeWidth="2"
-        android:strokeColor="#FFFFFFFF"
+        android:strokeColor="@color/investa_background"
         android:strokeLineCap="round" />
 </vector>

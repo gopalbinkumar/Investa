@@ -17,6 +17,7 @@ import com.example.investa.navigation.ScreenHost
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
+import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.YahooFinanceApi
 import kotlinx.coroutines.launch
 
@@ -28,7 +29,15 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_circle_dollar, "Exchange Rate", "USD / IDR", true) {
             host.showScreen(AppScreen.EXCHANGE_RATE)
         }
-        addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_moon, "Theme", "Dark", true)
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_moon,
+            "Theme",
+            ThemeManager.current(host.activity).label,
+            true
+        ) {
+            host.showScreen(AppScreen.THEME)
+        }
         addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_languages, "Language", "English", true)
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_download, "Data Backup", "", true)
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_upload, "Data Restore", "", true)
@@ -36,6 +45,41 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, "Version", "1.0.0", false)
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_message_circle, "Feedback", "", true)
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_star, "Rate Investa", "", true)
+    }
+
+    fun renderTheme() {
+        val root = host.inflate(R.layout.screen_theme)
+        host.attach(root)
+        root.findViewById<View>(R.id.theme_back)
+            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
+
+        val currentTheme = ThemeManager.current(host.activity)
+        var selectedTheme = currentTheme
+        val themeGroup = root.findViewById<android.widget.RadioGroup>(R.id.theme_radio_group)
+        themeGroup.check(
+            when (currentTheme) {
+                ThemeManager.AppTheme.DARK -> R.id.theme_dark
+                ThemeManager.AppTheme.LIGHT -> R.id.theme_light
+                ThemeManager.AppTheme.SYSTEM -> R.id.theme_system
+            }
+        )
+        themeGroup.setOnCheckedChangeListener { _, checkedId ->
+            val selected = when (checkedId) {
+                R.id.theme_light -> ThemeManager.AppTheme.LIGHT
+                R.id.theme_system -> ThemeManager.AppTheme.SYSTEM
+                else -> ThemeManager.AppTheme.DARK
+            }
+            selectedTheme = selected
+        }
+        root.findViewById<TextView>(R.id.theme_save).setOnClickListener {
+            ThemeManager.save(host.activity, selectedTheme)
+            Toast.makeText(
+                host.activity,
+                "Theme changed",
+                Toast.LENGTH_SHORT
+            ).show()
+            ThemeManager.apply(host.activity)
+        }
     }
 
     fun renderExchangeRate() {
@@ -63,10 +107,10 @@ internal class SettingsRenderer(private val host: ScreenHost) {
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                    .onFailure {
+                    .onFailure { error ->
                         Toast.makeText(
                             host.activity,
-                            "Failed to load exchange rate",
+                            "Failed to load exchange rate: ${error.message}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="investa_background">#FF000000</color>
-    <color name="investa_surface">#4D0B60B0</color>
-    <color name="investa_surface_elevated">#660B60B0</color>
-    <color name="investa_primary">#FF40A2D8</color>
-    <color name="investa_mint">#FFF0EDCF</color>
-    <color name="investa_text">#FFF0EDCF</color>
-    <color name="investa_text_secondary">#FF40A2D8</color>
+    <color name="investa_background">#FFFFFFFF</color>
+    <color name="investa_surface">#FFE3F4FF</color>
+    <color name="investa_surface_elevated">#FFE4F1F7</color>
+    <color name="investa_primary">#FF0B60B0</color>
+    <color name="investa_mint">#FF0B60B0</color>
+    <color name="investa_text">#FF0D1B2A</color>
+    <color name="investa_text_secondary">#FF1E6F9F</color>
     <color name="investa_border">#FF0B60B0</color>
-    <color name="investa_loss">#B30000</color>
-    <color name="investa_buy">#059A0B</color>
-    <color name="investa_icon_primary">#FFF0EDCF</color>
-    <color name="investa_icon_secondary">#FF40A2D8</color>
-    <color name="investa_icon_inactive">#FF0B60B0</color>
+    <color name="investa_buy">#FF237A46</color>
+    <color name="investa_loss">#FFB3261E</color>
+    <color name="investa_icon_primary">#FF0B60B0</color>
+    <color name="investa_icon_secondary">#FF0B60B0</color>
+    <color name="investa_icon_inactive">#FF7A9AAF</color>
 </resources>

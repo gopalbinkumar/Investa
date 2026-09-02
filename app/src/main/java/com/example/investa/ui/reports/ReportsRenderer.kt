@@ -1,14 +1,13 @@
 package com.example.investa.ui.reports
 
-import android.view.Gravity
-import android.view.ViewGroup
+import android.graphics.Color
+import android.view.MotionEvent
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import com.example.investa.R
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.TransactionEntity
-import com.example.investa.R
-import com.example.investa.ui.home.PerformanceChartView
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addReportSummaryRow
@@ -19,9 +18,17 @@ import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.toIdrDisplay
 import com.example.investa.utils.toUiAsset
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.components.YAxis
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -66,31 +73,50 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             text = String.format(Locale.US, "%+.2f%%", totalProfitPercentage)
             setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss))
         }
-        val performance = performanceSnapshots(host.databaseAssets, host.databaseTransactions, usdExchangeRate)
-        root.findViewById<PerformanceChartView>(R.id.performance_chart)
-            .setPerformanceData(performance.first, performance.second)
-        val monthLabels = root.findViewById<LinearLayout>(R.id.performance_month_labels)
-        val monthFormat = SimpleDateFormat("MMM", Locale.ENGLISH)
-        val currentMonth = Calendar.getInstance().apply { set(Calendar.DAY_OF_MONTH, 1) }
-        repeat(6) { index ->
-            val month = currentMonth.clone() as Calendar
-            month.add(Calendar.MONTH, index - 5)
-            monthLabels.addView(TextView(host.activity).apply {
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-                gravity = Gravity.CENTER
-                text = monthFormat.format(month.time)
-                setTextColor(ContextCompat.getColor(host.activity, R.color.investa_icon_inactive))
-                textSize = 11f
-            })
-        }
+        val performance = dailyPerformanceSnapshots(
+            assets = host.databaseAssets,
+            transactions = host.databaseTransactions,
+            usdExchangeRate = usdExchangeRate
+        )
+        setupPerformanceChart(
+            root.findViewById(R.id.performance_chart),
+            performance
+        )
         val summary = root.findViewById<LinearLayout>(R.id.category_summary)
         fun renderSummary(byAsset: Boolean) {
             summary.removeAllViews()
             if (byAsset) {
-                displayAssets.forEach { asset ->
-                    val value = parseMoneyInput(asset.value) ?: 0.0
-                    val percentage = if (totalValue == 0.0) 0 else ((value * 100.0) / totalValue).roundToInt()
-                    addReportSummaryRow(host.activity, summary, asset.symbol, formatAmount(value, displayCurrency, 0), "$percentage%")
+                val groupedAssets = displayAssets.groupBy { it.category }
+                val categories = assetCategories + groupedAssets.keys
+                    .filterNot { it in assetCategories }
+                    .sortedBy { it.lowercase(Locale.ENGLISH) }
+                categories.forEach { category ->
+                    val categoryAssets = groupedAssets[category]
+                        ?.sortedWith(
+                            compareBy< com.example.investa.model.Asset > { it.name.lowercase(Locale.ENGLISH) }
+                                .thenBy { it.symbol.lowercase(Locale.ENGLISH) }
+                        )
+                        .orEmpty()
+                    if (categoryAssets.isEmpty()) return@forEach
+
+                    summary.addView(TextView(host.activity).apply {
+                        text = category
+                        setTextColor(ContextCompat.getColor(host.activity, R.color.investa_text_secondary))
+                        textSize = 12f
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        val topMargin = if (summary.childCount == 0) 0 else host.dp(12)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            this.topMargin = topMargin
+                        }
+                    })
+                    categoryAssets.forEach { asset ->
+                        val value = parseMoneyInput(asset.value) ?: 0.0
+                        val percentage = if (totalValue == 0.0) 0 else ((value * 100.0) / totalValue).roundToInt()
+                        addReportSummaryRow(host.activity, summary, asset.symbol, formatAmount(value, displayCurrency, 0), "$percentage%")
+                    }
                 }
             } else {
                 assetCategories.forEach { category ->
@@ -113,60 +139,254 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         }
     }
 
-    private fun performanceSnapshots(
+    private fun setupPerformanceChart(
+        chart: LineChart,
+        performance: List<DailyPerformance>
+    ) {
+        val investedValues = performance.map { it.invested }
+        val currentValues = performance.map { it.current }
+        val dateLabels = performance.map { it.dateLabel }
+
+        fun dataSet(values: List<Long>, label: String, color: Int): LineDataSet {
+            val entries = values.mapIndexed { index, value ->
+                Entry(index.toFloat(), value.toFloat())
+            }
+            return LineDataSet(entries, label).apply {
+                axisDependency = YAxis.AxisDependency.RIGHT
+                this.color = color
+                lineWidth = 2.5f
+                mode = LineDataSet.Mode.CUBIC_BEZIER
+                setDrawValues(false)
+                setDrawCircles(false)
+                setCircleColor(color)
+                circleRadius = 3.5f
+                circleHoleRadius = 1.5f
+                setDrawHighlightIndicators(true)
+                setDrawVerticalHighlightIndicator(true)
+                setDrawHorizontalHighlightIndicator(false)
+                isHighlightEnabled = true
+                highLightColor = Color.WHITE
+                highlightLineWidth = 1f
+                enableDashedHighlightLine(6f, 4f, 0f)
+            }
+        }
+
+        val allValues = (investedValues + currentValues).map { it.toFloat() }
+        val axisRange = performanceAxisRange(allValues)
+
+        chart.apply {
+            setBackgroundColor(Color.TRANSPARENT)
+            description.isEnabled = false
+            legend.isEnabled = false
+            axisLeft.isEnabled = false
+            axisRight.isEnabled = true
+            axisRight.setDrawAxisLine(false)
+            axisRight.setDrawGridLines(true)
+            axisRight.enableGridDashedLine(8f, 5f, 0f)
+            axisRight.gridColor = Color.argb(80, 64, 162, 216)
+            axisRight.textColor = ContextCompat.getColor(host.activity, R.color.investa_text_secondary)
+            axisRight.textSize = 9f
+            axisRight.axisMinimum = axisRange.minimum
+            axisRight.axisMaximum = axisRange.maximum
+            axisRight.setLabelCount(4, false)
+            axisRight.valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String = formatAxisValue(value)
+            }
+            xAxis.isEnabled = true
+            xAxis.position = com.github.mikephil.charting.components.XAxis.XAxisPosition.BOTTOM
+            xAxis.setDrawAxisLine(false)
+            xAxis.setDrawGridLines(false)
+            xAxis.textColor = ContextCompat.getColor(host.activity, R.color.investa_text_secondary)
+            xAxis.textSize = 9f
+            xAxis.granularity = 1f
+            xAxis.setLabelCount(3, true)
+            xAxis.valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    val index = value.roundToInt().coerceIn(0, performance.lastIndex)
+                    return performance.getOrNull(index)?.monthLabel.orEmpty()
+                }
+            }
+            setTouchEnabled(true)
+            setDragEnabled(false)
+            setScaleEnabled(false)
+            setScaleXEnabled(false)
+            setScaleYEnabled(false)
+            setPinchZoom(false)
+            setHighlightPerDragEnabled(true)
+            setHighlightPerTapEnabled(true)
+            isDoubleTapToZoomEnabled = false
+            setDrawMarkers(true)
+            val portfolioMarker = PortfolioMarkerView(
+                host.activity,
+                dateLabels,
+                investedValues,
+                currentValues
+            )
+            marker = portfolioMarker
+            addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
+                portfolioMarker.updateChartBounds(right - left, bottom - top)
+            }
+            post { portfolioMarker.updateChartBounds(width, height) }
+            setOnTouchListener { view, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN,
+                    MotionEvent.ACTION_MOVE -> {
+                        view.parent?.requestDisallowInterceptTouchEvent(true)
+                        getHighlightByTouchPoint(event.x, event.y)?.let { highlight ->
+                            highlightValue(highlight, true)
+                        }
+                        true
+                    }
+                    MotionEvent.ACTION_UP,
+                    MotionEvent.ACTION_CANCEL -> {
+                        view.parent?.requestDisallowInterceptTouchEvent(false)
+                        highlightValue(null, true)
+                        invalidate()
+                        true
+                    }
+                    else -> true
+                }
+            }
+            extraLeftOffset = 4f
+            extraRightOffset = 4f
+            extraTopOffset = 8f
+            extraBottomOffset = 8f
+            data = LineData(
+                dataSet(investedValues, "Invested", Color.rgb(255, 209, 102)),
+                dataSet(currentValues, "Current Value", Color.rgb(64, 162, 216))
+            )
+            invalidate()
+        }
+    }
+
+    private fun dailyPerformanceSnapshots(
         assets: List<AssetEntity>,
         transactions: List<TransactionEntity>,
         usdExchangeRate: Double
-    ): Pair<List<Long>, List<Long>> {
-        val month = Calendar.getInstance().apply {
+    ): List<DailyPerformance> {
+        val calendar = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_MONTH, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            add(Calendar.MONTH, -5)
+            add(Calendar.MONTH, -2)
         }
-        val investedValues = mutableListOf<Long>()
-        val currentValues = mutableListOf<Long>()
-        repeat(6) {
-            val nextMonth = month.clone() as Calendar
-            nextMonth.add(Calendar.MONTH, 1)
-            val monthEnd = nextMonth.timeInMillis - 1L
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val dateFormat = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
+        val monthFormat = SimpleDateFormat("MMM", Locale.ENGLISH)
+        val performance = mutableListOf<DailyPerformance>()
+
+        while (!calendar.after(today)) {
+            val dayEnd = (calendar.clone() as Calendar).apply {
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }.timeInMillis
             var invested = 0.0
             var current = 0.0
+
             assets.forEach { asset ->
-                if (asset.createdAt > monthEnd) return@forEach
+                if (asset.createdAt > dayEnd) return@forEach
+
                 var quantity = asset.quantity
                 var costBasis = asset.investedAmount
                 transactions.asSequence()
-                    .filter { it.assetId == asset.id && it.date > monthEnd }
+                    .filter { it.assetId == asset.id && it.date > dayEnd }
                     .sortedWith(compareByDescending<TransactionEntity> { it.date }.thenByDescending { it.id })
                     .forEach { transaction ->
+                        val transactionAction = transaction.action.trim().uppercase(Locale.US)
                         val transactionRate = host.exchangeRateFor(transaction.currency)
                         val assetRate = host.exchangeRateFor(asset.currency)
                         val transactionCost = transaction.total * transactionRate / assetRate
-                        if (transaction.action == "BUY") {
-                            quantity = (quantity - transaction.quantity).coerceAtLeast(0.0)
-                            costBasis = (costBasis - transactionCost).coerceAtLeast(0.0)
-                        } else if (transaction.action == "SELL") {
-                            val quantityAfterSell = quantity
-                            val quantityBeforeSell = quantityAfterSell + transaction.quantity
-                            costBasis = if (quantityAfterSell > 0.0) {
-                                costBasis * quantityBeforeSell / quantityAfterSell
-                            } else {
-                                costBasis + transactionCost
+                        when (transactionAction) {
+                            "BUY" -> {
+                                quantity -= transaction.quantity
+                                costBasis -= transactionCost
                             }
-                            quantity = quantityBeforeSell
+                            "SELL" -> {
+                                val sellCostBasis = if (transaction.costBasis > 0.0) {
+                                    transaction.costBasis * transactionRate / assetRate
+                                } else {
+                                    val averagePrice = if (quantity > 0.0) costBasis / quantity else 0.0
+                                    averagePrice * transaction.quantity
+                                }
+                                quantity += transaction.quantity
+                                costBasis += sellCostBasis
+                            }
                         }
                     }
+
                 val assetExchangeRate = if (asset.currency == "USD") usdExchangeRate else 1.0
-                invested += costBasis * assetExchangeRate
-                current += quantity * asset.currentPrice * assetExchangeRate
+                val historicalQuantity = quantity.coerceAtLeast(0.0)
+                val historicalCostBasis = costBasis.coerceAtLeast(0.0)
+                invested += historicalCostBasis * assetExchangeRate
+                current += historicalQuantity * asset.currentPrice * assetExchangeRate
             }
-            investedValues += invested.roundToLong()
-            currentValues += current.roundToLong()
-            month.add(Calendar.MONTH, 1)
+
+            performance += DailyPerformance(
+                dateLabel = dateFormat.format(calendar.time),
+                monthLabel = monthFormat.format(calendar.time),
+                invested = invested.roundToLong(),
+                current = current.roundToLong()
+            )
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
         }
-        return investedValues to currentValues
+        return performance
     }
+
+    private fun performanceAxisRange(values: List<Float>): AxisRange {
+        val minimumValue = values.minOrNull()?.toDouble() ?: 0.0
+        val maximumValue = values.maxOrNull()?.toDouble() ?: 0.0
+        val scale = when {
+            maximumValue >= 1_000_000_000.0 -> 1_000_000_000.0
+            maximumValue >= 1_000_000.0 -> 1_000_000.0
+            maximumValue >= 1_000.0 -> 1_000.0
+            else -> 1.0
+        }
+        val step = scale * 2.5
+        var minimum = floor(minimumValue / step) * step
+        var maximum = ceil(maximumValue / step) * step
+
+        if (maximum <= minimum) {
+            if (minimum == 0.0) {
+                maximum = step
+            } else {
+                minimum = (minimum - step).coerceAtLeast(0.0)
+                maximum += step
+            }
+        }
+        return AxisRange(minimum.toFloat(), maximum.toFloat())
+    }
+
+    private fun formatAxisValue(value: Float): String {
+        val amount = value.toDouble()
+        return when {
+            amount >= 1_000_000_000.0 -> "${(amount / 1_000_000_000.0).formatCompact()}B"
+            amount >= 1_000_000.0 -> "${(amount / 1_000_000.0).formatCompact()}M"
+            amount >= 1_000.0 -> "${(amount / 1_000.0).formatCompact()}K"
+            else -> amount.roundToLong().toString()
+        }
+    }
+
+    private fun Double.formatCompact(): String = String.format(Locale.US, "%.1f", this)
+
+    private data class DailyPerformance(
+        val dateLabel: String,
+        val monthLabel: String,
+        val invested: Long,
+        val current: Long
+    )
+
+    private data class AxisRange(
+        val minimum: Float,
+        val maximum: Float
+    )
+
 }

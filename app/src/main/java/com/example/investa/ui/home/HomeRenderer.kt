@@ -1,11 +1,11 @@
 package com.example.investa.ui.home
 
+import android.graphics.Color
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.example.investa.R
-import com.example.investa.ui.home.DonutChartView
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addAssetRow
 import com.example.investa.ui.common.bindLegendRows
@@ -16,6 +16,10 @@ import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.toIdrDisplay
 import com.example.investa.utils.toUiAsset
 import com.example.investa.utils.withCalculatedCurrentValue
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -88,8 +92,10 @@ internal class HomeRenderer(private val host: ScreenHost) {
             root.findViewById(R.id.legend_container),
             assetCategories.zip(categoryPercentages.map { it.roundToInt() })
         )
-        root.findViewById<DonutChartView>(R.id.portfolio_allocation_chart)
-            .setAllocationPercentages(categoryPercentages)
+        setupAllocationChart(
+            root.findViewById(R.id.portfolio_allocation_chart),
+            assetCategories.zip(categoryPercentages)
+        )
         root.findViewById<TextView>(R.id.see_all_assets)
             .setOnClickListener { host.showScreen(com.example.investa.navigation.AppScreen.ASSETS) }
 
@@ -111,5 +117,49 @@ internal class HomeRenderer(private val host: ScreenHost) {
                     topAsset.profitPercent
                 )
             }
+    }
+
+    private fun setupAllocationChart(
+        chart: PieChart,
+        allocation: List<Pair<String, Float>>
+    ) {
+        val entries = allocation
+            .filter { it.second > 0f }
+            .map { (category, percentage) -> PieEntry(percentage, category) }
+
+        chart.apply {
+            clear()
+            if (entries.isEmpty()) return@apply
+
+            val dataSet = PieDataSet(entries, "").apply {
+                colors = listOf(
+                    Color.rgb(255, 159, 67),  // Orange
+                    Color.rgb(255, 107, 107), // Soft red
+                    Color.rgb(255, 209, 102), // Yellow
+                    Color.rgb(77, 150, 255),  // Blue
+                    Color.rgb(166, 108, 255), // Purple
+                    Color.rgb(0, 194, 168)     // Teal
+                )
+                setDrawValues(false)
+                setDrawIcons(false)
+                sliceSpace = 2f
+                selectionShift = 0f
+            }
+
+            data = PieData(dataSet)
+            description.isEnabled = false
+            legend.isEnabled = false
+            setDrawEntryLabels(false)
+            setUsePercentValues(false)
+            setRotationEnabled(false)
+            isHighlightPerTapEnabled = false
+            setTouchEnabled(false)
+            setHoleRadius(58f)
+            setTransparentCircleRadius(58f)
+            setTransparentCircleAlpha(0)
+            setHoleColor(Color.TRANSPARENT)
+            setExtraOffsets(0f, 0f, 0f, 0f)
+            invalidate()
+        }
     }
 }

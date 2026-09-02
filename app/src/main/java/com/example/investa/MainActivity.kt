@@ -1,10 +1,12 @@
 package com.example.investa
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -31,6 +33,7 @@ import com.example.investa.ui.home.HomeRenderer
 import com.example.investa.ui.reports.ReportsRenderer
 import com.example.investa.ui.settings.SettingsRenderer
 import com.example.investa.ui.transactions.TransactionHandler
+import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.toUiAsset
 import com.example.investa.viewmodel.AssetViewModel
 import com.example.investa.viewmodel.AssetViewModelFactory
@@ -42,7 +45,11 @@ import com.example.investa.viewmodel.TransactionViewModel
 import com.example.investa.viewmodel.TransactionViewModelFactory
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity(), ScreenHost {
+class MainActivity : AppCompatActivity(), ScreenHost {
+    companion object {
+        private const val SCREEN_STATE_KEY = "investa_current_screen"
+    }
+
     override lateinit var contentContainer: ViewGroup
     override lateinit var bottomNavigation: View
     override var currentScreen = AppScreen.HOME
@@ -79,10 +86,15 @@ class MainActivity : ComponentActivity(), ScreenHost {
     private lateinit var settingsRenderer: SettingsRenderer
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
         window.statusBarColor = ContextCompat.getColor(this, R.color.investa_background)
         window.navigationBarColor = ContextCompat.getColor(this, R.color.investa_background)
         setContentView(R.layout.activity_main)
+        findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab)
+            .imageTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.investa_background)
+            )
         contentContainer = findViewById(R.id.content_container)
         bottomNavigation = findViewById(R.id.bottom_navigation)
 
@@ -151,7 +163,15 @@ class MainActivity : ComponentActivity(), ScreenHost {
                 }
             }
         }
-        showScreen(AppScreen.HOME)
+        val restoredScreen = savedInstanceState
+            ?.getString(SCREEN_STATE_KEY)
+            ?.let { screenName -> runCatching { AppScreen.valueOf(screenName) }.getOrNull() }
+        showScreen(restoredScreen ?: AppScreen.HOME)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(SCREEN_STATE_KEY, currentScreen.name)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onBackPressed() {
@@ -167,6 +187,7 @@ class MainActivity : ComponentActivity(), ScreenHost {
             AppScreen.CASH -> cashRenderer.render()
             AppScreen.REPORTS -> reportsRenderer.render()
             AppScreen.SETTINGS -> settingsRenderer.render()
+            AppScreen.THEME -> settingsRenderer.renderTheme()
             AppScreen.EXCHANGE_RATE -> settingsRenderer.renderExchangeRate()
             AppScreen.DETAIL -> assetDetailRenderer.render()
             AppScreen.ADD -> assetFormHandler.render(null)

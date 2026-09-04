@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Add Transaction"
+            android:text="@string/add_transaction"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -29,6 +29,7 @@
             android:layout_height="24dp"
             android:layout_gravity="end|center_vertical"
             android:contentDescription="@string/more_options"
+            android:foreground="@drawable/ripple_icon"
             android:src="@drawable/ic_lucide_more_vertical"
             android:tint="@color/investa_icon_primary"
             android:visibility="gone" />
@@ -38,7 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
-        android:text="Date"
+        android:text="@string/date"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -49,13 +50,13 @@
         android:drawableEnd="@drawable/ic_lucide_calendar"
         android:drawablePadding="8dp"
         android:focusable="false"
-        android:hint="29 August 2026"
+        android:hint="@string/hint_date"
         android:inputType="none" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Quantity"
+        android:text="@string/quantity"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -65,7 +66,9 @@
         android:layout_marginTop="6dp"
         android:layout_marginBottom="14dp"
         android:background="@drawable/bg_input"
+        android:foreground="@drawable/ripple_surface"
         android:gravity="center_vertical"
+        android:addStatesFromChildren="true"
         android:orientation="horizontal"
         android:paddingStart="14dp"
         android:paddingEnd="14dp">
@@ -79,7 +82,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:gravity="center_vertical|start"
-            android:hint="0.005"
+            android:hint="@string/hint_transaction_quantity"
             android:inputType="numberDecimal"
             android:padding="0dp"
             android:singleLine="true"
@@ -100,7 +103,7 @@
         android:id="@+id/transaction_price_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Price"
+        android:text="@string/price"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -110,7 +113,9 @@
         android:layout_marginTop="6dp"
         android:layout_marginBottom="14dp"
         android:background="@drawable/bg_input"
+        android:foreground="@drawable/ripple_surface"
         android:gravity="center_vertical"
+        android:addStatesFromChildren="true"
         android:orientation="horizontal"
         android:paddingStart="14dp"
         android:paddingEnd="14dp">
@@ -125,7 +130,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:gravity="center_vertical|start"
-            android:hint="1.200.000.000"
+            android:hint="@string/hint_price"
             android:inputType="numberDecimal"
             android:padding="0dp" />
 
@@ -148,7 +153,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Fee (Optional)"
+        android:text="@string/fee_optional"
             android:textColor="@color/investa_text_secondary"
             android:textSize="11sp" />
 
@@ -163,13 +168,13 @@
     <EditText
         android:id="@+id/transaction_fee"
         style="@style/FormInput"
-        android:hint="Rp 25.000"
+        android:hint="@string/hint_fee"
         android:inputType="numberDecimal" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Notes"
+        android:text="@string/notes"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -177,14 +182,14 @@
         android:id="@+id/transaction_notes"
         style="@style/FormInput"
         android:gravity="center_vertical|start"
-        android:hint="Ex: DCA weekly"
+        android:hint="@string/hint_transaction_notes"
         android:inputType="textMultiLine"
         android:minLines="3" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Total"
+        android:text="@string/total"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -194,7 +199,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="14dp"
-        android:text="Rp 6.025.000"
+        android:text="@string/dummy_transaction_total"
         android:textColor="@color/investa_text"
         android:textSize="18sp"
         android:textStyle="bold" />
@@ -205,8 +210,9 @@
         android:layout_height="52dp"
         android:layout_marginTop="6dp"
         android:background="@drawable/bg_primary_button"
+        android:foreground="@drawable/ripple_button"
         android:gravity="center"
-        android:text="Save Transaction"
+        android:text="@string/save_transaction"
         android:textColor="@color/investa_background"
         android:textSize="14sp"
         android:textStyle="bold" />

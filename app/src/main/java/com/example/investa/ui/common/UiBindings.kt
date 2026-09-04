@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.example.investa.R
 import com.example.investa.model.Asset
+import com.example.investa.utils.localizedCategory
 
 internal fun addAssetRow(
     context: Context,
@@ -27,10 +28,10 @@ internal fun addAssetRow(
     parent.addView(row)
 }
 
-private fun bindAsset(row: View, asset: Asset, compact: Boolean, percentage: String? = null) {
+internal fun bindAsset(row: View, asset: Asset, compact: Boolean, percentage: String? = null) {
     row.findViewById<TextView>(R.id.asset_name).text = asset.name
     row.findViewById<TextView>(R.id.asset_symbol).text = asset.symbol
-    row.findViewById<TextView>(R.id.asset_category).text = asset.category
+    row.findViewById<TextView>(R.id.asset_category).text = localizedCategory(row.context, asset.category)
     row.findViewById<TextView>(R.id.asset_quantity).text = asset.quantity
     row.findViewById<TextView>(R.id.asset_value).text = asset.value
     row.findViewById<TextView>(R.id.asset_profit).text = percentage ?: asset.profitPercent
@@ -52,6 +53,11 @@ internal fun bindLegendRows(legend: ViewGroup, values: List<Pair<String, Int>>) 
             row.findViewById<TextView>(R.id.legend_label).text = label
             row.findViewById<TextView>(R.id.legend_percent).text = "${percent}%"
             tint(row.findViewById(R.id.legend_dot), chartColor(index))
+            (row.layoutParams as? LinearLayout.LayoutParams)?.let { params ->
+                params.bottomMargin = if (index == values.lastIndex) 0 else row.context.resources
+                    .getDimensionPixelSize(R.dimen.allocation_legend_row_spacing)
+                row.layoutParams = params
+            }
         }
     }
 }
@@ -61,13 +67,17 @@ internal fun addReportSummaryRow(
     summary: ViewGroup,
     label: String,
     amount: String,
-    percentage: String
+    percentage: String,
+    onClick: (() -> Unit)? = null
 ) {
     val row = LayoutInflater.from(context)
         .inflate(R.layout.view_category_summary_row, summary, false)
     row.findViewById<TextView>(R.id.summary_category).text = label
     row.findViewById<TextView>(R.id.summary_amount).text = amount
     row.findViewById<TextView>(R.id.summary_percentage).text = percentage
+    row.isClickable = onClick != null
+    row.isFocusable = onClick != null
+    row.setOnClickListener { onClick?.invoke() }
     summary.addView(row)
 }
 

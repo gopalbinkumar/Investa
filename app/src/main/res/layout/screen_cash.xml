@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="42dp"
             android:gravity="center"
-            android:text="Cash"
+            android:text="@string/cash"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="Manage your available cash"
+            android:text="@string/manage_available_cash"
             android:textColor="@color/investa_text_secondary"
             android:textSize="13sp" />
 
@@ -42,7 +42,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Total Cash"
+                android:text="@string/total_cash"
                 android:textColor="@color/investa_text_secondary"
                 android:textSize="12sp" />
 
@@ -51,17 +51,25 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Rp 0"
+                android:text="@string/zero_amount"
                 android:textColor="@color/investa_text"
                 android:textSize="24sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/cash_total_usd_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="16sp" />
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Cash Accounts"
+            android:text="@string/cash_accounts"
             android:textColor="@color/investa_text"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -79,6 +87,7 @@
             android:layout_height="52dp"
             android:layout_marginTop="22dp"
             android:background="@drawable/bg_primary_button"
+            android:foreground="@drawable/ripple_button"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -93,7 +102,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Add Cash"
+                android:text="@string/add_cash"
                 android:textColor="@color/investa_background"
                 android:textSize="14sp"
                 android:textStyle="bold" />

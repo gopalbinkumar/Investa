@@ -28,8 +28,14 @@ internal class PortfolioMarkerView(
         if (labels.isEmpty()) return
         val index = e?.x?.roundToInt()?.coerceIn(0, labels.lastIndex) ?: return
         dateView.text = labels[index]
-        valueView.text = "Current Val  ${formatAmount(currentValues[index].toDouble(), "IDR", 0)}"
-        investedView.text = "Invested  ${formatAmount(investedValues[index].toDouble(), "IDR", 0)}"
+        valueView.text = context.getString(
+            R.string.current_val_marker,
+            formatAmount(currentValues[index].toDouble(), "IDR", 0)
+        )
+        investedView.text = context.getString(
+            R.string.invested_marker,
+            formatAmount(investedValues[index].toDouble(), "IDR", 0)
+        )
         super.refreshContent(e, highlight)
     }
 

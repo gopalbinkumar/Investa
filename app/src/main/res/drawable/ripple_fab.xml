@@ -1,0 +1,8 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="@color/investa_ripple_on_primary" />
+        </shape>
+    </item>
+    <item android:drawable="@android:color/transparent" />
+</selector>

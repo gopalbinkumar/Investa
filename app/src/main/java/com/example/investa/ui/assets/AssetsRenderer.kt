@@ -10,6 +10,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.investa.R
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.utils.localizedCategory
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
@@ -45,16 +46,22 @@ internal class AssetsRenderer(private val host: ScreenHost) {
     private fun setupTabsAndPager(tabs: TabLayout, viewPager: ViewPager2) {
         tabLayout = tabs
         pager = viewPager
-        pagerAdapter = AssetCategoryPagerAdapter { asset ->
+        val adapter = AssetCategoryPagerAdapter { asset ->
             host.selectedAsset = asset
             host.showScreen(AppScreen.DETAIL)
         }
-        viewPager.adapter = pagerAdapter
+        adapter.updateAssets(
+            host.databaseAssets,
+            host.exchangeRateFor("USD"),
+            notifyAdapter = false
+        )
+        pagerAdapter = adapter
+        viewPager.adapter = adapter
         viewPager.offscreenPageLimit = 1
 
         tabMediator = TabLayoutMediator(tabs, viewPager) { tab, position ->
-            tab.text = assetPagerCategories[position]
-            tab.contentDescription = assetPagerCategories[position]
+            tab.text = localizedCategory(host.activity, assetPagerCategories[position])
+            tab.contentDescription = localizedCategory(host.activity, assetPagerCategories[position])
             tab.customView = createTabView(assetPagerCategories[position])
         }.also { it.attach() }
 
@@ -85,7 +92,8 @@ internal class AssetsRenderer(private val host: ScreenHost) {
     }
 
     private fun createTabView(category: String): TextView = TextView(host.activity).apply {
-        text = category
+        text = localizedCategory(host.activity, category)
+        gravity = android.view.Gravity.CENTER
         textSize = 12f
         setPadding(host.dp(17), host.dp(9), host.dp(17), host.dp(9))
         layoutParams = ViewGroup.LayoutParams(
@@ -125,6 +133,6 @@ internal class AssetsRenderer(private val host: ScreenHost) {
             position == 0 || asset.category == assetPagerCategories[position]
         }
         val root = host.assetsRoot ?: return
-        root.findViewById<TextView>(R.id.asset_count).text = "$count Assets"
+        root.findViewById<TextView>(R.id.asset_count).text = host.activity.getString(R.string.assets_count, count)
     }
 }

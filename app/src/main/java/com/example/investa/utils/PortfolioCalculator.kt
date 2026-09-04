@@ -1,5 +1,7 @@
 package com.example.investa.utils
 
+import android.content.Context
+import com.example.investa.R
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.model.Asset
@@ -7,7 +9,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun AssetEntity.toUiAsset(): Asset {
+fun AssetEntity.toUiAsset(context: Context? = null): Asset {
     val currentValueAmount = quantity * currentPrice
     val profitAmount = quantity * (currentPrice - averagePrice)
     val profitPercentage = if (averagePrice == 0.0) 0.0 else {
@@ -15,10 +17,10 @@ fun AssetEntity.toUiAsset(): Asset {
     }
     val quantityUnit = when (category) {
         "Crypto" -> symbol
-        "ID Stocks", "US Stocks" -> "share(s)"
-        "Mutual Fund", "Bonds" -> "Unit(s)"
-        "Gold" -> "gr"
-        else -> "unit(s)"
+        "ID Stocks", "US Stocks" -> context?.getString(R.string.unit_shares) ?: "share(s)"
+        "Mutual Fund", "Bonds" -> context?.getString(R.string.unit_units) ?: "unit(s)"
+        "Gold" -> context?.getString(R.string.unit_grams) ?: "gr"
+        else -> context?.getString(R.string.unit_units) ?: "unit(s)"
     }
     val quantityText = "${formatQuantityValue(quantity)} $quantityUnit"
     return Asset(
@@ -33,7 +35,8 @@ fun AssetEntity.toUiAsset(): Asset {
         averagePrice = formatAmount(averagePrice, currency),
         currentPrice = formatAmount(currentPrice, currency),
         notes = notes,
-        addedOn = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).format(Date(createdAt)),
+        addedOn = context?.let { formatAssetDate(it, createdAt) }
+            ?: SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).format(Date(createdAt)),
         id = id,
         currency = currency
     )

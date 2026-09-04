@@ -17,6 +17,7 @@
             android:layout_height="24dp"
             android:layout_gravity="start|center_vertical"
             android:contentDescription="@string/back"
+            android:foreground="@drawable/ripple_icon"
             android:src="@drawable/ic_lucide_arrow_left"
             android:tint="@color/investa_icon_primary" />
 
@@ -25,19 +26,35 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Change Exchange Rate"
+            android:text="@string/change_exchange_rate"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <ImageView
+        <FrameLayout
             android:id="@+id/exchange_rate_refresh"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="end|center_vertical"
-            android:contentDescription="Refresh exchange rate"
-            android:src="@drawable/ic_lucide_rotate_cw"
-            android:tint="@color/investa_icon_primary" />
+            android:contentDescription="@string/refresh_exchange_rate"
+            android:foreground="@drawable/ripple_icon">
+
+            <ImageView
+                android:id="@+id/exchange_rate_refresh_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_lucide_rotate_cw"
+                android:tint="@color/investa_icon_primary" />
+
+            <ProgressBar
+                android:id="@+id/exchange_rate_refresh_progress"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/investa_primary"
+                android:visibility="gone" />
+        </FrameLayout>
     </FrameLayout>
 
     <ScrollView
@@ -58,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
-                android:text="Currency"
+                android:text="@string/currency"
                 android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
 
@@ -77,14 +94,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="USD"
+                    android:text="@string/currency_usd"
                     android:textColor="@color/investa_text"
                     android:textSize="13sp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="US Dollar"
+                    android:text="@string/us_dollar"
                     android:textColor="@color/investa_text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
@@ -92,21 +109,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Exchange Rate"
+                android:text="@string/exchange_rate"
                 android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
 
             <EditText
                 android:id="@+id/exchange_rate_input"
                 style="@style/FormInput"
-                android:hint="Ex: 16.500"
+                android:hint="@string/hint_exchange_rate"
                 android:inputType="numberDecimal" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="-8dp"
-                android:text="1 USD equals how many IDR"
+                android:text="@string/exchange_rate_description"
                 android:textColor="@color/investa_icon_inactive"
                 android:textSize="11sp" />
 
@@ -116,8 +133,9 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="24dp"
                 android:background="@drawable/bg_primary_button"
+                android:foreground="@drawable/ripple_button"
                 android:gravity="center"
-                android:text="Save Changes"
+                android:text="@string/save_changes"
                 android:textColor="@color/investa_background"
                 android:textSize="14sp"
                 android:textStyle="bold" />

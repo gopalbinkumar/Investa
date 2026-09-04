@@ -10,7 +10,6 @@ import android.widget.PopupMenu
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
-import android.widget.Toast
 import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.R
 import com.example.investa.model.Asset
@@ -23,10 +22,12 @@ import com.example.investa.utils.formatTransactionDate
 import com.example.investa.utils.installDecimalInputFormatter
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
+import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.parseTransactionDate
 import com.example.investa.utils.parseTransactionQuantity
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.quantityUnitHint
+import com.example.investa.utils.LanguageManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
@@ -55,15 +56,15 @@ internal class TransactionHandler(private val host: ScreenHost) {
         val notesInput = drawer.findViewById<EditText>(R.id.transaction_notes)
         val total = drawer.findViewById<TextView>(R.id.transaction_total)
         val saveButton = drawer.findViewById<View>(R.id.transaction_save)
-        val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
+        val dateFormat = SimpleDateFormat("dd MMMM yyyy", LanguageManager.locale(host.activity))
 
         drawer.findViewById<TextView>(R.id.transaction_price_label).text =
-            if (isBuy) "Buy Price" else "Sell Price"
-        quantityUnit.text = quantityUnitHint(asset.category, asset.symbol)
-        priceUnit.text = priceUnitSuffix(asset.category, asset.symbol)
+            host.activity.getString(if (isBuy) R.string.buy_price else R.string.sell_price)
+        quantityUnit.text = quantityUnitHint(host.activity, asset.category, asset.symbol)
+        priceUnit.text = priceUnitSuffix(host.activity, asset.category, asset.symbol)
         dateInput.setText(
-            transaction?.let { formatTransactionDate(it.date) }
-                ?: SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH).format(Date())
+            transaction?.let { formatTransactionDate(host.activity, it.date) }
+                ?: dateFormat.format(Date())
         )
         fun selectedCurrency(): String = asset.currency
         quantityInput.setText(
@@ -81,7 +82,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
 
         fun showDatePicker() {
             val selectedDate = Calendar.getInstance().apply {
-                timeInMillis = parseTransactionDate(dateInput.text.toString())
+                timeInMillis = parseTransactionDate(host.activity, dateInput.text.toString())
             }
             DatePickerDialog(
                 host.activity,
@@ -123,7 +124,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
 
         saveButton.setOnClickListener {
             if (transaction == null && asset.id == 0L) {
-                Toast.makeText(host.activity, "Save the asset before adding a transaction", Toast.LENGTH_SHORT).show()
+                host.activity.showInvestaToast(host.activity.getString(R.string.save_asset_first))
                 return@setOnClickListener
             }
             val quantity = parseTransactionQuantity(quantityInput.text.toString())
@@ -133,17 +134,17 @@ internal class TransactionHandler(private val host: ScreenHost) {
             val now = System.currentTimeMillis()
             when {
                 quantity == null || quantity <= 0.0 -> quantityInput.apply {
-                    error = "Enter a valid quantity"; requestFocus()
+                    error = host.activity.getString(R.string.valid_quantity); requestFocus()
                 }
                 price == null || price <= 0.0 -> priceInput.apply {
-                    error = "Enter a valid price"; requestFocus()
+                    error = host.activity.getString(R.string.valid_price); requestFocus()
                 }
                 fee < 0.0 -> feeInput.apply {
-                    error = "Enter a valid fee"; requestFocus()
+                    error = host.activity.getString(R.string.valid_fee); requestFocus()
                 }
                 else -> {
                     val updatedTransaction = transaction?.copy(
-                        date = parseTransactionDate(dateInput.text.toString()),
+                        date = parseTransactionDate(host.activity, dateInput.text.toString()),
                         quantity = quantity,
                         price = price,
                         fee = fee,
@@ -158,10 +159,10 @@ internal class TransactionHandler(private val host: ScreenHost) {
                             onSaved = {
                                 host.refreshTransactions()
                                 dialog.dismiss()
-                                Toast.makeText(host.activity, "Transaction updated", Toast.LENGTH_SHORT).show()
+                                host.activity.showInvestaToast(host.activity.getString(R.string.transaction_updated))
                             },
                             onError = { message ->
-                                Toast.makeText(host.activity, message, Toast.LENGTH_SHORT).show()
+                                host.activity.showInvestaToast(message)
                             }
                         )
                     } else {
@@ -169,7 +170,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
                             TransactionEntity(
                                 assetId = asset.id,
                                 action = if (isBuy) "BUY" else "SELL",
-                                date = parseTransactionDate(dateInput.text.toString()),
+                                date = parseTransactionDate(host.activity, dateInput.text.toString()),
                                 quantity = quantity,
                                 price = price,
                                 fee = fee,
@@ -183,10 +184,10 @@ internal class TransactionHandler(private val host: ScreenHost) {
                             onSaved = {
                                 host.refreshTransactions()
                                 dialog.dismiss()
-                                Toast.makeText(host.activity, "Transaction added", Toast.LENGTH_SHORT).show()
+                                host.activity.showInvestaToast(host.activity.getString(R.string.transaction_added))
                             },
                             onError = { message ->
-                                Toast.makeText(host.activity, message, Toast.LENGTH_SHORT).show()
+                                host.activity.showInvestaToast(message)
                             }
                         )
                     }
@@ -195,7 +196,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
         }
 
         if (transaction != null) {
-            title.text = "Transaction Detail"
+            title.text = host.activity.getString(R.string.transaction_detail)
             moreButton.visibility = View.VISIBLE
             moreButton.setOnClickListener { showTransactionOptions(moreButton, transaction, dialog) }
             saveButton.visibility = View.GONE
@@ -241,9 +242,9 @@ internal class TransactionHandler(private val host: ScreenHost) {
         dialog: BottomSheetDialog
     ) {
         PopupMenu(host.activity, anchor).apply {
-            menu.add("Delete")
+            menu.add(R.string.delete)
             setOnMenuItemClickListener { item ->
-                if (item.title.toString() == "Delete") {
+                if (item.itemId == 0 || item.title.toString() == host.activity.getString(R.string.delete)) {
                     confirmDeleteTransaction(transaction, dialog)
                     true
                 } else {
@@ -255,19 +256,19 @@ internal class TransactionHandler(private val host: ScreenHost) {
 
     private fun confirmDeleteTransaction(transaction: TransactionEntity, dialog: BottomSheetDialog) {
         AlertDialog.Builder(host.activity)
-            .setTitle("Delete Transaction")
-            .setMessage("Delete this transaction?")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle(host.activity.getString(R.string.delete_transaction))
+            .setMessage(host.activity.getString(R.string.delete_transaction_message))
+            .setNegativeButton(host.activity.getString(R.string.cancel), null)
+            .setPositiveButton(host.activity.getString(R.string.delete)) { _, _ ->
                 host.transactionViewModel.deleteTransaction(
                     transaction = transaction,
                     onDeleted = {
                         host.refreshTransactions()
                         dialog.dismiss()
-                        Toast.makeText(host.activity, "Transaction deleted", Toast.LENGTH_SHORT).show()
+                        host.activity.showInvestaToast(host.activity.getString(R.string.transaction_deleted))
                     },
                     onError = { message ->
-                        Toast.makeText(host.activity, message, Toast.LENGTH_SHORT).show()
+                        host.activity.showInvestaToast(message)
                     }
                 )
             }

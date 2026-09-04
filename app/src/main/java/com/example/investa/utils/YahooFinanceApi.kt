@@ -2,6 +2,8 @@ package com.example.investa.utils
 
 import android.net.Uri
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -24,6 +26,8 @@ internal object YahooFinanceApi {
         for (baseUrl in BASE_URLS) {
             try {
                 return@withContext fetchFromEndpoint("$baseUrl$encodedSymbol?range=1d&interval=5m&includePrePost=true&events=div%2Csplits&lang=en-US&region=US")
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Throwable) {
                 lastError = error
             }
@@ -31,7 +35,7 @@ internal object YahooFinanceApi {
         error("Yahoo Finance unavailable: ${lastError?.message ?: "unknown network error"}")
     }
 
-    private fun fetchFromEndpoint(endpoint: String): Double {
+    private suspend fun fetchFromEndpoint(endpoint: String): Double = withContext(Dispatchers.IO) {
         val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 15_000
@@ -43,14 +47,18 @@ internal object YahooFinanceApi {
             setRequestProperty("Cache-Control", "no-cache")
             setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile) AppleWebKit/537.36 Chrome/120 Safari/537.36")
         }
+        val cancellationHandle = coroutineContext[Job]?.invokeOnCompletion {
+            connection.disconnect()
+        }
         try {
             val responseCode = connection.responseCode
             if (responseCode !in 200..299) {
                 error("HTTP $responseCode")
             }
             val response = connection.inputStream.bufferedReader().use { it.readText() }
-            return parseQuote(response)
+            return@withContext parseQuote(response)
         } finally {
+            cancellationHandle?.dispose()
             connection.disconnect()
         }
     }

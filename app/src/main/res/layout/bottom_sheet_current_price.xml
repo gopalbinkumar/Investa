@@ -18,28 +18,43 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Change Current Price"
+            android:text="@string/change_current_price"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <ImageButton
+        <FrameLayout
             android:id="@+id/current_price_refresh"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="end|center_vertical"
-            android:background="@android:color/transparent"
-            android:contentDescription="Refresh current price"
-            android:padding="4dp"
-            android:src="@drawable/ic_lucide_rotate_cw"
-            android:tint="@color/investa_icon_secondary" />
+            android:contentDescription="@string/refresh_current_price"
+            android:foreground="@drawable/ripple_icon">
+
+            <ImageView
+                android:id="@+id/current_price_refresh_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_lucide_rotate_cw"
+                android:tint="@color/investa_icon_secondary" />
+
+            <ProgressBar
+                android:id="@+id/current_price_refresh_progress"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/investa_primary"
+                android:visibility="gone" />
+        </FrameLayout>
     </FrameLayout>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
-        android:text="Current Price"
+            android:text="@string/current_price"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -49,7 +64,9 @@
         android:layout_marginTop="6dp"
         android:layout_marginBottom="14dp"
         android:background="@drawable/bg_input"
+        android:foreground="@drawable/ripple_surface"
         android:gravity="center_vertical"
+        android:addStatesFromChildren="true"
         android:orientation="horizontal"
         android:paddingStart="14dp"
         android:paddingEnd="14dp">
@@ -64,7 +81,7 @@
             android:layout_weight="1"
             android:background="@android:color/transparent"
             android:gravity="center_vertical|start"
-            android:hint="1.200.000.000"
+            android:hint="@string/hint_price"
             android:inputType="numberDecimal"
             android:padding="0dp" />
 
@@ -83,8 +100,9 @@
         android:layout_height="52dp"
         android:layout_marginTop="6dp"
         android:background="@drawable/bg_primary_button"
+        android:foreground="@drawable/ripple_button"
         android:gravity="center"
-        android:text="Save"
+        android:text="@string/save"
         android:textColor="@color/investa_background"
         android:textSize="14sp"
         android:textStyle="bold" />

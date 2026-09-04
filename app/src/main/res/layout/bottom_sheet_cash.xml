@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Add Cash"
+        android:text="@string/add_cash"
         android:textColor="@color/investa_text"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="22dp"
-        android:text="Currency"
+        android:text="@string/currency"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
@@ -35,14 +35,14 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Amount"
+        android:text="@string/amount"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
 
     <EditText
         android:id="@+id/cash_amount"
         style="@style/FormInput"
-        android:hint="Rp 1.000.000"
+        android:hint="@string/hint_cash_amount"
         android:inputType="numberDecimal" />
 
     <TextView
@@ -51,8 +51,9 @@
         android:layout_height="52dp"
         android:layout_marginTop="6dp"
         android:background="@drawable/bg_primary_button"
+        android:foreground="@drawable/ripple_button"
         android:gravity="center"
-        android:text="Save Cash"
+        android:text="@string/save_cash"
         android:textColor="@color/investa_background"
         android:textSize="14sp"
         android:textStyle="bold" />

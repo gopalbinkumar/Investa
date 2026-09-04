@@ -2,6 +2,7 @@ package com.example.investa.navigation
 
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ScrollView
 import androidx.activity.ComponentActivity
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.CashAccountEntity
@@ -19,6 +20,7 @@ internal interface ScreenHost {
     val contentContainer: ViewGroup
     val bottomNavigation: View
     var currentScreen: AppScreen
+    var detailOrigin: AppScreen
     var selectedCategory: String
     var assetsRoot: View?
     var databaseAssets: List<AssetEntity>
@@ -44,6 +46,7 @@ internal class AppNavigator(
     private val renderScreen: (AppScreen) -> Unit
 ) {
     private var hasRenderedInitialScreen = false
+    private var reportScrollYBeforeDetail = 0
 
     fun setupBottomNavigation() {
         host.activity.findViewById<View>(R.id.nav_home)
@@ -63,6 +66,19 @@ internal class AppNavigator(
     fun showScreen(screen: AppScreen) {
         if (screen == host.currentScreen && hasRenderedInitialScreen) return
         val isInitialScreen = !hasRenderedInitialScreen
+        val previousScreen = host.currentScreen
+        if (screen == AppScreen.DETAIL && previousScreen in setOf(AppScreen.ASSETS, AppScreen.REPORTS)) {
+            host.detailOrigin = previousScreen
+            if (previousScreen == AppScreen.REPORTS) {
+                reportScrollYBeforeDetail =
+                    host.contentContainer.findViewById<ScrollView>(R.id.reports_scroll)?.scrollY ?: 0
+            }
+        }
+        val shouldRestoreReportScroll =
+            screen == AppScreen.REPORTS &&
+                previousScreen == AppScreen.DETAIL &&
+                host.detailOrigin == AppScreen.REPORTS
+        val reportScrollY = if (shouldRestoreReportScroll) reportScrollYBeforeDetail else 0
         val transition = when {
             screen == host.currentScreen -> ScreenTransition.FORWARD
             screenOrder(screen) >= screenOrder(host.currentScreen) -> ScreenTransition.FORWARD
@@ -96,6 +112,13 @@ internal class AppNavigator(
         }
         host.contentContainer.removeAllViews()
         renderScreen(screen)
+        if (shouldRestoreReportScroll) {
+            host.contentContainer.findViewById<ScrollView>(R.id.reports_scroll)?.let { reportsScroll ->
+                reportsScroll.post {
+                    reportsScroll.scrollTo(0, reportScrollY)
+                }
+            }
+        }
         if (!isInitialScreen) {
             host.contentContainer.animate()
                 .translationX(0f)
@@ -110,10 +133,15 @@ internal class AppNavigator(
 
     fun handleBack(): Boolean = when (host.currentScreen) {
         AppScreen.THEME -> { showScreen(AppScreen.SETTINGS); true }
+        AppScreen.LANGUAGE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.EXCHANGE_RATE -> { showScreen(AppScreen.SETTINGS); true }
-        AppScreen.DETAIL -> { showScreen(AppScreen.ASSETS); true }
+        AppScreen.DETAIL -> { showScreen(host.detailOrigin); true }
         AppScreen.ADD -> { showScreen(AppScreen.ASSETS); true }
         AppScreen.EDIT -> { showScreen(AppScreen.DETAIL); true }
+        AppScreen.ASSETS,
+        AppScreen.CASH,
+        AppScreen.REPORTS,
+        AppScreen.SETTINGS -> { showScreen(AppScreen.HOME); true }
         else -> false
     }
 
@@ -124,10 +152,11 @@ internal class AppNavigator(
         AppScreen.REPORTS -> 3
         AppScreen.SETTINGS -> 4
         AppScreen.THEME -> 5
-        AppScreen.EXCHANGE_RATE -> 6
-        AppScreen.DETAIL -> 7
-        AppScreen.ADD -> 8
-        AppScreen.EDIT -> 9
+        AppScreen.LANGUAGE -> 6
+        AppScreen.EXCHANGE_RATE -> 7
+        AppScreen.DETAIL -> 8
+        AppScreen.ADD -> 9
+        AppScreen.EDIT -> 10
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {

@@ -24,6 +24,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="start|center_vertical"
                 android:contentDescription="@string/back"
+                android:foreground="@drawable/ripple_icon"
                 android:src="@drawable/ic_lucide_arrow_left"
                 android:tint="@color/investa_icon_primary" />
 
@@ -31,7 +32,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Asset Detail"
+                android:text="@string/asset_detail"
                 android:textColor="@color/investa_text"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -42,6 +43,7 @@
                 android:layout_height="24dp"
                 android:layout_gravity="end|center_vertical"
                 android:contentDescription="@string/more_options"
+                android:foreground="@drawable/ripple_icon"
                 android:src="@drawable/ic_lucide_more_vertical"
                 android:tint="@color/investa_icon_primary" />
         </FrameLayout>
@@ -116,8 +118,9 @@
             android:layout_height="52dp"
             android:layout_marginTop="22dp"
             android:background="@drawable/bg_outline_button"
+            android:foreground="@drawable/ripple_button"
             android:gravity="center"
-            android:text="Change Current Price"
+            android:text="@string/change_current_price"
             android:textColor="@color/investa_primary"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -134,13 +137,14 @@
                 android:layout_height="50dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_buy_button"
+                android:foreground="@drawable/ripple_buy"
                 android:gravity="center"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Buy"
+                    android:text="@string/buy"
                     android:textColor="@color/investa_buy"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -155,13 +159,14 @@
                 android:layout_height="50dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_sell_button"
+                android:foreground="@drawable/ripple_loss"
                 android:gravity="center"
                 android:orientation="horizontal">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sell"
+                    android:text="@string/sell"
                     android:textColor="@color/investa_loss"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -171,7 +176,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="History"
+            android:text="@string/history"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />

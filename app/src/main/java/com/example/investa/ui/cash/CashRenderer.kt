@@ -9,7 +9,6 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.Toast
 import com.example.investa.R
 import com.example.investa.data.entity.CashAccountEntity
 import com.example.investa.data.entity.CurrencyEntity
@@ -18,6 +17,8 @@ import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
+import com.example.investa.utils.showInvestaToast
+import com.example.investa.utils.localizedCurrencyName
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
@@ -32,6 +33,8 @@ internal class CashRenderer(private val host: ScreenHost) {
         }
         root.findViewById<TextView>(R.id.cash_total_value).text =
             formatAmount(totalCash, "IDR", "Rp", 0)
+        root.findViewById<TextView>(R.id.cash_total_usd_value).text =
+            formatAmount(totalCash / host.exchangeRateFor("USD").coerceAtLeast(1.0), "USD", "\$", 2)
 
         val accountsContainer = root.findViewById<LinearLayout>(R.id.cash_accounts_container)
         host.databaseCashAccounts
@@ -42,14 +45,17 @@ internal class CashRenderer(private val host: ScreenHost) {
                 val row = LayoutInflater.from(host.activity)
                     .inflate(R.layout.view_cash_account, accountsContainer, false)
                 row.findViewById<TextView>(R.id.cash_account_code).text = currency.code
-                row.findViewById<TextView>(R.id.cash_account_name).text = currency.name
+                row.findViewById<TextView>(R.id.cash_account_name).text = localizedCurrencyName(host.activity, currency)
                 row.findViewById<TextView>(R.id.cash_account_balance).text =
                     formatAmount(account.balance, currency.code, currency.symbol, 2)
                 row.findViewById<TextView>(R.id.cash_account_idr_value).apply {
                     if (currency.code == "IDR") {
                         visibility = View.GONE
                     } else {
-                        text = "≈ ${formatAmount(account.balance * exchangeRate(currency.code), "IDR", "Rp", 0)}"
+                        text = host.activity.getString(
+                            R.string.approx_amount,
+                            formatAmount(account.balance * exchangeRate(currency.code), "IDR", "Rp", 0)
+                        )
                     }
                 }
                 row.setOnClickListener { showCashDrawer(account) }
@@ -76,8 +82,8 @@ internal class CashRenderer(private val host: ScreenHost) {
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         currencySpinner.setSelection(currencyCodes.indexOf(initialCurrency).coerceAtLeast(0))
         currencySpinner.isEnabled = account == null
-        title.text = if (account == null) "Add Cash" else "Edit Cash"
-        saveButton.text = if (account == null) "Save Cash" else "Save Changes"
+        title.text = host.activity.getString(if (account == null) R.string.add_cash else R.string.edit_cash)
+        saveButton.text = host.activity.getString(if (account == null) R.string.save_cash else R.string.save_changes)
 
         fun selectedCurrency(): String = currencySpinner.selectedItem?.toString() ?: "IDR"
         amountInput.setText(
@@ -99,8 +105,8 @@ internal class CashRenderer(private val host: ScreenHost) {
         saveButton.setOnClickListener {
             val amount = parseMoneyInput(amountInput.text.toString())
             when {
-                amount == null || amount <= 0.0 -> {
-                    amountInput.error = "Enter a valid amount"
+                amount == null || amount < 0.0 -> {
+                    amountInput.error = host.activity.getString(R.string.valid_amount)
                     amountInput.requestFocus()
                 }
                 account == null -> host.cashViewModel.addCash(
@@ -108,7 +114,7 @@ internal class CashRenderer(private val host: ScreenHost) {
                     amount,
                     onSaved = {
                         dialog.dismiss()
-                        Toast.makeText(host.activity, "Cash added", Toast.LENGTH_SHORT).show()
+                        host.activity.showInvestaToast(host.activity.getString(R.string.cash_added))
                     },
                     onError = { message -> showError(message) }
                 )
@@ -117,7 +123,7 @@ internal class CashRenderer(private val host: ScreenHost) {
                     amount,
                     onSaved = {
                         dialog.dismiss()
-                        Toast.makeText(host.activity, "Cash updated", Toast.LENGTH_SHORT).show()
+                        host.activity.showInvestaToast(host.activity.getString(R.string.cash_updated))
                     },
                     onError = { message -> showError(message) }
                 )
@@ -143,7 +149,7 @@ internal class CashRenderer(private val host: ScreenHost) {
 
     private fun fallbackCurrency(code: String): CurrencyEntity = CurrencyEntity(
         code = code,
-        name = if (code == "USD") "US Dollar" else "Indonesian Rupiah",
+        name = if (code == "USD") host.activity.getString(R.string.us_dollar) else host.activity.getString(R.string.indonesian_rupiah),
         symbol = if (code == "USD") "$" else "Rp",
         exchangeRate = if (code == "USD") 16500.0 else 1.0,
         updatedAt = 0L,
@@ -156,6 +162,6 @@ internal class CashRenderer(private val host: ScreenHost) {
             ?: if (code == "USD") 16500.0 else 1.0
 
     private fun showError(message: String) {
-        Toast.makeText(host.activity, message, Toast.LENGTH_SHORT).show()
+        host.activity.showInvestaToast(message)
     }
 }

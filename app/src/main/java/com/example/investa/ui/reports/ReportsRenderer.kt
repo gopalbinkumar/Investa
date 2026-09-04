@@ -13,11 +13,13 @@ import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addReportSummaryRow
 import com.example.investa.ui.common.setReportToggle
 import com.example.investa.utils.assetCategories
+import com.example.investa.utils.localizedCategory
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.toIdrDisplay
 import com.example.investa.utils.toUiAsset
+import com.example.investa.utils.LanguageManager
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -33,15 +35,20 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 internal class ReportsRenderer(private val host: ScreenHost) {
+    private var summaryByAsset = false
+    private var reportsRoot: android.view.View? = null
+
     fun render() {
-        host.contentContainer.removeAllViews()
-        val root = host.inflate(R.layout.screen_reports)
-        host.attach(root)
+        val root = reportsRoot ?: host.inflate(R.layout.screen_reports).also { reportsRoot = it }
+        val categoryToggle = root.findViewById<TextView>(R.id.toggle_category)
+        val assetToggle = root.findViewById<TextView>(R.id.toggle_asset)
+        setReportToggle(host.activity, categoryToggle, assetToggle, !summaryByAsset)
+        if (root.parent == null) host.attach(root)
         root.findViewById<android.widget.ImageView>(R.id.reports_back)
             .setOnClickListener { host.showScreen(AppScreen.HOME) }
         val usdExchangeRate = host.exchangeRateFor("USD")
         val displayAssets = host.databaseAssets.map { asset ->
-            asset.toUiAsset().toIdrDisplay(usdExchangeRate)
+            asset.toUiAsset(host.activity).toIdrDisplay(usdExchangeRate)
         }
         val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
         val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
@@ -86,6 +93,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         fun renderSummary(byAsset: Boolean) {
             summary.removeAllViews()
             if (byAsset) {
+                summary.background = null
+                summary.setPadding(0, 0, 0, 0)
                 val groupedAssets = displayAssets.groupBy { it.category }
                 val categories = assetCategories + groupedAssets.keys
                     .filterNot { it in assetCategories }
@@ -99,43 +108,78 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                         .orEmpty()
                     if (categoryAssets.isEmpty()) return@forEach
 
-                    summary.addView(TextView(host.activity).apply {
-                        text = category
-                        setTextColor(ContextCompat.getColor(host.activity, R.color.investa_text_secondary))
-                        textSize = 12f
-                        setTypeface(typeface, android.graphics.Typeface.BOLD)
-                        val topMargin = if (summary.childCount == 0) 0 else host.dp(12)
+                    val categoryCard = LinearLayout(host.activity).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setBackgroundResource(R.drawable.bg_surface)
+                        setPadding(0, host.dp(16), 0, host.dp(16))
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT
                         ).apply {
-                            this.topMargin = topMargin
+                            topMargin = if (summary.childCount == 0) 0 else host.dp(10)
                         }
+                    }
+                    categoryCard.addView(TextView(host.activity).apply {
+                        text = localizedCategory(host.activity, category)
+                        setTextColor(ContextCompat.getColor(host.activity, R.color.investa_text_secondary))
+                        textSize = 12f
+                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        setPadding(host.dp(16), 0, host.dp(16), 0)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        )
                     })
                     categoryAssets.forEach { asset ->
                         val value = parseMoneyInput(asset.value) ?: 0.0
                         val percentage = if (totalValue == 0.0) 0 else ((value * 100.0) / totalValue).roundToInt()
-                        addReportSummaryRow(host.activity, summary, asset.symbol, formatAmount(value, displayCurrency, 0), "$percentage%")
+                        addReportSummaryRow(
+                            host.activity,
+                            categoryCard,
+                            asset.symbol,
+                            formatAmount(value, displayCurrency, 0),
+                            "$percentage%",
+                            onClick = {
+                                host.selectedAsset = host.databaseAssets
+                                    .firstOrNull { it.id == asset.id }
+                                    ?.toUiAsset(host.activity)
+                                    ?: asset
+                                host.showScreen(AppScreen.DETAIL)
+                            }
+                        )
                     }
+                    summary.addView(categoryCard)
                 }
             } else {
+                summary.setBackgroundResource(R.drawable.bg_surface)
+                summary.setPadding(0, host.dp(16), 0, host.dp(16))
                 assetCategories.forEach { category ->
                     val value = displayAssets.filter { it.category == category }.sumOf { parseMoneyInput(it.value) ?: 0.0 }
                     val percentage = if (totalValue == 0.0) 0 else ((value * 100.0) / totalValue).roundToInt()
-                    addReportSummaryRow(host.activity, summary, category, formatAmount(value, displayCurrency, 0), "$percentage%")
+                        addReportSummaryRow(
+                            host.activity,
+                            summary,
+                            localizedCategory(host.activity, category),
+                            formatAmount(value, displayCurrency, 0),
+                            "$percentage%",
+                            onClick = {
+                                host.selectedCategory = category
+                                host.showScreen(AppScreen.ASSETS)
+                            }
+                        )
                 }
             }
         }
-        renderSummary(false)
-        val categoryToggle = root.findViewById<TextView>(R.id.toggle_category)
-        val assetToggle = root.findViewById<TextView>(R.id.toggle_asset)
+        renderSummary(summaryByAsset)
         categoryToggle.setOnClickListener {
+            summaryByAsset = false
             setReportToggle(host.activity, categoryToggle, assetToggle, true)
-            renderSummary(false)
+            renderSummary(summaryByAsset)
         }
         assetToggle.setOnClickListener {
+            summaryByAsset = true
             setReportToggle(host.activity, categoryToggle, assetToggle, false)
-            renderSummary(true)
+            renderSummary(summaryByAsset)
         }
     }
 
@@ -252,8 +296,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             extraTopOffset = 8f
             extraBottomOffset = 8f
             data = LineData(
-                dataSet(investedValues, "Invested", Color.rgb(255, 209, 102)),
-                dataSet(currentValues, "Current Value", Color.rgb(64, 162, 216))
+                dataSet(investedValues, host.activity.getString(R.string.total_invested), Color.rgb(255, 209, 102)),
+                dataSet(currentValues, host.activity.getString(R.string.current_value), Color.rgb(64, 162, 216))
             )
             invalidate()
         }
@@ -278,8 +322,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        val dateFormat = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
-        val monthFormat = SimpleDateFormat("MMM", Locale.ENGLISH)
+        val dateFormat = SimpleDateFormat("d MMM yyyy", LanguageManager.locale(host.activity))
+        val monthFormat = SimpleDateFormat("MMM", LanguageManager.locale(host.activity))
         val performance = mutableListOf<DailyPerformance>()
 
         while (!calendar.after(today)) {

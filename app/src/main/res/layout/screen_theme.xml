@@ -16,7 +16,8 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="start|center_vertical"
-            android:contentDescription="Back"
+            android:contentDescription="@string/back"
+            android:foreground="@drawable/ripple_icon"
             android:src="@drawable/ic_lucide_arrow_left"
             android:tint="@color/investa_icon_primary" />
 
@@ -24,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Theme"
+            android:text="@string/theme"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -48,7 +49,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
-                android:text="Choose your app theme"
+                android:text="@string/choose_theme"
                 android:textColor="@color/investa_text_secondary"
                 android:textSize="12sp" />
 
@@ -70,7 +71,7 @@
                     android:layout_height="52dp"
                     android:buttonTint="@color/theme_radio_tint"
                     android:gravity="center_vertical"
-                    android:text="Dark"
+                    android:text="@string/theme_dark"
                     android:textColor="@color/investa_text"
                     android:textSize="14sp" />
 
@@ -80,7 +81,7 @@
                     android:layout_height="52dp"
                     android:buttonTint="@color/theme_radio_tint"
                     android:gravity="center_vertical"
-                    android:text="Light"
+                    android:text="@string/theme_light"
                     android:textColor="@color/investa_text"
                     android:textSize="14sp" />
 
@@ -90,7 +91,48 @@
                     android:layout_height="52dp"
                     android:buttonTint="@color/theme_radio_tint"
                     android:gravity="center_vertical"
-                    android:text="System"
+                    android:text="@string/theme_system"
+                    android:textColor="@color/investa_text"
+                    android:textSize="14sp" />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:text="@string/choose_icon_theme"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="12sp" />
+
+            <RadioGroup
+                android:id="@+id/icon_theme_radio_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_surface"
+                android:orientation="vertical"
+                android:paddingStart="8dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="6dp">
+
+                <RadioButton
+                    android:id="@+id/icon_theme_light"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:buttonTint="@color/theme_radio_tint"
+                    android:gravity="center_vertical"
+                    android:text="@string/theme_light"
+                    android:textColor="@color/investa_text"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/icon_theme_dark"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:buttonTint="@color/theme_radio_tint"
+                    android:gravity="center_vertical"
+                    android:text="@string/theme_dark"
                     android:textColor="@color/investa_text"
                     android:textSize="14sp" />
             </RadioGroup>
@@ -101,8 +143,9 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="24dp"
                 android:background="@drawable/bg_primary_button"
+                android:foreground="@drawable/ripple_button"
                 android:gravity="center"
-                android:text="Change Theme"
+                android:text="@string/change_theme"
                 android:textColor="@color/investa_background"
                 android:textSize="14sp"
                 android:textStyle="bold" />

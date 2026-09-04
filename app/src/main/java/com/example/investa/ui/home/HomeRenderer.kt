@@ -1,10 +1,15 @@
 package com.example.investa.ui.home
 
 import android.graphics.Color
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.MarginPageTransformer
+import androidx.viewpager2.widget.ViewPager2
 import com.example.investa.R
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addAssetRow
@@ -24,13 +29,15 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 internal class HomeRenderer(private val host: ScreenHost) {
+    private var homeRoot: View? = null
+    private var allocationAdapter: AllocationPagerAdapter? = null
+
     fun render() {
-        host.contentContainer.removeAllViews()
-        val root = host.inflate(R.layout.screen_home)
-        host.attach(root)
+        val root = homeRoot ?: host.inflate(R.layout.screen_home).also { homeRoot = it }
+        if (root.parent == null) host.attach(root)
         val usdExchangeRate = host.exchangeRateFor("USD")
         val displayAssets = host.databaseAssets.map { asset ->
-            asset.toUiAsset().toIdrDisplay(usdExchangeRate)
+            asset.toUiAsset(host.activity).toIdrDisplay(usdExchangeRate)
         }
         val investmentValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
         val cashValue = host.databaseCashAccounts.sumOf { account ->
@@ -59,14 +66,14 @@ internal class HomeRenderer(private val host: ScreenHost) {
         }
 
         val invested = root.findViewById<View>(R.id.summary_invested)
-        invested.findViewById<TextView>(R.id.summary_title).text = "Total Invested"
+        invested.findViewById<TextView>(R.id.summary_title).text = host.activity.getString(R.string.total_invested)
         invested.findViewById<TextView>(R.id.summary_value).text = formatAmount(totalInvested, displayCurrency, 0)
         invested.findViewById<TextView>(R.id.summary_percent).apply {
-            text = "— last month"
+            text = host.activity.getString(R.string.last_month)
             visibility = View.VISIBLE
         }
         val profit = root.findViewById<View>(R.id.summary_profit)
-        profit.findViewById<TextView>(R.id.summary_title).text = "Total Profit"
+        profit.findViewById<TextView>(R.id.summary_title).text = host.activity.getString(R.string.total_profit)
         profit.findViewById<TextView>(R.id.summary_value).apply {
             text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(ContextCompat.getColor(
@@ -88,18 +95,46 @@ internal class HomeRenderer(private val host: ScreenHost) {
         val categoryPercentages = categoryValues.map { value ->
             if (investmentValue == 0.0) 0f else (value * 100.0 / investmentValue).toFloat()
         }
-        bindLegendRows(
-            root.findViewById(R.id.legend_container),
-            assetCategories.zip(categoryPercentages.map { it.roundToInt() })
+        val investedCategoryValues = assetCategories.map { category ->
+            displayAssets
+                .filter { it.category == category }
+                .sumOf { parseMoneyInput(it.invested) ?: 0.0 }
+        }
+        val investedCategoryPercentages = investedCategoryValues.map { value ->
+            if (totalInvested == 0.0) 0f else (value * 100.0 / totalInvested).toFloat()
+        }
+        val allocationPages = listOf(
+            AllocationPage(
+                title = host.activity.getString(R.string.portfolio_allocation),
+                allocation = assetCategories.zip(categoryPercentages)
+            ),
+            AllocationPage(
+                title = host.activity.getString(R.string.invested_allocation),
+                allocation = assetCategories.zip(investedCategoryPercentages)
+            )
         )
-        setupAllocationChart(
-            root.findViewById(R.id.portfolio_allocation_chart),
-            assetCategories.zip(categoryPercentages)
-        )
+        val allocationTitle = root.findViewById<TextView>(R.id.allocation_title)
+        val allocationPager = root.findViewById<ViewPager2>(R.id.allocation_pager)
+        val existingAdapter = allocationAdapter
+        if (existingAdapter == null) {
+            allocationAdapter = AllocationPagerAdapter(allocationPages, ::setupAllocationChart)
+            allocationPager.adapter = allocationAdapter
+            allocationPager.setPageTransformer(MarginPageTransformer(host.dp(12)))
+            allocationPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    updateAllocationPage(root, allocationTitle, allocationAdapter?.pages.orEmpty(), position)
+                }
+            })
+        } else {
+            existingAdapter.updatePages(allocationPages)
+        }
+        val selectedAllocationPage = allocationPager.currentItem.coerceIn(0, allocationPages.lastIndex)
+        updateAllocationPage(root, allocationTitle, allocationPages, selectedAllocationPage)
         root.findViewById<TextView>(R.id.see_all_assets)
             .setOnClickListener { host.showScreen(com.example.investa.navigation.AppScreen.ASSETS) }
 
         val topAssets = root.findViewById<LinearLayout>(R.id.top_assets_container)
+        topAssets.removeAllViews()
         displayAssets
             .map { it.withCalculatedCurrentValue() }
             .sortedByDescending { parseMoneyInput(it.value) ?: 0.0 }
@@ -160,6 +195,64 @@ internal class HomeRenderer(private val host: ScreenHost) {
             setHoleColor(Color.TRANSPARENT)
             setExtraOffsets(0f, 0f, 0f, 0f)
             invalidate()
+        }
+    }
+
+    private fun updateAllocationPage(
+        root: View,
+        title: TextView,
+        pages: List<AllocationPage>,
+        position: Int
+    ) {
+        val selectedPosition = position.coerceIn(pages.indices)
+        title.text = pages[selectedPosition].title
+        root.findViewById<View>(R.id.allocation_dot_portfolio).setBackgroundResource(
+            if (selectedPosition == 0) R.drawable.bg_allocation_dot_active
+            else R.drawable.bg_allocation_dot_inactive
+        )
+        root.findViewById<View>(R.id.allocation_dot_invested).setBackgroundResource(
+            if (selectedPosition == 1) R.drawable.bg_allocation_dot_active
+            else R.drawable.bg_allocation_dot_inactive
+        )
+    }
+
+    private data class AllocationPage(
+        val title: String,
+        val allocation: List<Pair<String, Float>>
+    )
+
+    private class AllocationPagerAdapter(
+        var pages: List<AllocationPage>,
+        private val setupChart: (PieChart, List<Pair<String, Float>>) -> Unit
+    ) : RecyclerView.Adapter<AllocationPagerAdapter.PageViewHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
+            val page = LayoutInflater.from(parent.context)
+                .inflate(R.layout.view_allocation_page, parent, false)
+            return PageViewHolder(page)
+        }
+
+        override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
+            val allocationPage = pages[position]
+            setupChart(holder.chart, allocationPage.allocation)
+            bindLegendRows(
+                holder.legend,
+                allocationPage.allocation.map { (category, percentage) ->
+                    category to percentage.roundToInt()
+                }
+            )
+        }
+
+        override fun getItemCount(): Int = pages.size
+
+        fun updatePages(updatedPages: List<AllocationPage>) {
+            if (pages == updatedPages) return
+            pages = updatedPages
+            notifyDataSetChanged()
+        }
+
+        class PageViewHolder(page: View) : RecyclerView.ViewHolder(page) {
+            val chart: PieChart = page.findViewById(R.id.allocation_chart)
+            val legend: ViewGroup = page.findViewById(R.id.allocation_legend)
         }
     }
 }

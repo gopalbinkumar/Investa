@@ -26,8 +26,10 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="72dp"
         android:contentDescription="@string/submit"
+        android:foreground="@drawable/ripple_fab"
         android:src="@drawable/ic_lucide_plus"
         android:tint="@color/investa_background"
+        app:rippleColor="@android:color/transparent"
         app:backgroundTint="@color/investa_primary"
         tools:ignore="MissingClass" />
 </FrameLayout>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/reports_scroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/investa_background"
@@ -18,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="42dp"
             android:gravity="center"
-            android:text="Reports"
+            android:text="@string/reports"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -27,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Realized Gain/Loss"
+            android:text="@string/realized_gain_loss"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -44,7 +45,7 @@
                 android:id="@+id/reports_realized_pl"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rp 0"
+                android:text="@string/zero_amount"
                 android:textColor="@color/investa_mint"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -54,7 +55,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Portfolio Performance"
+            android:text="@string/portfolio_performance"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -81,7 +82,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Invested"
+                        android:text="@string/total_invested"
                         android:textColor="@color/investa_text_secondary"
                         android:textSize="12sp" />
 
@@ -89,7 +90,7 @@
                         android:id="@+id/reports_invested_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rp 106.900.000"
+                        android:text="@string/dummy_invested_amount"
                         android:textColor="@color/investa_text"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -114,7 +115,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Current Value"
+                        android:text="@string/current_value"
                         android:textColor="@color/investa_text_secondary"
                         android:textSize="12sp" />
 
@@ -122,7 +123,7 @@
                         android:id="@+id/reports_current_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Rp 125.650.000"
+                        android:text="@string/dummy_current_value"
                         android:textColor="@color/investa_mint"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -153,7 +154,7 @@
                     android:id="@+id/reports_profit_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="+Rp 18.750.000"
+                    android:text="@string/dummy_profit_amount"
                     android:textColor="@color/investa_mint"
                     android:textStyle="bold" />
 
@@ -162,7 +163,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:text="+17.56%"
+                    android:text="@string/dummy_profit_percent"
                     android:textColor="@color/investa_mint" />
             </LinearLayout>
         </LinearLayout>
@@ -171,7 +172,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Summary"
+            android:text="@string/summary"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -190,8 +191,9 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/bg_primary_button"
+                android:foreground="@drawable/ripple_button"
                 android:gravity="center"
-                android:text="By Category"
+                android:text="@string/by_category"
                 android:textColor="@color/investa_background"
                 android:textSize="11sp" />
 
@@ -200,8 +202,9 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:foreground="@drawable/ripple_button"
                 android:gravity="center"
-                android:text="By Asset"
+                android:text="@string/by_asset"
                 android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>

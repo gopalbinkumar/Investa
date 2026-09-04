@@ -8,6 +8,10 @@
     <color name="investa_text">#FF0D1B2A</color>
     <color name="investa_text_secondary">#FF1E6F9F</color>
     <color name="investa_border">#FF0B60B0</color>
+    <color name="investa_ripple">#330B60B0</color>
+    <color name="investa_ripple_on_primary">#33000000</color>
+    <color name="investa_ripple_buy">#33237A46</color>
+    <color name="investa_ripple_loss">#33B3261E</color>
     <color name="investa_buy">#FF237A46</color>
     <color name="investa_loss">#FFB3261E</color>
     <color name="investa_icon_primary">#FF0B60B0</color>

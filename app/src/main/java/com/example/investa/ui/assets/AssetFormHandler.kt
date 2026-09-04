@@ -9,7 +9,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
-import android.widget.Toast
 import android.widget.TextView
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.R
@@ -22,7 +21,9 @@ import com.example.investa.utils.formatEditableAmount
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.installDecimalInputFormatter
 import com.example.investa.utils.installMoneyInputFormatter
+import com.example.investa.utils.localizedCategory
 import com.example.investa.utils.parseMoneyInput
+import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.parseTransactionQuantity
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.quantityUnitHint
@@ -47,15 +48,19 @@ internal class AssetFormHandler(private val host: ScreenHost) {
         val currencySpinner = root.findViewById<Spinner>(R.id.form_currency)
         val assetFieldsContainer = root.findViewById<View>(R.id.asset_fields_container)
         symbolInput.filters = arrayOf(InputFilter.AllCaps())
-        root.findViewById<TextView>(R.id.form_title).text = if (asset == null) "Add Asset" else "Edit Asset"
-        root.findViewById<TextView>(R.id.form_save).text = if (asset == null) "Save Asset" else "Save Changes"
+        root.findViewById<TextView>(R.id.form_title).text = host.activity.getString(
+            if (asset == null) R.string.add_asset else R.string.edit_asset
+        )
+        root.findViewById<TextView>(R.id.form_save).text = host.activity.getString(
+            if (asset == null) R.string.save_asset else R.string.save_changes
+        )
         root.findViewById<View>(R.id.form_back).setOnClickListener {
             host.showScreen(if (asset == null) AppScreen.ASSETS else AppScreen.DETAIL)
         }
         root.findViewById<View>(R.id.form_save).setOnClickListener {
             val name = nameInput.text.toString().trim()
             val symbol = symbolInput.text.toString().trim().uppercase(Locale.ROOT)
-            val category = categorySpinner.selectedItem?.toString().orEmpty()
+            val category = canonicalCategoryAt(categorySpinner.selectedItemPosition)
             val quantity = parseTransactionQuantity(quantityInput.text.toString())
             val averagePrice = parseMoneyInput(averagePriceInput.text.toString())
             val currentPrice = parseMoneyInput(currentPriceInput.text.toString())
@@ -63,21 +68,21 @@ internal class AssetFormHandler(private val host: ScreenHost) {
             val currency = currencySpinner.selectedItem?.toString().orEmpty()
             val now = System.currentTimeMillis()
             when {
-                name.isEmpty() -> nameInput.apply { error = "Asset name is required"; requestFocus() }
-                symbol.isEmpty() -> symbolInput.apply { error = "Symbol is required"; requestFocus() }
+                name.isEmpty() -> nameInput.apply { error = host.activity.getString(R.string.asset_name_required); requestFocus() }
+                symbol.isEmpty() -> symbolInput.apply { error = host.activity.getString(R.string.symbol_required); requestFocus() }
                 category == SELECT_CATEGORY || category.isEmpty() ->
-                    Toast.makeText(host.activity, "Select a category", Toast.LENGTH_SHORT).show()
+                    host.activity.showInvestaToast(host.activity.getString(R.string.select_category_error))
                 quantity == null || quantity <= 0.0 -> quantityInput.apply {
-                    error = "Enter a valid quantity"; requestFocus()
+                    error = host.activity.getString(R.string.valid_quantity); requestFocus()
                 }
                 investedAmount == null || investedAmount <= 0.0 -> investedInput.apply {
-                    error = "Enter a valid invested amount"; requestFocus()
+                    error = host.activity.getString(R.string.valid_invested_amount); requestFocus()
                 }
                 averagePrice == null || averagePrice <= 0.0 -> averagePriceInput.apply {
-                    error = "Enter a valid average price"; requestFocus()
+                    error = host.activity.getString(R.string.valid_average_price); requestFocus()
                 }
                 currentPrice == null || currentPrice <= 0.0 -> currentPriceInput.apply {
-                    error = "Enter a valid current price"; requestFocus()
+                    error = host.activity.getString(R.string.valid_current_price); requestFocus()
                 }
                 else -> {
                     val existingEntity = asset?.id?.let { id -> host.databaseAssets.firstOrNull { it.id == id } }
@@ -99,18 +104,18 @@ internal class AssetFormHandler(private val host: ScreenHost) {
                         host.assetViewModel.addAsset(updatedEntity) { assetId ->
                             val savedEntity = updatedEntity.copy(id = assetId)
                             host.databaseAssets = host.databaseAssets + savedEntity
-                            host.selectedAsset = savedEntity.toUiAsset()
+                            host.selectedAsset = savedEntity.toUiAsset(host.activity)
                             host.showScreen(AppScreen.DETAIL)
-                            Toast.makeText(host.activity, "Asset added", Toast.LENGTH_SHORT).show()
+                            host.activity.showInvestaToast(host.activity.getString(R.string.asset_added))
                         }
                     } else {
                         host.assetViewModel.updateAsset(updatedEntity) {
                             host.databaseAssets = host.databaseAssets.map { entity ->
                                 if (entity.id == updatedEntity.id) updatedEntity else entity
                             }
-                            host.selectedAsset = updatedEntity.toUiAsset()
+                            host.selectedAsset = updatedEntity.toUiAsset(host.activity)
                             host.showScreen(AppScreen.DETAIL)
-                            Toast.makeText(host.activity, "Asset updated", Toast.LENGTH_SHORT).show()
+                            host.activity.showInvestaToast(host.activity.getString(R.string.asset_updated))
                         }
                     }
                 }
@@ -128,7 +133,7 @@ internal class AssetFormHandler(private val host: ScreenHost) {
             parseMoneyInput(it.currentPrice)?.let { value -> formatInputAmount(value, it.currency) }
         }.orEmpty())
         notesInput.setText(asset?.notes.orEmpty())
-        setupSpinner(categorySpinner, listOf(SELECT_CATEGORY) + assetCategories, asset?.category ?: SELECT_CATEGORY)
+        setupCategorySpinner(categorySpinner, asset?.category ?: SELECT_CATEGORY)
         setupSpinner(currencySpinner, listOf("IDR", "USD"), asset?.currency ?: "IDR")
         investedInput.apply {
             isFocusable = false
@@ -168,14 +173,16 @@ internal class AssetFormHandler(private val host: ScreenHost) {
         }
         updateInvestedAmount()
 
+        fun selectedCategory(): String = canonicalCategoryAt(categorySpinner.selectedItemPosition)
         fun updateQuantityUnitHint() {
-            quantityUnitHintView.text = quantityUnitHint(categorySpinner.selectedItem?.toString().orEmpty(), symbolInput.text.toString())
-            val unitSuffix = priceUnitSuffix(categorySpinner.selectedItem?.toString().orEmpty(), symbolInput.text.toString())
+            val category = selectedCategory()
+            quantityUnitHintView.text = quantityUnitHint(host.activity, category, symbolInput.text.toString())
+            val unitSuffix = priceUnitSuffix(host.activity, category, symbolInput.text.toString())
             averagePriceUnit.text = unitSuffix
             currentPriceUnit.text = unitSuffix
             quantityUnitHintView.visibility = View.VISIBLE
             val hasAssetIdentity = nameInput.text.toString().trim().isNotEmpty() && symbolInput.text.toString().trim().isNotEmpty()
-            assetFieldsContainer.visibility = if (categorySpinner.selectedItem?.toString() != SELECT_CATEGORY && hasAssetIdentity) View.VISIBLE else View.GONE
+            assetFieldsContainer.visibility = if (category != SELECT_CATEGORY && hasAssetIdentity) View.VISIBLE else View.GONE
         }
         categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) = updateQuantityUnitHint()
@@ -201,6 +208,19 @@ internal class AssetFormHandler(private val host: ScreenHost) {
         spinner.adapter = adapter
         spinner.setSelection(values.indexOf(selected).coerceAtLeast(0))
     }
+
+    private fun setupCategorySpinner(spinner: Spinner, selected: String) {
+        val values = listOf(SELECT_CATEGORY) + assetCategories
+        val displayValues = values.map { localizedCategory(host.activity, it) }
+        val adapter = ArrayAdapter(host.activity, R.layout.spinner_item, displayValues).also {
+            it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        spinner.adapter = adapter
+        spinner.setSelection(values.indexOf(selected).coerceAtLeast(0))
+    }
+
+    private fun canonicalCategoryAt(position: Int): String =
+        (listOf(SELECT_CATEGORY) + assetCategories).getOrElse(position) { SELECT_CATEGORY }
 
     private fun reformatMoneyInput(input: EditText, currency: String) {
         val amount = parseMoneyInput(input.text.toString()) ?: return

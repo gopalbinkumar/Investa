@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
-        android:text="No assets found"
+        android:text="@string/no_assets_found"
         android:textColor="@color/investa_text_secondary"
         android:textSize="13sp" />
 
@@ -29,7 +29,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:text="Try another category"
+        android:text="@string/try_another_category"
         android:textColor="@color/investa_text_secondary"
         android:textSize="13sp" />
 </LinearLayout>

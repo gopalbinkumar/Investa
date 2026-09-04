@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="Assets"
+                android:text="@string/assets"
                 android:textColor="@color/investa_text"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -59,17 +59,19 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Total Assets"
+                android:text="@string/total_assets"
                 android:textColor="@color/investa_text"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:paddingStart="12dp"/>
 
             <TextView
                 android:id="@+id/asset_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="12 Assets"
+                android:text="@string/assets_count_placeholder"
                 android:textColor="@color/investa_text_secondary"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:paddingEnd="12dp"/>
         </LinearLayout>
     </LinearLayout>
 

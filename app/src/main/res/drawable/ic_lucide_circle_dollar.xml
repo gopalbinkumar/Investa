@@ -6,26 +6,34 @@
 
     <path
         android:fillColor="@android:color/transparent"
-        android:pathData="M15,9.4A4,4 0,1 0,15 14.6"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+        android:strokeLineJoin="round"
+        android:pathData="M12,2
+            A10,10 0,1 1,12,22
+            A10,10 0,1 1,12,2" />
 
+    <!-- Dollar curve -->
     <path
         android:fillColor="@android:color/transparent"
-        android:pathData="M7,12L12,12"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+        android:strokeLineJoin="round"
+        android:pathData="M16,8
+            H10
+            A2,2 0,1 0,10,12
+            H14
+            A2,2 0,1 1,14,16
+            H8" />
 
+    <!-- Dollar vertical line -->
     <path
         android:fillColor="@android:color/transparent"
-        android:pathData="M12,2A10,10 0,1 0,12 22A10,10 0,1 0,12 2"
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="2"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+        android:pathData="M12,18 V6" />
 
 </vector>

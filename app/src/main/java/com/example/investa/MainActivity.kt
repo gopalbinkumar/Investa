@@ -34,6 +34,9 @@ import com.example.investa.ui.reports.ReportsRenderer
 import com.example.investa.ui.settings.SettingsRenderer
 import com.example.investa.ui.transactions.TransactionHandler
 import com.example.investa.utils.ThemeManager
+import com.example.investa.utils.LanguageManager
+import com.example.investa.utils.IconThemeManager
+import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.toUiAsset
 import com.example.investa.viewmodel.AssetViewModel
 import com.example.investa.viewmodel.AssetViewModelFactory
@@ -53,6 +56,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     override lateinit var contentContainer: ViewGroup
     override lateinit var bottomNavigation: View
     override var currentScreen = AppScreen.HOME
+    override var detailOrigin = AppScreen.ASSETS
     override var selectedCategory = "All"
     override var assetsRoot: View? = null
     override var databaseAssets: List<AssetEntity> = emptyList()
@@ -86,7 +90,9 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     private lateinit var settingsRenderer: SettingsRenderer
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        IconThemeManager.apply(this)
         ThemeManager.apply(this)
+        LanguageManager.apply(this)
         super.onCreate(savedInstanceState)
         window.statusBarColor = ContextCompat.getColor(this, R.color.investa_background)
         window.navigationBarColor = ContextCompat.getColor(this, R.color.investa_background)
@@ -167,6 +173,9 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             ?.getString(SCREEN_STATE_KEY)
             ?.let { screenName -> runCatching { AppScreen.valueOf(screenName) }.getOrNull() }
         showScreen(restoredScreen ?: AppScreen.HOME)
+        if (LanguageManager.consumeLanguageChangedToast(this)) {
+            showInvestaToast(getString(R.string.language_changed))
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -188,6 +197,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             AppScreen.REPORTS -> reportsRenderer.render()
             AppScreen.SETTINGS -> settingsRenderer.render()
             AppScreen.THEME -> settingsRenderer.renderTheme()
+            AppScreen.LANGUAGE -> settingsRenderer.renderLanguage()
             AppScreen.EXCHANGE_RATE -> settingsRenderer.renderExchangeRate()
             AppScreen.DETAIL -> assetDetailRenderer.render()
             AppScreen.ADD -> assetFormHandler.render(null)
@@ -198,7 +208,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                     showScreen(AppScreen.ASSETS)
                     return
                 }
-                assetFormHandler.render(entity.toUiAsset())
+                assetFormHandler.render(entity.toUiAsset(this))
             }
         }
     }

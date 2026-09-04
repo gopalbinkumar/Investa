@@ -1,0 +1,3 @@
+<resources>
+    <dimen name="allocation_legend_row_spacing">6dp</dimen>
+</resources>

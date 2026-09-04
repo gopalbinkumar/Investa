@@ -10,6 +10,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/investa_icon"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/investa_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.Investa"
@@ -19,12 +20,35 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Investa">
+        </activity>
+
+        <activity-alias
+            android:name=".DarkIconAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/investa_icon"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".LightIconAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/investa_icon_light"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 
 </manifest>

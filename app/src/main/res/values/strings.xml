@@ -75,7 +75,7 @@
     <string name="hint_symbol">Contoh: BTC</string>
     <string name="hint_quantity">Contoh: 0,045</string>
     <string name="hint_average_price">Contoh: 1.200.000</string>
-    <string name="hint_invested_amount">Contoh: Rp 500.000</string>
+    <string name="hint_invested_amount">Contoh: Rp500.000</string>
     <string name="hint_current_price">Contoh: 1.000.000</string>
     <string name="hint_notes">Contoh: Investasi jangka panjang</string>
     <string name="add_transaction">Tambah Transaksi</string>
@@ -87,7 +87,7 @@
     <string name="save_transaction">Simpan Transaksi</string>
     <string name="hint_date">29 Agustus 2026</string>
     <string name="hint_price">1.200.000.000</string>
-    <string name="hint_fee">Rp 25.000</string>
+    <string name="hint_fee">Rp25.000</string>
     <string name="hint_transaction_notes">Contoh: DCA mingguan</string>
     <string name="buy_price">Harga Beli</string>
     <string name="sell_price">Harga Jual</string>
@@ -99,7 +99,7 @@
     <string name="save_cash">Simpan Kas</string>
     <string name="edit_cash">Edit Kas</string>
     <string name="indonesian_rupiah">Rupiah Indonesia</string>
-    <string name="hint_cash_amount">Rp 1.000.000</string>
+    <string name="hint_cash_amount">Rp1.000.000</string>
     <string name="change_exchange_rate">Ubah Kurs</string>
     <string name="refresh_exchange_rate">Perbarui kurs</string>
     <string name="us_dollar">Dolar AS</string>
@@ -172,13 +172,13 @@
     <string name="yahoo_category_unavailable">Yahoo Finance tidak tersedia untuk kategori ini</string>
     <string name="refresh_current_price">Perbarui harga saat ini</string>
     <string name="hint_transaction_quantity">Contoh: 0,005</string>
-    <string name="dummy_portfolio_value">Rp 125.650.000</string>
-    <string name="dummy_invested_amount">Rp 106.900.000</string>
-    <string name="dummy_current_value">Rp 125.650.000</string>
-    <string name="dummy_profit_amount">+Rp 18.750.000</string>
+    <string name="dummy_portfolio_value">Rp125.650.000</string>
+    <string name="dummy_invested_amount">Rp106.900.000</string>
+    <string name="dummy_current_value">Rp125.650.000</string>
+    <string name="dummy_profit_amount">+Rp18.750.000</string>
     <string name="dummy_profit_percent">+17,56%</string>
-    <string name="dummy_transaction_total">Rp 6.025.000</string>
-    <string name="zero_amount">Rp 0</string>
+    <string name="dummy_transaction_total">Rp6.025.000</string>
+    <string name="zero_amount">Rp0</string>
     <string name="unit_shares">lembar</string>
     <string name="unit_units">unit</string>
     <string name="unit_grams">gram</string>

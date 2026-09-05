@@ -54,14 +54,14 @@ internal class HomeRenderer(private val host: ScreenHost) {
             text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(ContextCompat.getColor(
                 host.activity,
-                if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss
+                if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss
             ))
         }
         root.findViewById<TextView>(R.id.portfolio_profit_percent).apply {
             text = String.format(Locale.US, "%+.2f%%", totalProfitPercentage)
             setTextColor(ContextCompat.getColor(
                 host.activity,
-                if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss
+                if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss
             ))
         }
 
@@ -78,14 +78,14 @@ internal class HomeRenderer(private val host: ScreenHost) {
             text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(ContextCompat.getColor(
                 host.activity,
-                if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss
+                if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss
             ))
         }
         profit.findViewById<TextView>(R.id.summary_percent).apply {
             text = String.format(Locale.US, "%+.2f%%", totalProfitPercentage)
             setTextColor(ContextCompat.getColor(
                 host.activity,
-                if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss
+                if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss
             ))
         }
 

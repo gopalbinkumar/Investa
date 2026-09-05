@@ -22,13 +22,18 @@
             android:theme="@style/Theme.Investa">
         </activity>
 
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Investa.Splash" />
+
         <activity-alias
             android:name=".DarkIconAlias"
             android:enabled="true"
             android:exported="true"
             android:icon="@mipmap/investa_icon"
             android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -42,7 +47,7 @@
             android:exported="true"
             android:icon="@mipmap/investa_icon_light"
             android:label="@string/app_name"
-            android:targetActivity=".MainActivity">
+            android:targetActivity=".SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

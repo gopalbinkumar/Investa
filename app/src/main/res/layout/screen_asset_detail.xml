@@ -136,8 +136,8 @@
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_buy_button"
-                android:foreground="@drawable/ripple_buy"
+                android:background="@drawable/bg_profit_button"
+                android:foreground="@drawable/ripple_profit"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -145,7 +145,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/buy"
-                    android:textColor="@color/investa_buy"
+                    android:textColor="@color/investa_profit"
                     android:textSize="14sp" />
             </LinearLayout>
 

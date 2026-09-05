@@ -70,7 +70,7 @@ private fun installNumericInputFormatter(
             }
             val formattedBody = formatEditableAmount(source, currencyProvider(), decimalMode)
             val formattedWithSeparator = if (includeCurrencyPrefix && formattedBody.isNotEmpty()) {
-                if (currencyProvider() == "IDR") "Rp $formattedBody" else "$ $formattedBody"
+                if (currencyProvider() == "IDR") "Rp$formattedBody" else "\$$formattedBody"
             } else {
                 formattedBody
             }
@@ -99,7 +99,7 @@ fun formatInputAmount(amount: Double, currency: String): String {
         maximumFractionDigits = 8
     }
     val formatted = formatter.format(amount)
-    return "${currencySymbolFor(currency)} $formatted"
+    return "${currencySymbolFor(currency)}$formatted"
 }
 
 fun formatQuantityValue(quantity: Double): String =
@@ -130,7 +130,7 @@ fun formatAmount(
         maximumFractionDigits = maxFractionDigits
     }
     val prefix = currencySymbol.ifBlank { currencySymbolFor(currency) }
-    return "$prefix ${formatter.format(amount)}"
+    return "$prefix${formatter.format(amount)}"
 }
 
 fun formatSignedAmount(amount: Double, currency: String, maxFractionDigits: Int = 8): String =

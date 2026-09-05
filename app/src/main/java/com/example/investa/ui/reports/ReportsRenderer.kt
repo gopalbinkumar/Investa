@@ -66,7 +66,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             setTextColor(
                 ContextCompat.getColor(
                     host.activity,
-                    if (realizedPL >= 0.0) R.color.investa_mint else R.color.investa_loss
+                    if (realizedPL >= 0.0) R.color.investa_profit else R.color.investa_loss
                 )
             )
         }
@@ -74,11 +74,11 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         root.findViewById<TextView>(R.id.reports_current_value).text = formatAmount(totalValue, displayCurrency, 0)
         root.findViewById<TextView>(R.id.reports_profit_value).apply {
             text = formatSignedAmount(totalProfit, displayCurrency, 0)
-            setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss))
+            setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss))
         }
         root.findViewById<TextView>(R.id.reports_profit_percent).apply {
             text = String.format(Locale.US, "%+.2f%%", totalProfitPercentage)
-            setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_mint else R.color.investa_loss))
+            setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss))
         }
         val performance = dailyPerformanceSnapshots(
             assets = host.databaseAssets,

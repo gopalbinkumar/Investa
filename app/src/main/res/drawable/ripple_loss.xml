@@ -2,7 +2,7 @@
     <item android:state_pressed="true">
         <shape>
             <solid android:color="@color/investa_ripple_loss" />
-            <corners android:radius="14dp" />
+            <corners android:radius="17dp" />
         </shape>
     </item>
     <item android:drawable="@android:color/transparent" />

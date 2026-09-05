@@ -159,7 +159,7 @@ internal class AssetDetailRenderer(
                 setTextColor(ContextCompat.getColor(
                     host.activity,
                     if (transaction.action.equals("BUY", ignoreCase = true)) {
-                        R.color.investa_buy
+                        R.color.investa_profit
                     } else {
                         R.color.investa_loss
                     }

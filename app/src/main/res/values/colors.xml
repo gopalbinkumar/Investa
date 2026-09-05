@@ -10,11 +10,11 @@
     <color name="investa_border">#FF0B60B0</color>
     <color name="investa_ripple">#330B60B0</color>
     <color name="investa_ripple_on_primary">#33000000</color>
-    <color name="investa_ripple_buy">#33237A46</color>
+    <color name="investa_ripple_profit">#33237A46</color>
     <color name="investa_ripple_loss">#33B3261E</color>
-    <color name="investa_buy">#FF237A46</color>
+    <color name="investa_profit">#FF237A46</color>
     <color name="investa_loss">#FFB3261E</color>
     <color name="investa_icon_primary">#FF0B60B0</color>
     <color name="investa_icon_secondary">#FF0B60B0</color>
-    <color name="investa_icon_inactive">#FF7A9AAF</color>
+    <color name="investa_icon_inactive">#FF97B6CA</color>
 </resources>

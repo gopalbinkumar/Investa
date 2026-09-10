@@ -42,6 +42,7 @@
     <EditText
         android:id="@+id/cash_amount"
         style="@style/FormInput"
+        android:foreground="@drawable/ripple_surface"
         android:hint="@string/hint_cash_amount"
         android:inputType="numberDecimal" />
 

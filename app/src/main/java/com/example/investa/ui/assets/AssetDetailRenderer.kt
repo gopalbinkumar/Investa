@@ -23,7 +23,6 @@ import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.formatTransactionDate
-import com.example.investa.utils.formatAssetDate
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.showInvestaToast
@@ -59,16 +58,21 @@ internal class AssetDetailRenderer(
             ?.symbol
             ?.takeIf { it.isNotBlank() }
             ?: currencySymbolFor(asset.currency)
-        val displayAsset = asset.withAmountPrecision(2, currencySymbol).copy(
-            addedOn = formatAssetDate(
-                host.activity,
-                host.databaseAssets.firstOrNull { it.id == asset.id }?.createdAt ?: System.currentTimeMillis()
-            )
-        )
+        val displayAsset = asset.withAmountPrecision(2, currencySymbol)
         root.findViewById<TextView>(R.id.detail_name).text = displayAsset.name
         root.findViewById<TextView>(R.id.detail_symbol).text = displayAsset.symbol
         root.findViewById<TextView>(R.id.detail_value).text = displayAsset.value
-        root.findViewById<TextView>(R.id.detail_profit).text = "${displayAsset.profit}  ${displayAsset.profitPercent}"
+        root.findViewById<TextView>(R.id.detail_profit).apply {
+            text = "${displayAsset.profit}  ${displayAsset.profitPercent}"
+            setTextColor(ContextCompat.getColor(
+                host.activity,
+                if (displayAsset.profit.trimStart().startsWith("-")) {
+                    R.color.investa_loss
+                } else {
+                    R.color.investa_profit
+                }
+            ))
+        }
         root.findViewById<View>(R.id.detail_back).setOnClickListener { host.showScreen(host.detailOrigin) }
         root.findViewById<View>(R.id.detail_buy).setOnClickListener {
             transactionHandler.showTransactionDrawer(displayAsset, isBuy = true)
@@ -86,8 +90,7 @@ internal class AssetDetailRenderer(
             host.activity.getString(R.string.average_price) to displayAsset.averagePrice,
             host.activity.getString(R.string.current_price) to displayAsset.currentPrice,
             host.activity.getString(R.string.category) to localizedCategory(host.activity, displayAsset.category),
-            host.activity.getString(R.string.notes) to displayAsset.notes.ifBlank { "-" },
-            host.activity.getString(R.string.added_on) to displayAsset.addedOn
+            host.activity.getString(R.string.notes) to displayAsset.notes.ifBlank { "-" }
         )
         val info = root.findViewById<LinearLayout>(R.id.detail_info_container)
         rows.forEachIndexed { index, (label, value) ->
@@ -95,7 +98,7 @@ internal class AssetDetailRenderer(
             row.findViewById<TextView>(R.id.detail_row_label).text = label
             row.findViewById<TextView>(R.id.detail_row_value).text = value
         }
-        populateTransactionHistory(root, displayAsset, currentTransactions, currencySymbol)
+        populateTransactionHistory(root, displayAsset, currentTransactions)
     }
 
     fun refreshSelectedAsset(assets: List<AssetEntity>) {
@@ -135,8 +138,7 @@ internal class AssetDetailRenderer(
     private fun populateTransactionHistory(
         root: View,
         asset: Asset,
-        transactions: List<TransactionEntity>,
-        currencySymbol: String
+        transactions: List<TransactionEntity>
     ) {
         val historyContainer = root.findViewById<LinearLayout>(R.id.detail_history_container)
         if (transactions.isEmpty()) {

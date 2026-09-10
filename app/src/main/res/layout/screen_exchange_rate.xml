@@ -7,8 +7,9 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="60dp"
         android:paddingStart="12dp"
+        android:paddingTop="18dp"
         android:paddingEnd="12dp">
 
         <ImageView
@@ -84,7 +85,9 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="14dp"
-                android:background="@drawable/bg_input"
+                android:background="@drawable/bg_input_readonly"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="14dp"
@@ -116,6 +119,7 @@
             <EditText
                 android:id="@+id/exchange_rate_input"
                 style="@style/FormInput"
+                android:foreground="@drawable/ripple_surface"
                 android:hint="@string/hint_exchange_rate"
                 android:inputType="numberDecimal" />
 

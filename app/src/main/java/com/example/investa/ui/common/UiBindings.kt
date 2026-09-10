@@ -34,7 +34,20 @@ internal fun bindAsset(row: View, asset: Asset, compact: Boolean, percentage: St
     row.findViewById<TextView>(R.id.asset_category).text = localizedCategory(row.context, asset.category)
     row.findViewById<TextView>(R.id.asset_quantity).text = asset.quantity
     row.findViewById<TextView>(R.id.asset_value).text = asset.value
-    row.findViewById<TextView>(R.id.asset_profit).text = percentage ?: asset.profitPercent
+    row.findViewById<TextView>(R.id.asset_profit).apply {
+        val displayedPercentage = percentage ?: asset.profitPercent
+        text = displayedPercentage
+        if (compact) {
+            setTextColor(ContextCompat.getColor(
+                row.context,
+                if (displayedPercentage.trimStart().startsWith("-")) {
+                    R.color.investa_loss
+                } else {
+                    R.color.investa_profit
+                }
+            ))
+        }
+    }
     row.findViewById<View>(R.id.asset_summary_container).visibility =
         if (compact) View.VISIBLE else View.GONE
     row.findViewById<ImageView>(R.id.asset_chevron).visibility =
@@ -103,11 +116,11 @@ internal fun tint(view: View, color: Int) {
     view.backgroundTintList = ColorStateList.valueOf(color)
 }
 
-private fun chartColor(index: Int) = intArrayOf(
-    0xFFFF9F43.toInt(), // Orange
-    0xFFFF6B6B.toInt(), // Soft red
-    0xFFFFD166.toInt(), // Yellow
+internal fun chartColor(index: Int) = intArrayOf(
+    0xFFFF6B6B.toInt(), // Coral / Red
+    0xFFFFB547.toInt(), // Amber
+    0xFF4DD0B5.toInt(), // Mint / Green
+    0xFFF15BB5.toInt(), // Pink
     0xFF4D96FF.toInt(), // Blue
-    0xFFA66CFF.toInt(), // Purple
-    0xFF00C2A8.toInt()  // Teal
+    0xFF9B6DFF.toInt() // Purple
 )[index % 6]

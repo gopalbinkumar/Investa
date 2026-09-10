@@ -47,32 +47,32 @@
             app:tabPaddingTop="0dp"
             app:tabPaddingBottom="0dp"
             app:tabRippleColor="@android:color/transparent" />
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:text="@string/total_assets"
+            android:textColor="@color/investa_text"
+            android:textSize="14sp"
+            android:paddingStart="12dp"/>
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/total_assets"
-                android:textColor="@color/investa_text"
-                android:textSize="14sp"
-                android:paddingStart="12dp"/>
-
-            <TextView
-                android:id="@+id/asset_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/assets_count_placeholder"
-                android:textColor="@color/investa_text_secondary"
-                android:textSize="12sp"
-                android:paddingEnd="12dp"/>
-        </LinearLayout>
+        <TextView
+            android:id="@+id/asset_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/assets_count_placeholder"
+            android:textColor="@color/investa_text_secondary"
+            android:textSize="12sp"
+            android:paddingEnd="12dp"/>
     </LinearLayout>
 
     <androidx.viewpager2.widget.ViewPager2

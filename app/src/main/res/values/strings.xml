@@ -141,8 +141,8 @@
     <string name="exchange_rate_saved">Kurs berhasil disimpan</string>
     <string name="latest_current_price_loaded">Harga saat ini berhasil dimuat</string>
     <string name="failed_current_price">Gagal memuat harga saat ini: %1$s</string>
-    <string name="current_price_request_cancelled">Permintaan pembaruan harga dibatalkan</string>
-    <string name="exchange_rate_request_cancelled">Permintaan pembaruan kurs dibatalkan</string>
+    <string name="current_price_request_cancelled">Permintaan dibatalkan</string>
+    <string name="exchange_rate_request_cancelled">Permintaan dibatalkan</string>
     <string name="current_price_updated">Harga saat ini berhasil diperbarui</string>
     <string name="asset_added">Aset berhasil ditambahkan</string>
     <string name="asset_updated">Aset berhasil diperbarui</string>

@@ -6,9 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -55,6 +58,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
 
     override lateinit var contentContainer: ViewGroup
     override lateinit var bottomNavigation: View
+    override var systemNavigationInset = 0
     override var currentScreen = AppScreen.HOME
     override var detailOrigin = AppScreen.ASSETS
     override var selectedCategory = "All"
@@ -103,8 +107,18 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             )
         contentContainer = findViewById(R.id.content_container)
         bottomNavigation = findViewById(R.id.bottom_navigation)
+        setupSystemBarInsets()
 
         navigator = AppNavigator(this) { screen -> renderScreen(screen) }
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (!navigator.handleBack()) {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
         homeRenderer = HomeRenderer(this)
         assetsRenderer = AssetsRenderer(this)
         cashRenderer = CashRenderer(this)
@@ -178,13 +192,55 @@ class MainActivity : AppCompatActivity(), ScreenHost {
         }
     }
 
+    private fun setupSystemBarInsets() {
+        val root = findViewById<View>(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val isEdgeToEdgeDevice = android.os.Build.VERSION.SDK_INT >= 35
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            systemNavigationInset = if (isEdgeToEdgeDevice) {
+                systemBars.bottom
+            } else {
+                0
+            }
+
+            (bottomNavigation.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                params.bottomMargin = systemNavigationInset
+                bottomNavigation.layoutParams = params
+            }
+
+            findViewById<View>(R.id.fab)?.let { fab ->
+                (fab.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                    params.bottomMargin = dp(72) + systemNavigationInset
+                    fab.layoutParams = params
+                }
+            }
+
+            (contentContainer.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
+                params.topMargin = if (isEdgeToEdgeDevice) {
+                    (systemBars.top - dp(18)).coerceAtLeast(0)
+                } else {
+                    0
+                }
+                params.bottomMargin = when {
+                    currentScreen in setOf(
+                        AppScreen.HOME,
+                        AppScreen.ASSETS,
+                        AppScreen.CASH,
+                        AppScreen.REPORTS,
+                        AppScreen.SETTINGS
+                    ) -> dp(56) + systemNavigationInset
+                    else -> systemNavigationInset
+                }
+                contentContainer.layoutParams = params
+            }
+            insets
+        }
+        ViewCompat.requestApplyInsets(root)
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString(SCREEN_STATE_KEY, currentScreen.name)
         super.onSaveInstanceState(outState)
-    }
-
-    override fun onBackPressed() {
-        if (!navigator.handleBack()) super.onBackPressed()
     }
 
     override fun showScreen(screen: AppScreen) = navigator.showScreen(screen)

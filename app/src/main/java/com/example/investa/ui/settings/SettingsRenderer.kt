@@ -42,7 +42,9 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         ) {
             host.showScreen(AppScreen.THEME)
         }
-        addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_languages, host.activity.getString(R.string.language), LanguageManager.label(host.activity), true) {
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_languages, host.activity.getString(R.string.language), LanguageManager.label(host.activity), true) {
             host.showScreen(AppScreen.LANGUAGE)
         }
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_upload, host.activity.getString(R.string.data_backup), "", true)

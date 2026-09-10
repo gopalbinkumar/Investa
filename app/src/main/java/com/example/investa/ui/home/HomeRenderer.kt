@@ -14,6 +14,7 @@ import com.example.investa.R
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addAssetRow
 import com.example.investa.ui.common.bindLegendRows
+import com.example.investa.ui.common.chartColor
 import com.example.investa.utils.assetCategories
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatSignedAmount
@@ -167,14 +168,9 @@ internal class HomeRenderer(private val host: ScreenHost) {
             if (entries.isEmpty()) return@apply
 
             val dataSet = PieDataSet(entries, "").apply {
-                colors = listOf(
-                    Color.rgb(255, 159, 67),  // Orange
-                    Color.rgb(255, 107, 107), // Soft red
-                    Color.rgb(255, 209, 102), // Yellow
-                    Color.rgb(77, 150, 255),  // Blue
-                    Color.rgb(166, 108, 255), // Purple
-                    Color.rgb(0, 194, 168)     // Teal
-                )
+                colors = entries.map { entry ->
+                    chartColor(allocation.indexOfFirst { it.first == entry.label })
+                }
                 setDrawValues(false)
                 setDrawIcons(false)
                 sliceSpace = 2f

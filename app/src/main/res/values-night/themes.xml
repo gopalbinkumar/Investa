@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Investa" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:fontFamily">sans</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans</item>
+        <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:colorAccent">@color/investa_primary</item>
         <item name="android:statusBarColor">@color/investa_background</item>
@@ -9,8 +10,10 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>
+
     <style name="Theme.Investa.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:fontFamily">sans</item>
+        <item name="android:fontFamily">@font/plus_jakarta_sans</item>
+        <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowActionModeOverlay">true</item>

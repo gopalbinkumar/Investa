@@ -95,6 +95,8 @@ internal class AssetsRenderer(private val host: ScreenHost) {
         text = localizedCategory(host.activity, category)
         gravity = android.view.Gravity.CENTER
         textSize = 12f
+        setDuplicateParentStateEnabled(true)
+        foreground = ContextCompat.getDrawable(host.activity, R.drawable.ripple_chip)
         setPadding(host.dp(17), host.dp(9), host.dp(17), host.dp(9))
         layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,

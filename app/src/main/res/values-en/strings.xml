@@ -141,8 +141,8 @@
     <string name="exchange_rate_saved">Exchange rate saved</string>
     <string name="latest_current_price_loaded">Latest current price loaded</string>
     <string name="failed_current_price">Failed to load current price: %1$s</string>
-    <string name="current_price_request_cancelled">Current price request canceled</string>
-    <string name="exchange_rate_request_cancelled">Exchange rate request canceled</string>
+    <string name="current_price_request_cancelled">Request canceled</string>
+    <string name="exchange_rate_request_cancelled">Request canceled</string>
     <string name="current_price_updated">Current price updated</string>
     <string name="asset_added">Asset added</string>
     <string name="asset_updated">Asset updated</string>

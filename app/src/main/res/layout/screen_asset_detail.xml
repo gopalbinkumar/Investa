@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/investa_background"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:paddingStart="12dp"
         android:paddingTop="18dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="25dp">
+        android:paddingEnd="12dp">
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="34dp">
+            android:layout_height="42dp">
 
             <ImageView
                 android:id="@+id/detail_back"
@@ -47,6 +45,21 @@
                 android:src="@drawable/ic_lucide_more_vertical"
                 android:tint="@color/investa_icon_primary" />
         </FrameLayout>
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="25dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -96,8 +109,6 @@
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
             android:padding="16dp">
-
-            <include layout="@layout/view_detail_row" />
 
             <include layout="@layout/view_detail_row" />
 
@@ -188,4 +199,5 @@
             android:layout_marginTop="12dp"
             android:orientation="vertical" />
     </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</LinearLayout>

@@ -10,6 +10,9 @@ import android.widget.PopupMenu
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.R
 import com.example.investa.model.Asset
@@ -122,6 +125,27 @@ internal class TransactionHandler(private val host: ScreenHost) {
         }
         updateTotal()
 
+        fun updateTransactionFieldAppearance(editable: Boolean) {
+            val background = ContextCompat.getDrawable(
+                host.activity,
+                if (editable) R.drawable.bg_input else R.drawable.bg_input_readonly
+            )
+            val foreground = if (editable) {
+                ContextCompat.getDrawable(host.activity, R.drawable.ripple_surface)
+            } else {
+                null
+            }
+            listOf(feeInput, notesInput).forEach { input ->
+                input.background = background?.constantState?.newDrawable()
+                input.foreground = foreground?.constantState?.newDrawable()
+            }
+            listOf(quantityInput, priceInput).forEach { input ->
+                val container = input.parent as? View
+                container?.background = background?.constantState?.newDrawable()
+                container?.foreground = foreground?.constantState?.newDrawable()
+            }
+        }
+
         saveButton.setOnClickListener {
             if (transaction == null && asset.id == 0L) {
                 host.activity.showInvestaToast(host.activity.getString(R.string.save_asset_first))
@@ -200,11 +224,13 @@ internal class TransactionHandler(private val host: ScreenHost) {
             moreButton.visibility = View.VISIBLE
             moreButton.setOnClickListener { showTransactionOptions(moreButton, transaction, dialog) }
             saveButton.visibility = View.GONE
+            updateTransactionFieldAppearance(editable = false)
             val inputs = listOf(quantityInput, priceInput, feeInput, notesInput)
             inputs.forEach { input ->
                 input.isFocusable = false
                 input.isFocusableInTouchMode = false
                 input.setOnClickListener {
+                    updateTransactionFieldAppearance(editable = true)
                     inputs.forEach { editableInput ->
                         editableInput.isFocusable = true
                         editableInput.isFocusableInTouchMode = true
@@ -216,6 +242,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
                 }
             }
             dateInput.setOnClickListener {
+                updateTransactionFieldAppearance(editable = true)
                 inputs.forEach { editableInput ->
                     editableInput.isFocusable = true
                     editableInput.isFocusableInTouchMode = true
@@ -231,7 +258,34 @@ internal class TransactionHandler(private val host: ScreenHost) {
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
-            bottomSheet?.let { BottomSheetBehavior.from(it).state = BottomSheetBehavior.STATE_EXPANDED }
+            bottomSheet?.let { sheet ->
+                val baseBottomPadding = drawer.paddingBottom
+                ViewCompat.setOnApplyWindowInsetsListener(sheet) { _, insets ->
+                    val navigationInset = if (android.os.Build.VERSION.SDK_INT >= 35) {
+                        insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+                    } else {
+                        0
+                    }
+                    drawer.setPadding(
+                        drawer.paddingLeft,
+                        drawer.paddingTop,
+                        drawer.paddingRight,
+                        baseBottomPadding + navigationInset
+                    )
+                    insets
+                }
+                ViewCompat.requestApplyInsets(sheet)
+                val behavior = BottomSheetBehavior.from(sheet).apply {
+                    // Open the drawer fully from the start; do not leave it in the
+                    // half-expanded/collapsed position where the Save button is hidden.
+                    skipCollapsed = true
+                    isFitToContents = true
+                    state = BottomSheetBehavior.STATE_EXPANDED
+                }
+                // Re-apply after measurement because Android can restore the initial
+                // bottom-sheet state while the content is being laid out.
+                sheet.post { behavior.state = BottomSheetBehavior.STATE_EXPANDED }
+            }
         }
         dialog.show()
     }

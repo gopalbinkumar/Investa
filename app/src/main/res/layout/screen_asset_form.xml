@@ -7,8 +7,9 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="60dp"
         android:paddingStart="12dp"
+        android:paddingTop="18dp"
         android:paddingEnd="12dp">
 
         <ImageView
@@ -55,6 +56,7 @@
             <EditText
                 android:id="@+id/form_name"
                 style="@style/FormInput"
+                android:foreground="@drawable/ripple_surface"
                 android:hint="@string/hint_asset_name" />
 
             <TextView
@@ -67,6 +69,7 @@
             <EditText
                 android:id="@+id/form_symbol"
                 style="@style/FormInput"
+                android:foreground="@drawable/ripple_surface"
                 android:hint="@string/hint_symbol"
                 android:inputType="textCapCharacters" />
 
@@ -186,7 +189,7 @@
 
                 <EditText
                     android:id="@+id/form_invested"
-                    style="@style/FormInput"
+                    style="@style/FormReadonlyInput"
                     android:hint="@string/hint_invested_amount"
                     android:inputType="numberDecimal" />
 
@@ -254,6 +257,7 @@
                 <EditText
                     android:id="@+id/form_notes"
                     style="@style/FormInput"
+                    android:foreground="@drawable/ripple_surface"
                     android:gravity="center_vertical|start"
                     android:hint="@string/hint_notes"
                     android:inputType="textMultiLine"

@@ -19,6 +19,7 @@ internal interface ScreenHost {
     val activity: ComponentActivity
     val contentContainer: ViewGroup
     val bottomNavigation: View
+    var systemNavigationInset: Int
     var currentScreen: AppScreen
     var detailOrigin: AppScreen
     var selectedCategory: String
@@ -96,7 +97,10 @@ internal class AppNavigator(
         host.activity.findViewById<View>(R.id.fab).visibility =
             if (screen == AppScreen.ASSETS) View.VISIBLE else View.GONE
         val contentParams = host.contentContainer.layoutParams as ViewGroup.MarginLayoutParams
-        contentParams.bottomMargin = if (isMainScreen) host.dp(56) else 0
+        contentParams.bottomMargin = when {
+            isMainScreen -> host.dp(56) + host.systemNavigationInset
+            else -> host.systemNavigationInset
+        }
         host.contentContainer.layoutParams = contentParams
         host.contentContainer.animate().cancel()
         if (isInitialScreen) {

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="palette_blue_background">#FFFFFFFF</color>
+    <color name="palette_blue_surface">#FFE3F4FF</color>
+    <color name="palette_blue_surface_elevated">#FFE4F1F7</color>
+    <color name="palette_blue_primary">#FF0B60B0</color>
+    <color name="palette_blue_highlight">#FF0B60B0</color>
+    <color name="palette_blue_text">#FF0D1B2A</color>
+    <color name="palette_blue_text_secondary">#FF1E6F9F</color>
+    <color name="palette_blue_border">#FF0B60B0</color>
+    <color name="palette_blue_ripple">#330B60B0</color>
+    <color name="palette_blue_ripple_on_primary">#33000000</color>
+    <color name="palette_blue_icon_primary">#FF0B60B0</color>
+    <color name="palette_blue_icon_secondary">#FF0B60B0</color>
+    <color name="palette_blue_icon_inactive">#FF97B6CA</color>
+
+    <color name="palette_green_background">#FFFFFFFF</color>
+    <color name="palette_green_surface">#FFEAF6EE</color>
+    <color name="palette_green_surface_elevated">#FFF1FAF4</color>
+    <color name="palette_green_primary">#FF287A4B</color>
+    <color name="palette_green_highlight">#FF287A4B</color>
+    <color name="palette_green_text">#FF102218</color>
+    <color name="palette_green_text_secondary">#FF397257</color>
+    <color name="palette_green_border">#FF287A4B</color>
+    <color name="palette_green_ripple">#33287A4B</color>
+    <color name="palette_green_ripple_on_primary">#33000000</color>
+    <color name="palette_green_icon_primary">#FF287A4B</color>
+    <color name="palette_green_icon_secondary">#FF397257</color>
+    <color name="palette_green_icon_inactive">#FF91B7A0</color>
+
+    <color name="palette_teal_background">#FFFFFFFF</color>
+    <color name="palette_teal_surface">#FFE5F4F4</color>
+    <color name="palette_teal_surface_elevated">#FFD9EEEE</color>
+    <color name="palette_teal_primary">#FF087F8C</color>
+    <color name="palette_teal_highlight">#FF087F8C</color>
+    <color name="palette_teal_text">#FF102426</color>
+    <color name="palette_teal_text_secondary">#FF2F6F75</color>
+    <color name="palette_teal_border">#FF087F8C</color>
+    <color name="palette_teal_ripple">#33087F8C</color>
+    <color name="palette_teal_ripple_on_primary">#33000000</color>
+    <color name="palette_teal_icon_primary">#FF087F8C</color>
+    <color name="palette_teal_icon_secondary">#FF2F6F75</color>
+    <color name="palette_teal_icon_inactive">#FF8CB4B8</color>
+
+    <color name="palette_purple_background">#FFFFFFFF</color>
+    <color name="palette_purple_surface">#FFF1ECFF</color>
+    <color name="palette_purple_surface_elevated">#FFE8DFFF</color>
+    <color name="palette_purple_primary">#FF6C4AB6</color>
+    <color name="palette_purple_highlight">#FF6C4AB6</color>
+    <color name="palette_purple_text">#FF1D1728</color>
+    <color name="palette_purple_text_secondary">#FF695B78</color>
+    <color name="palette_purple_border">#FF6C4AB6</color>
+    <color name="palette_purple_ripple">#336C4AB6</color>
+    <color name="palette_purple_ripple_on_primary">#33000000</color>
+    <color name="palette_purple_icon_primary">#FF6C4AB6</color>
+    <color name="palette_purple_icon_secondary">#FF695B78</color>
+    <color name="palette_purple_icon_inactive">#FFA89BB9</color>
+
+    <color name="palette_rose_background">#FFFFFFFF</color>
+    <color name="palette_rose_surface">#FFFDEAF0</color>
+    <color name="palette_rose_surface_elevated">#FFF9DDE6</color>
+    <color name="palette_rose_primary">#FFB83B66</color>
+    <color name="palette_rose_highlight">#FFB83B66</color>
+    <color name="palette_rose_text">#FF2A151D</color>
+    <color name="palette_rose_text_secondary">#FF875268</color>
+    <color name="palette_rose_border">#FFB83B66</color>
+    <color name="palette_rose_ripple">#33B83B66</color>
+    <color name="palette_rose_ripple_on_primary">#33000000</color>
+    <color name="palette_rose_icon_primary">#FFB83B66</color>
+    <color name="palette_rose_icon_secondary">#FF875268</color>
+    <color name="palette_rose_icon_inactive">#FFBE91A3</color>
+
+    <color name="palette_red_background">#FFFFFFFF</color>
+    <color name="palette_red_surface">#FFFCEBEC</color>
+    <color name="palette_red_surface_elevated">#FFF8DDE0</color>
+    <color name="palette_red_primary">#FFB4232F</color>
+    <color name="palette_red_highlight">#FFB4232F</color>
+    <color name="palette_red_text">#FF2B1114</color>
+    <color name="palette_red_text_secondary">#FF87545A</color>
+    <color name="palette_red_border">#FFB4232F</color>
+    <color name="palette_red_ripple">#33B4232F</color>
+    <color name="palette_red_ripple_on_primary">#33000000</color>
+    <color name="palette_red_icon_primary">#FFB4232F</color>
+    <color name="palette_red_icon_secondary">#FF87545A</color>
+    <color name="palette_red_icon_inactive">#FFBE9297</color>
+</resources>

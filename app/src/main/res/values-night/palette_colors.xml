@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="palette_blue_background">#FF000000</color>
+    <color name="palette_blue_surface">#4D0B60B0</color>
+    <color name="palette_blue_surface_elevated">#660B60B0</color>
+    <color name="palette_blue_primary">#FF40A2D8</color>
+    <color name="palette_blue_highlight">#FFF0EDCF</color>
+    <color name="palette_blue_text">#FFF0EDCF</color>
+    <color name="palette_blue_text_secondary">#FF40A2D8</color>
+    <color name="palette_blue_border">#FF0B60B0</color>
+    <color name="palette_blue_ripple">#5540A2D8</color>
+    <color name="palette_blue_ripple_on_primary">#55F0EDCF</color>
+    <color name="palette_blue_icon_primary">#FFF0EDCF</color>
+    <color name="palette_blue_icon_secondary">#FF40A2D8</color>
+    <color name="palette_blue_icon_inactive">#FF0B60B0</color>
+
+    <color name="palette_green_background">#FF000000</color>
+    <color name="palette_green_surface">#FF12301E</color>
+    <color name="palette_green_surface_elevated">#FF194326</color>
+    <color name="palette_green_primary">#FF82D99D</color>
+    <color name="palette_green_highlight">#FFB5EBC5</color>
+    <color name="palette_green_text">#FFE9F7EC</color>
+    <color name="palette_green_text_secondary">#FF82D99D</color>
+    <color name="palette_green_border">#FF3E9F67</color>
+    <color name="palette_green_ripple">#5582D99D</color>
+    <color name="palette_green_ripple_on_primary">#55000000</color>
+    <color name="palette_green_icon_primary">#FFE9F7EC</color>
+    <color name="palette_green_icon_secondary">#FF82D99D</color>
+    <color name="palette_green_icon_inactive">#FF3E9F67</color>
+
+    <color name="palette_teal_background">#FF000000</color>
+    <color name="palette_teal_surface">#FF102B2E</color>
+    <color name="palette_teal_surface_elevated">#FF173B3F</color>
+    <color name="palette_teal_primary">#FF5DD3D1</color>
+    <color name="palette_teal_highlight">#FF9BE7E4</color>
+    <color name="palette_teal_text">#FFE5F7F7</color>
+    <color name="palette_teal_text_secondary">#FF8CDDD9</color>
+    <color name="palette_teal_border">#FF3B9B9A</color>
+    <color name="palette_teal_ripple">#555DD3D1</color>
+    <color name="palette_teal_ripple_on_primary">#55000000</color>
+    <color name="palette_teal_icon_primary">#FFE5F7F7</color>
+    <color name="palette_teal_icon_secondary">#FF5DD3D1</color>
+    <color name="palette_teal_icon_inactive">#FF3B7778</color>
+
+    <color name="palette_purple_background">#FF000000</color>
+    <color name="palette_purple_surface">#FF241A35</color>
+    <color name="palette_purple_surface_elevated">#FF302247</color>
+    <color name="palette_purple_primary">#FFC2A8FF</color>
+    <color name="palette_purple_highlight">#FFE0D3FF</color>
+    <color name="palette_purple_text">#FFF4EEFF</color>
+    <color name="palette_purple_text_secondary">#FFC2A8FF</color>
+    <color name="palette_purple_border">#FF8D70D4</color>
+    <color name="palette_purple_ripple">#55C2A8FF</color>
+    <color name="palette_purple_ripple_on_primary">#55000000</color>
+    <color name="palette_purple_icon_primary">#FFF4EEFF</color>
+    <color name="palette_purple_icon_secondary">#FFC2A8FF</color>
+    <color name="palette_purple_icon_inactive">#FF6D5A91</color>
+
+    <color name="palette_rose_background">#FF000000</color>
+    <color name="palette_rose_surface">#FF321521</color>
+    <color name="palette_rose_surface_elevated">#FF44202D</color>
+    <color name="palette_rose_primary">#FFFF9FBA</color>
+    <color name="palette_rose_highlight">#FFFFC2D2</color>
+    <color name="palette_rose_text">#FFFFEFF3</color>
+    <color name="palette_rose_text_secondary">#FFFF9FBA</color>
+    <color name="palette_rose_border">#FFD96A8A</color>
+    <color name="palette_rose_ripple">#55FF9FBA</color>
+    <color name="palette_rose_ripple_on_primary">#55000000</color>
+    <color name="palette_rose_icon_primary">#FFFFEFF3</color>
+    <color name="palette_rose_icon_secondary">#FFFF9FBA</color>
+    <color name="palette_rose_icon_inactive">#FF9B4D68</color>
+
+    <color name="palette_red_background">#FF000000</color>
+    <color name="palette_red_surface">#FF321417</color>
+    <color name="palette_red_surface_elevated">#FF441D21</color>
+    <color name="palette_red_primary">#FFFF8A80</color>
+    <color name="palette_red_highlight">#FFFFB3AD</color>
+    <color name="palette_red_text">#FFFFEDED</color>
+    <color name="palette_red_text_secondary">#FFFFB3AD</color>
+    <color name="palette_red_border">#FFD86666</color>
+    <color name="palette_red_ripple">#55FF8A80</color>
+    <color name="palette_red_ripple_on_primary">#55000000</color>
+    <color name="palette_red_icon_primary">#FFFFEDED</color>
+    <color name="palette_red_icon_secondary">#FFFF8A80</color>
+    <color name="palette_red_icon_inactive">#FF914A4F</color>
+</resources>

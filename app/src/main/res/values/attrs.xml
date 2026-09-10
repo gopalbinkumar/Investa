@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="investa_background" format="color" />
+    <attr name="investa_surface" format="color" />
+    <attr name="investa_surface_elevated" format="color" />
+    <attr name="investa_primary" format="color" />
+    <attr name="investa_highlight" format="color" />
+    <attr name="investa_text" format="color" />
+    <attr name="investa_text_secondary" format="color" />
+    <attr name="investa_border" format="color" />
+    <attr name="investa_ripple" format="color" />
+    <attr name="investa_ripple_on_primary" format="color" />
+    <attr name="investa_icon_primary" format="color" />
+    <attr name="investa_icon_secondary" format="color" />
+    <attr name="investa_icon_inactive" format="color" />
+</resources>

@@ -3,7 +3,8 @@ package com.example.investa.ui.reports
 import android.content.Context
 import android.widget.TextView
 import com.example.investa.R
-import com.example.investa.utils.formatAmount
+import com.example.investa.ui.common.applyElevatedCards
+import com.example.investa.ui.common.disableFontPaddingRecursively
 import com.github.mikephil.charting.components.MarkerView
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.highlight.Highlight
@@ -12,30 +13,23 @@ import kotlin.math.roundToInt
 
 internal class PortfolioMarkerView(
     context: Context,
-    private val labels: List<String>,
-    private val investedValues: List<Long>,
-    private val currentValues: List<Long>
+    private val labels: List<String>
 ) : MarkerView(context, R.layout.view_portfolio_marker) {
+
+    init {
+        disableFontPaddingRecursively()
+        applyElevatedCards(this)
+    }
 
     private var chartWidth = 0f
     private var chartHeight = 0f
 
     private val dateView = findViewById<TextView>(R.id.marker_date)
-    private val valueView = findViewById<TextView>(R.id.marker_value)
-    private val investedView = findViewById<TextView>(R.id.marker_invested)
 
     override fun refreshContent(e: Entry?, highlight: Highlight?) {
         if (labels.isEmpty()) return
         val index = e?.x?.roundToInt()?.coerceIn(0, labels.lastIndex) ?: return
         dateView.text = labels[index]
-        valueView.text = context.getString(
-            R.string.current_val_marker,
-            formatAmount(currentValues[index].toDouble(), "IDR", 0)
-        )
-        investedView.text = context.getString(
-            R.string.invested_marker,
-            formatAmount(investedValues[index].toDouble(), "IDR", 0)
-        )
         super.refreshContent(e, highlight)
     }
 

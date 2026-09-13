@@ -1,15 +1,14 @@
 package com.example.investa.ui.transactions
 
-import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.graphics.Color
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.widget.PopupMenu
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.ScrollView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -17,10 +16,16 @@ import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.R
 import com.example.investa.model.Asset
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.ui.common.InvestaPopupOption
+import com.example.investa.ui.common.disableFontPaddingRecursively
+import com.example.investa.ui.common.applyElevatedCards
+import com.example.investa.ui.common.showInvestaConfirmationDialog
+import com.example.investa.ui.common.showInvestaPopup
 import com.example.investa.utils.calculateTransactionTotal
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatEditableAmount
 import com.example.investa.utils.formatInputAmount
+import com.example.investa.utils.formatQuantityValue
 import com.example.investa.utils.formatTransactionDate
 import com.example.investa.utils.installDecimalInputFormatter
 import com.example.investa.utils.installMoneyInputFormatter
@@ -31,12 +36,12 @@ import com.example.investa.utils.parseTransactionQuantity
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.quantityUnitHint
 import com.example.investa.utils.LanguageManager
+import com.example.investa.utils.enableImeScrolling
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 internal class TransactionHandler(private val host: ScreenHost) {
     fun showTransactionDrawer(
@@ -46,6 +51,9 @@ internal class TransactionHandler(private val host: ScreenHost) {
     ) {
         val dialog = BottomSheetDialog(host.activity)
         val drawer = host.activity.layoutInflater.inflate(R.layout.bottom_sheet_transaction, null)
+        drawer.disableFontPaddingRecursively()
+        applyElevatedCards(drawer)
+        drawer.findViewById<ScrollView>(R.id.transaction_content_scroll).enableImeScrolling()
         dialog.setContentView(drawer)
         val title = drawer.findViewById<TextView>(R.id.transaction_title)
         val moreButton = drawer.findViewById<View>(R.id.transaction_more)
@@ -73,7 +81,12 @@ internal class TransactionHandler(private val host: ScreenHost) {
         quantityInput.setText(
             transaction?.let { formatEditableAmount(formatQuantityValue(it.quantity), "IDR") } ?: ""
         )
-        priceInput.setText(transaction?.let { formatInputAmount(it.price, selectedCurrency()) } ?: "")
+        priceInput.setText(
+            transaction?.let { formatInputAmount(it.price, selectedCurrency()) }
+                ?: parseMoneyInput(asset.currentPrice)?.let {
+                    formatInputAmount(it, selectedCurrency())
+                }.orEmpty()
+        )
         feeInput.setText(
             transaction?.fee?.takeIf { it > 0.0 }?.let { formatInputAmount(it, selectedCurrency()) } ?: ""
         )
@@ -226,22 +239,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
             saveButton.visibility = View.GONE
             updateTransactionFieldAppearance(editable = false)
             val inputs = listOf(quantityInput, priceInput, feeInput, notesInput)
-            inputs.forEach { input ->
-                input.isFocusable = false
-                input.isFocusableInTouchMode = false
-                input.setOnClickListener {
-                    updateTransactionFieldAppearance(editable = true)
-                    inputs.forEach { editableInput ->
-                        editableInput.isFocusable = true
-                        editableInput.isFocusableInTouchMode = true
-                    }
-                    feeToggle.isClickable = true
-                    feeToggle.isFocusable = true
-                    saveButton.visibility = View.VISIBLE
-                    input.requestFocus()
-                }
-            }
-            dateInput.setOnClickListener {
+            fun enableEditing() {
                 updateTransactionFieldAppearance(editable = true)
                 inputs.forEach { editableInput ->
                     editableInput.isFocusable = true
@@ -250,6 +248,17 @@ internal class TransactionHandler(private val host: ScreenHost) {
                 feeToggle.isClickable = true
                 feeToggle.isFocusable = true
                 saveButton.visibility = View.VISIBLE
+            }
+            inputs.forEach { input ->
+                input.isFocusable = false
+                input.isFocusableInTouchMode = false
+                input.setOnClickListener {
+                    enableEditing()
+                    input.requestFocus()
+                }
+            }
+            dateInput.setOnClickListener {
+                enableEditing()
                 showDatePicker()
             }
             feeToggle.isClickable = false
@@ -280,6 +289,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
                     // half-expanded/collapsed position where the Save button is hidden.
                     skipCollapsed = true
                     isFitToContents = true
+                    isDraggable = false
                     state = BottomSheetBehavior.STATE_EXPANDED
                 }
                 // Re-apply after measurement because Android can restore the initial
@@ -295,40 +305,37 @@ internal class TransactionHandler(private val host: ScreenHost) {
         transaction: TransactionEntity,
         dialog: BottomSheetDialog
     ) {
-        PopupMenu(host.activity, anchor).apply {
-            menu.add(R.string.delete)
-            setOnMenuItemClickListener { item ->
-                if (item.itemId == 0 || item.title.toString() == host.activity.getString(R.string.delete)) {
+        showInvestaPopup(
+            anchor,
+            listOf(
+                InvestaPopupOption(
+                    host.activity.getString(R.string.delete),
+                    destructive = true
+                ) {
                     confirmDeleteTransaction(transaction, dialog)
-                    true
-                } else {
-                    false
                 }
-            }
-        }.show()
+            )
+        )
     }
 
     private fun confirmDeleteTransaction(transaction: TransactionEntity, dialog: BottomSheetDialog) {
-        AlertDialog.Builder(host.activity)
-            .setTitle(host.activity.getString(R.string.delete_transaction))
-            .setMessage(host.activity.getString(R.string.delete_transaction_message))
-            .setNegativeButton(host.activity.getString(R.string.cancel), null)
-            .setPositiveButton(host.activity.getString(R.string.delete)) { _, _ ->
-                host.transactionViewModel.deleteTransaction(
-                    transaction = transaction,
-                    onDeleted = {
-                        host.refreshTransactions()
-                        dialog.dismiss()
-                        host.activity.showInvestaToast(host.activity.getString(R.string.transaction_deleted))
-                    },
-                    onError = { message ->
-                        host.activity.showInvestaToast(message)
-                    }
-                )
-            }
-            .show()
+        showInvestaConfirmationDialog(
+            activity = host.activity,
+            title = host.activity.getString(R.string.delete_transaction),
+            message = host.activity.getString(R.string.delete_transaction_message)
+        ) {
+            host.transactionViewModel.deleteTransaction(
+                transaction = transaction,
+                onDeleted = {
+                    host.refreshTransactions()
+                    dialog.dismiss()
+                    host.activity.showInvestaToast(host.activity.getString(R.string.transaction_deleted))
+                },
+                onError = { message ->
+                    host.activity.showInvestaToast(message)
+                }
+            )
+        }
     }
 
-    private fun formatQuantityValue(quantity: Double): String =
-        java.math.BigDecimal.valueOf(quantity).stripTrailingZeros().toPlainString()
 }

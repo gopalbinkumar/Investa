@@ -4,6 +4,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     android:background="@drawable/bg_surface"
+    android:tag="investa_elevated_card"
     android:foreground="@drawable/ripple_surface"
     android:gravity="center_vertical"
     android:minHeight="76dp"
@@ -20,7 +21,7 @@
             android:id="@+id/cash_account_code"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -28,7 +29,7 @@
             android:id="@+id/cash_account_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
             android:textSize="11sp" />
     </LinearLayout>
 
@@ -42,7 +43,7 @@
             android:id="@+id/cash_account_balance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -50,7 +51,7 @@
             android:id="@+id/cash_account_idr_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
             android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>

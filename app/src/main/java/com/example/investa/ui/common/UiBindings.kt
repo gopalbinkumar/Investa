@@ -7,11 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.example.investa.R
 import com.example.investa.model.Asset
 import com.example.investa.utils.localizedCategory
+import com.example.investa.utils.formatQuantityForCard
 
 internal fun addAssetRow(
     context: Context,
@@ -26,13 +28,29 @@ internal fun addAssetRow(
     if (onClick != null) row.setOnClickListener { onClick() } else row.setOnClickListener(null)
     row.isClickable = onClick != null
     parent.addView(row)
+    applyElevatedCard(row)
 }
 
-internal fun bindAsset(row: View, asset: Asset, compact: Boolean, percentage: String? = null) {
+internal fun bindAsset(
+    row: View,
+    asset: Asset,
+    compact: Boolean,
+    percentage: String? = null,
+    showCategory: Boolean = true
+) {
+    // RecyclerView/ViewPager2 rows are inflated after the screen root, so apply
+    // the global text metric rule here as well.
+    row.disableFontPaddingRecursively()
     row.findViewById<TextView>(R.id.asset_name).text = asset.name
     row.findViewById<TextView>(R.id.asset_symbol).text = asset.symbol
-    row.findViewById<TextView>(R.id.asset_category).text = localizedCategory(row.context, asset.category)
-    row.findViewById<TextView>(R.id.asset_quantity).text = asset.quantity
+    val cardQuantity = formatQuantityForCard(asset.quantity)
+    val categoryView = row.findViewById<TextView>(R.id.asset_category)
+    categoryView.text =
+        if (showCategory) {
+            "${localizedCategory(row.context, asset.category)} · $cardQuantity"
+        } else {
+            cardQuantity
+        }
     row.findViewById<TextView>(R.id.asset_value).text = asset.value
     row.findViewById<TextView>(R.id.asset_profit).apply {
         val displayedPercentage = percentage ?: asset.profitPercent
@@ -52,10 +70,8 @@ internal fun bindAsset(row: View, asset: Asset, compact: Boolean, percentage: St
         if (compact) View.VISIBLE else View.GONE
     row.findViewById<ImageView>(R.id.asset_chevron).visibility =
         if (compact) View.GONE else View.VISIBLE
-    if (compact) {
-        row.findViewById<TextView>(R.id.asset_category).visibility = View.GONE
-        row.findViewById<TextView>(R.id.asset_quantity).visibility = View.GONE
-    }
+    categoryView.visibility =
+        if (compact) View.GONE else View.VISIBLE
 }
 
 internal fun bindLegendRows(legend: ViewGroup, values: List<Pair<String, Int>>) {
@@ -102,14 +118,29 @@ internal fun setReportToggle(
 ) {
     if (categorySelected) category.setBackgroundResource(R.drawable.bg_primary_button) else category.background = null
     if (categorySelected) asset.background = null else asset.setBackgroundResource(R.drawable.bg_primary_button)
-    category.setTextColor(ContextCompat.getColor(
-        context,
-        if (categorySelected) R.color.investa_background else R.color.investa_text_secondary
-    ))
-    asset.setTextColor(ContextCompat.getColor(
-        context,
-        if (categorySelected) R.color.investa_text_secondary else R.color.investa_background
-    ))
+    category.setTextColor(
+        ContextCompat.getColor(
+            context,
+            if (categorySelected) R.color.investa_background else R.color.investa_text_secondary
+        )
+    )
+    asset.setTextColor(
+        ContextCompat.getColor(
+            context,
+            if (categorySelected) R.color.investa_text_secondary else R.color.investa_background
+        )
+    )
+}
+
+internal fun setLoadingState(
+    button: View,
+    icon: ImageView,
+    progress: ProgressBar,
+    loading: Boolean
+) {
+    button.isEnabled = !loading
+    icon.visibility = if (loading) View.GONE else View.VISIBLE
+    progress.visibility = if (loading) View.VISIBLE else View.GONE
 }
 
 internal fun tint(view: View, color: Int) {

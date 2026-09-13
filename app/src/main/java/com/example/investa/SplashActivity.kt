@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import com.example.investa.utils.ThemeManager
 
 class SplashActivity : AppCompatActivity() {
     private val splashHandler = Handler(Looper.getMainLooper())
@@ -14,6 +15,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
         splashHandler.postDelayed(openMainActivity, 1_200L)

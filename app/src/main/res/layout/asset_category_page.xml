@@ -3,6 +3,7 @@
     android:id="@+id/asset_page_list"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:scrollbars="none"
     android:clipToPadding="false"
     android:overScrollMode="never"
     android:paddingStart="12dp"

@@ -1,16 +1,20 @@
 package com.example.investa.ui.reports
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.view.MotionEvent
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import com.example.investa.R
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.TransactionEntity
+import com.example.investa.model.Asset
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addReportSummaryRow
+import com.example.investa.ui.common.applyElevatedCard
 import com.example.investa.ui.common.setReportToggle
 import com.example.investa.utils.assetCategories
 import com.example.investa.utils.localizedCategory
@@ -87,7 +91,9 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         )
         setupPerformanceChart(
             root.findViewById(R.id.performance_chart),
-            performance
+            performance,
+            root.findViewById(R.id.reports_invested_value),
+            root.findViewById(R.id.reports_current_value)
         )
         val summary = root.findViewById<LinearLayout>(R.id.category_summary)
         fun renderSummary(byAsset: Boolean) {
@@ -102,7 +108,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                 categories.forEach { category ->
                     val categoryAssets = groupedAssets[category]
                         ?.sortedWith(
-                            compareBy< com.example.investa.model.Asset > { it.name.lowercase(Locale.ENGLISH) }
+                            compareBy<Asset> { it.name.lowercase(Locale.ENGLISH) }
                                 .thenBy { it.symbol.lowercase(Locale.ENGLISH) }
                         )
                         .orEmpty()
@@ -121,9 +127,15 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                     }
                     categoryCard.addView(TextView(host.activity).apply {
                         text = localizedCategory(host.activity, category)
+                        includeFontPadding = false
                         setTextColor(ContextCompat.getColor(host.activity, R.color.investa_text_secondary))
                         textSize = 12f
-                        setTypeface(typeface, android.graphics.Typeface.BOLD)
+                        setTypeface(
+                            Typeface.create(
+                                ResourcesCompat.getFont(host.activity, R.font.plus_jakarta_sans),
+                                Typeface.BOLD
+                            )
+                        )
                         setPadding(host.dp(16), 0, host.dp(16), 0)
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
@@ -149,24 +161,25 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                         )
                     }
                     summary.addView(categoryCard)
+                    applyElevatedCard(categoryCard)
                 }
             } else {
-                summary.setBackgroundResource(R.drawable.bg_surface)
+                applyElevatedCard(summary)
                 summary.setPadding(0, host.dp(16), 0, host.dp(16))
                 assetCategories.forEach { category ->
                     val value = displayAssets.filter { it.category == category }.sumOf { parseMoneyInput(it.value) ?: 0.0 }
                     val percentage = if (totalValue == 0.0) 0 else ((value * 100.0) / totalValue).roundToInt()
-                        addReportSummaryRow(
-                            host.activity,
-                            summary,
-                            localizedCategory(host.activity, category),
-                            formatAmount(value, displayCurrency, 0),
-                            "$percentage%",
-                            onClick = {
-                                host.selectedCategory = category
-                                host.showScreen(AppScreen.ASSETS)
-                            }
-                        )
+                    addReportSummaryRow(
+                        host.activity,
+                        summary,
+                        localizedCategory(host.activity, category),
+                        formatAmount(value, displayCurrency, 0),
+                        "$percentage%",
+                        onClick = {
+                            host.selectedCategory = category
+                            host.showScreen(AppScreen.ASSETS)
+                        }
+                    )
                 }
             }
         }
@@ -185,11 +198,22 @@ internal class ReportsRenderer(private val host: ScreenHost) {
 
     private fun setupPerformanceChart(
         chart: LineChart,
-        performance: List<DailyPerformance>
+        performance: List<DailyPerformance>,
+        investedSummary: TextView,
+        currentSummary: TextView
     ) {
         val investedValues = performance.map { it.invested }
         val currentValues = performance.map { it.current }
         val dateLabels = performance.map { it.dateLabel }
+
+        fun updateSummary(index: Int) {
+            val selectedIndex = index.coerceIn(0, (performance.size - 1).coerceAtLeast(0))
+            val selected = performance.getOrNull(selectedIndex) ?: return
+            investedSummary.text = formatAmount(selected.invested.toDouble(), "IDR", 0)
+            currentSummary.text = formatAmount(selected.current.toDouble(), "IDR", 0)
+        }
+
+        updateSummary(performance.lastIndex)
 
         fun dataSet(values: List<Long>, label: String, color: Int): LineDataSet {
             val entries = values.mapIndexed { index, value ->
@@ -262,9 +286,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             setDrawMarkers(true)
             val portfolioMarker = PortfolioMarkerView(
                 host.activity,
-                dateLabels,
-                investedValues,
-                currentValues
+                dateLabels
             )
             marker = portfolioMarker
             addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
@@ -277,6 +299,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                     MotionEvent.ACTION_MOVE -> {
                         view.parent?.requestDisallowInterceptTouchEvent(true)
                         getHighlightByTouchPoint(event.x, event.y)?.let { highlight ->
+                            updateSummary(highlight.x.roundToInt())
                             highlightValue(highlight, true)
                         }
                         true
@@ -284,6 +307,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                     MotionEvent.ACTION_UP,
                     MotionEvent.ACTION_CANCEL -> {
                         view.parent?.requestDisallowInterceptTouchEvent(false)
+                        updateSummary(performance.lastIndex)
                         highlightValue(null, true)
                         invalidate()
                         true

@@ -28,10 +28,13 @@ import com.example.investa.model.Asset
 import com.example.investa.navigation.AppNavigator
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.navigation.isMainScreen
 import com.example.investa.ui.assets.AssetDetailRenderer
 import com.example.investa.ui.assets.AssetFormHandler
 import com.example.investa.ui.assets.AssetsRenderer
 import com.example.investa.ui.cash.CashRenderer
+import com.example.investa.ui.common.disableFontPaddingRecursively
+import com.example.investa.ui.common.applyElevatedCards
 import com.example.investa.ui.home.HomeRenderer
 import com.example.investa.ui.reports.ReportsRenderer
 import com.example.investa.ui.settings.SettingsRenderer
@@ -70,17 +73,21 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     override var selectedAsset: Asset? = null
     override val activity: ComponentActivity get() = this
 
+    private val database: InvestaDatabase by lazy {
+        InvestaDatabase.getInstance(applicationContext)
+    }
+
     override val assetViewModel: AssetViewModel by viewModels {
-        AssetViewModelFactory(AssetRepository(InvestaDatabase.getInstance(applicationContext).assetDao()))
+        AssetViewModelFactory(AssetRepository(database.assetDao()))
     }
     override val transactionViewModel: TransactionViewModel by viewModels {
-        TransactionViewModelFactory(TransactionRepository(InvestaDatabase.getInstance(applicationContext)))
+        TransactionViewModelFactory(TransactionRepository(database))
     }
     override val currencyViewModel: CurrencyViewModel by viewModels {
-        CurrencyViewModelFactory(CurrencyRepository(InvestaDatabase.getInstance(applicationContext).currencyDao()))
+        CurrencyViewModelFactory(CurrencyRepository(database.currencyDao()))
     }
     override val cashViewModel: CashViewModel by viewModels {
-        CashViewModelFactory(CashRepository(InvestaDatabase.getInstance(applicationContext)))
+        CashViewModelFactory(CashRepository(database))
     }
 
     private lateinit var navigator: AppNavigator
@@ -222,13 +229,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                     0
                 }
                 params.bottomMargin = when {
-                    currentScreen in setOf(
-                        AppScreen.HOME,
-                        AppScreen.ASSETS,
-                        AppScreen.CASH,
-                        AppScreen.REPORTS,
-                        AppScreen.SETTINGS
-                    ) -> dp(56) + systemNavigationInset
+                    currentScreen.isMainScreen -> dp(56) + systemNavigationInset
                     else -> systemNavigationInset
                 }
                 contentContainer.layoutParams = params
@@ -273,6 +274,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
         LayoutInflater.from(this).inflate(layout, contentContainer, false)
 
     override fun attach(view: View) {
+        view.disableFontPaddingRecursively()
         contentContainer.addView(
             view,
             ViewGroup.LayoutParams(
@@ -280,6 +282,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         )
+        applyElevatedCards(view)
     }
 
     override fun exchangeRateFor(currency: String): Double {

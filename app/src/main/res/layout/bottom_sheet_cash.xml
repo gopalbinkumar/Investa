@@ -19,10 +19,24 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
+    <ScrollView
+        android:id="@+id/cash_content_scroll"
+        android:scrollbars="none"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingTop="11dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="11dp"
         android:text="@string/currency"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
@@ -58,4 +72,7 @@
         android:textColor="@color/investa_background"
         android:textSize="14sp"
         android:textStyle="bold" />
+
+    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

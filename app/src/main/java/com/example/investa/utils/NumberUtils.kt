@@ -103,7 +103,46 @@ fun formatInputAmount(amount: Double, currency: String): String {
 }
 
 fun formatQuantityValue(quantity: Double): String =
-    BigDecimal.valueOf(quantity).stripTrailingZeros().toPlainString()
+    BigDecimal.valueOf(quantity)
+        .stripTrailingZeros()
+        .toPlainString()
+        .replace('.', ',')
+
+fun formatCompactQuantityValue(quantity: Double): String {
+    val plain = BigDecimal.valueOf(quantity)
+        .stripTrailingZeros()
+        .toPlainString()
+    val sign = if (plain.startsWith("-")) "-" else ""
+    val unsigned = plain.removePrefix("-")
+    val decimalIndex = unsigned.indexOf('.')
+    if (decimalIndex < 0) return sign + unsigned
+
+    val integerPart = unsigned.substring(0, decimalIndex)
+    val fraction = unsigned.substring(decimalIndex + 1)
+    val firstNonZero = fraction.indexOfFirst { it != '0' }
+    if (firstNonZero < 0) return sign + integerPart
+
+    val decimalsToKeep = if (integerPart == "0") {
+        // Keep three meaningful digits after any leading fractional zeroes.
+        firstNonZero + 3
+    } else {
+        3
+    }
+    val compactFraction = fraction
+        .take(decimalsToKeep)
+        .trimEnd('0')
+    return sign + integerPart +
+        if (compactFraction.isEmpty()) "" else ",$compactFraction"
+}
+
+fun formatQuantityForCard(quantityWithUnit: String): String {
+    val numericPart = quantityWithUnit.substringBefore(' ')
+    val amount = parseTransactionQuantity(numericPart)
+        ?: return quantityWithUnit.replace('.', ',')
+    val unit = quantityWithUnit.substringAfter(' ', "")
+    val formatted = formatCompactQuantityValue(amount)
+    return if (unit.isBlank()) formatted else "$formatted $unit"
+}
 
 fun formatQuantityWithUnit(quantity: Double, unit: String): String =
     "${formatQuantityValue(quantity)} $unit"

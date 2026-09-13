@@ -9,15 +9,20 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.ScrollView
 import com.example.investa.R
 import com.example.investa.data.entity.CashAccountEntity
 import com.example.investa.data.entity.CurrencyEntity
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.ui.common.applyElevatedCard
+import com.example.investa.ui.common.disableFontPaddingRecursively
+import com.example.investa.ui.common.applyElevatedCards
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.showInvestaToast
+import com.example.investa.utils.enableImeScrolling
 import com.example.investa.utils.localizedCurrencyName
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -44,6 +49,7 @@ internal class CashRenderer(private val host: ScreenHost) {
                     ?: fallbackCurrency(account.currencyCode)
                 val row = LayoutInflater.from(host.activity)
                     .inflate(R.layout.view_cash_account, accountsContainer, false)
+                row.disableFontPaddingRecursively()
                 row.findViewById<TextView>(R.id.cash_account_code).text = currency.code
                 row.findViewById<TextView>(R.id.cash_account_name).text = localizedCurrencyName(host.activity, currency)
                 row.findViewById<TextView>(R.id.cash_account_balance).text =
@@ -60,6 +66,7 @@ internal class CashRenderer(private val host: ScreenHost) {
                 }
                 row.setOnClickListener { showCashDrawer(account) }
                 accountsContainer.addView(row)
+                applyElevatedCard(row)
             }
         root.findViewById<View>(R.id.cash_add).setOnClickListener { showCashDrawer(null) }
     }
@@ -67,6 +74,9 @@ internal class CashRenderer(private val host: ScreenHost) {
     private fun showCashDrawer(account: CashAccountEntity?) {
         val dialog = BottomSheetDialog(host.activity)
         val drawer = host.activity.layoutInflater.inflate(R.layout.bottom_sheet_cash, null)
+        drawer.disableFontPaddingRecursively()
+        applyElevatedCards(drawer)
+        drawer.findViewById<ScrollView>(R.id.cash_content_scroll).enableImeScrolling()
         dialog.setContentView(drawer)
         val title = drawer.findViewById<TextView>(R.id.cash_drawer_title)
         val currencySpinner = drawer.findViewById<Spinner>(R.id.cash_currency)
@@ -134,7 +144,12 @@ internal class CashRenderer(private val host: ScreenHost) {
                 com.google.android.material.R.id.design_bottom_sheet
             )
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
-            bottomSheet?.let { BottomSheetBehavior.from(it).state = BottomSheetBehavior.STATE_EXPANDED }
+            bottomSheet?.let {
+                BottomSheetBehavior.from(it).apply {
+                    isDraggable = false
+                    state = BottomSheetBehavior.STATE_EXPANDED
+                }
+            }
         }
         dialog.show()
     }

@@ -1,9 +1,9 @@
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true">
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/investa_ripple_on_primary">
+    <item android:id="@android:id/mask">
         <shape>
-            <solid android:color="@color/investa_ripple_loss" />
-            <corners android:radius="17dp" />
+            <solid android:color="@android:color/white" />
+            <corners android:radius="20dp" />
         </shape>
     </item>
-    <item android:drawable="@android:color/transparent" />
-</selector>
+</ripple>

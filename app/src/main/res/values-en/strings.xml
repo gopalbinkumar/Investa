@@ -126,7 +126,6 @@
     <string name="language">Language</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
-    <string name="theme_system">System</string>
     <string name="choose_theme">Choose your app theme</string>
     <string name="choose_icon_theme">Choose your icon theme</string>
     <string name="change_theme">Change Theme</string>
@@ -162,6 +161,7 @@
     <string name="symbol_required">Symbol is required</string>
     <string name="select_category_error">Select a category</string>
     <string name="valid_quantity">Enter a valid quantity</string>
+    <string name="insufficient_asset_quantity">Insufficient asset quantity</string>
     <string name="valid_price">Enter a valid price</string>
     <string name="valid_fee">Enter a valid fee</string>
     <string name="valid_invested_amount">Enter a valid invested amount</string>
@@ -171,6 +171,9 @@
     <string name="valid_exchange_rate">Enter a valid exchange rate</string>
     <string name="yahoo_category_unavailable">Yahoo Finance is not available for this category</string>
     <string name="refresh_current_price">Refresh current price</string>
+    <string name="refresh_asset_data">Load latest asset data</string>
+    <string name="latest_asset_data_loaded">Latest asset data loaded</string>
+    <string name="failed_asset_data">Failed to load asset data: %1$s</string>
     <string name="hint_transaction_quantity">Ex: 0.005</string>
     <string name="dummy_portfolio_value">Rp125,650,000</string>
     <string name="dummy_invested_amount">Rp106,900,000</string>

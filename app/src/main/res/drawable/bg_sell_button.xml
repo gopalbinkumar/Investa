@@ -1,5 +1,4 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@android:color/transparent" />
-    <stroke android:width="2dp" android:color="@color/investa_loss" />
-    <corners android:radius="17dp" />
+    <solid android:color="@color/investa_loss" />
+    <corners android:radius="20dp" />
 </shape>

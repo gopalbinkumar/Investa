@@ -5,6 +5,7 @@
         <item name="android:fontFamily">@font/plus_jakarta_sans</item>
         <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:windowActionModeOverlay">true</item>
+        <item name="colorPrimary">@color/investa_primary</item>
         <item name="android:colorAccent">@color/investa_primary</item>
         <item name="android:statusBarColor">@color/investa_background</item>
         <item name="android:navigationBarColor">@color/investa_background</item>
@@ -12,7 +13,7 @@
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 
-    <style name="Theme.Investa.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Investa.Splash" parent="Theme.Investa">
         <item name="android:fontFamily">@font/plus_jakarta_sans</item>
         <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:windowNoTitle">true</item>
@@ -42,6 +43,7 @@
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">14dp</item>
         <item name="android:background">@drawable/bg_input</item>
+        <item name="android:tag">investa_input_field</item>
         <item name="android:textColor">@color/investa_text</item>
         <item name="android:textColorHint">@color/investa_text_secondary</item>
         <item name="android:textSize">13sp</item>
@@ -59,6 +61,7 @@
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">14dp</item>
         <item name="android:background">@drawable/bg_input</item>
+        <item name="android:tag">investa_input_field</item>
         <item name="android:paddingStart">14dp</item>
         <item name="android:paddingEnd">14dp</item>
         <item name="android:foreground">@drawable/ripple_surface</item>

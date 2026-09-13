@@ -9,8 +9,7 @@ internal object ThemeManager {
 
     enum class AppTheme(val value: String, val label: String, val nightMode: Int) {
         DARK("dark", "Dark", AppCompatDelegate.MODE_NIGHT_YES),
-        LIGHT("light", "Light", AppCompatDelegate.MODE_NIGHT_NO),
-        SYSTEM("system", "System", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        LIGHT("light", "Light", AppCompatDelegate.MODE_NIGHT_NO)
     }
 
     fun current(context: Context): AppTheme {
@@ -31,9 +30,4 @@ internal object ThemeManager {
             .apply()
     }
 
-    fun select(context: Context, theme: AppTheme) {
-        if (current(context) == theme) return
-        save(context, theme)
-        AppCompatDelegate.setDefaultNightMode(theme.nightMode)
-    }
 }

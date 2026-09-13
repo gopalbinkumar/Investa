@@ -1,14 +1,13 @@
 package com.example.investa.ui.assets
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.investa.data.entity.AssetEntity
@@ -18,6 +17,13 @@ import com.example.investa.model.Asset
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.transactions.TransactionHandler
+import com.example.investa.ui.common.applyElevatedCard
+import com.example.investa.ui.common.InvestaPopupOption
+import com.example.investa.ui.common.disableFontPaddingRecursively
+import com.example.investa.ui.common.applyElevatedCards
+import com.example.investa.ui.common.showInvestaConfirmationDialog
+import com.example.investa.ui.common.showInvestaPopup
+import com.example.investa.ui.common.setLoadingState
 import com.example.investa.utils.currencySymbolFor
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
@@ -26,8 +32,10 @@ import com.example.investa.utils.formatTransactionDate
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.showInvestaToast
+import com.example.investa.utils.hideInvestaKeyboard
 import com.example.investa.utils.toUiAsset
 import com.example.investa.utils.withAmountPrecision
+import com.example.investa.utils.enableImeScrolling
 import com.example.investa.utils.YahooFinanceApi
 import com.example.investa.utils.localizedCategory
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -78,7 +86,17 @@ internal class AssetDetailRenderer(
             transactionHandler.showTransactionDrawer(displayAsset, isBuy = true)
         }
         root.findViewById<View>(R.id.detail_sell).setOnClickListener {
-            transactionHandler.showTransactionDrawer(displayAsset, isBuy = false)
+            val currentQuantity = host.databaseAssets
+                .firstOrNull { it.id == displayAsset.id }
+                ?.quantity
+                ?: 0.0
+            if (currentQuantity <= 0.0) {
+                host.activity.showInvestaToast(
+                    host.activity.getString(R.string.insufficient_asset_quantity)
+                )
+            } else {
+                transactionHandler.showTransactionDrawer(displayAsset, isBuy = false)
+            }
         }
         root.findViewById<View>(R.id.detail_change_current_price).setOnClickListener {
             showCurrentPriceDrawer(displayAsset)
@@ -144,6 +162,7 @@ internal class AssetDetailRenderer(
         if (transactions.isEmpty()) {
             val empty = LayoutInflater.from(host.activity)
                 .inflate(R.layout.view_empty_state, historyContainer, false)
+            empty.disableFontPaddingRecursively()
             empty.findViewById<TextView>(R.id.empty_title).text = host.activity.getString(R.string.no_transactions_found)
             empty.findViewById<TextView>(R.id.empty_message).text = host.activity.getString(R.string.add_buy_sell_transaction)
             historyContainer.addView(empty)
@@ -156,6 +175,7 @@ internal class AssetDetailRenderer(
             )
             val card = LayoutInflater.from(host.activity)
                 .inflate(R.layout.view_transaction_history_card, historyContainer, false)
+            card.disableFontPaddingRecursively()
             card.findViewById<TextView>(R.id.history_type).apply {
                 text = actionLabel
                 setTextColor(ContextCompat.getColor(
@@ -193,10 +213,11 @@ internal class AssetDetailRenderer(
                     2
                 )
                 realizedValue.setTextColor(
-                    ContextCompat.getColor(
-                        host.activity,
-                        if (realizedPL >= 0.0) R.color.investa_mint else R.color.investa_loss
-                    )
+                    if (realizedPL >= 0.0) {
+                        ContextCompat.getColor(host.activity, R.color.investa_profit)
+                    } else {
+                        ContextCompat.getColor(host.activity, R.color.investa_loss)
+                    }
                 )
             } else {
                 realizedRow.visibility = View.GONE
@@ -205,6 +226,7 @@ internal class AssetDetailRenderer(
                 transactionHandler.showTransactionDrawer(asset, transaction.action == "BUY", transaction)
             }
             historyContainer.addView(card)
+            applyElevatedCard(card)
         }
     }
 
@@ -215,6 +237,9 @@ internal class AssetDetailRenderer(
         }
         val dialog = BottomSheetDialog(host.activity)
         val drawer = host.activity.layoutInflater.inflate(R.layout.bottom_sheet_current_price, null)
+        drawer.disableFontPaddingRecursively()
+        applyElevatedCards(drawer)
+        drawer.findViewById<ScrollView>(R.id.current_price_content_scroll).enableImeScrolling()
         dialog.setContentView(drawer)
         val priceInput = drawer.findViewById<android.widget.EditText>(R.id.current_price_input)
         val priceUnit = drawer.findViewById<TextView>(R.id.current_price_unit)
@@ -229,13 +254,14 @@ internal class AssetDetailRenderer(
             View.GONE
         }
         refreshButton.setOnClickListener {
-            setRefreshLoading(refreshButton, refreshIcon, refreshProgress, true)
+            setLoadingState(refreshButton, refreshIcon, refreshProgress, true)
             priceRequestJob = host.activity.lifecycleScope.launch {
                 try {
                     val latestPrice = fetchLatestAssetPrice(asset)
                         val formatted = formatInputAmount(latestPrice, asset.currency)
                         priceInput.setText(formatted)
                         priceInput.setSelection(formatted.length)
+                        priceInput.hideInvestaKeyboard()
                         host.activity.showInvestaToast(host.activity.getString(R.string.latest_current_price_loaded))
                 } catch (error: CancellationException) {
                     throw error
@@ -244,7 +270,7 @@ internal class AssetDetailRenderer(
                         host.activity.getString(R.string.failed_current_price, error.message ?: error.javaClass.simpleName)
                     )
                 } finally {
-                    setRefreshLoading(refreshButton, refreshIcon, refreshProgress, false)
+                    setLoadingState(refreshButton, refreshIcon, refreshProgress, false)
                 }
             }
         }
@@ -277,7 +303,12 @@ internal class AssetDetailRenderer(
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
-            bottomSheet?.let { BottomSheetBehavior.from(it).state = BottomSheetBehavior.STATE_EXPANDED }
+            bottomSheet?.let {
+                BottomSheetBehavior.from(it).apply {
+                    isDraggable = false
+                    state = BottomSheetBehavior.STATE_EXPANDED
+                }
+            }
         }
         dialog.setOnDismissListener {
             val request = priceRequestJob
@@ -313,29 +344,22 @@ internal class AssetDetailRenderer(
         }
     }
 
-    private fun setRefreshLoading(
-        button: View,
-        icon: android.widget.ImageView,
-        progress: ProgressBar,
-        loading: Boolean
-    ) {
-        button.isEnabled = !loading
-        icon.visibility = if (loading) View.GONE else View.VISIBLE
-        progress.visibility = if (loading) View.VISIBLE else View.GONE
-    }
-
     private fun showAssetOptions(asset: Asset) {
-        PopupMenu(host.activity, host.activity.findViewById(R.id.detail_more)).apply {
-            menu.add(host.activity.getString(R.string.edit))
-            menu.add(host.activity.getString(R.string.delete))
-            setOnMenuItemClickListener { item ->
-                when (item.title.toString()) {
-                    host.activity.getString(R.string.edit) -> { host.showScreen(AppScreen.EDIT); true }
-                    host.activity.getString(R.string.delete) -> { confirmDeleteAsset(asset); true }
-                    else -> false
+        val anchor = host.activity.findViewById<View>(R.id.detail_more)
+        showInvestaPopup(
+            anchor,
+            listOf(
+                InvestaPopupOption(host.activity.getString(R.string.edit)) {
+                    host.showScreen(AppScreen.EDIT)
+                },
+                InvestaPopupOption(
+                    host.activity.getString(R.string.delete),
+                    destructive = true
+                ) {
+                    confirmDeleteAsset(asset)
                 }
-            }
-        }.show()
+            )
+        )
     }
 
     private fun confirmDeleteAsset(asset: Asset) {
@@ -343,20 +367,19 @@ internal class AssetDetailRenderer(
             host.activity.showInvestaToast(host.activity.getString(R.string.asset_not_found))
             return
         }
-        AlertDialog.Builder(host.activity)
-            .setTitle(host.activity.getString(R.string.delete_asset))
-            .setMessage(host.activity.getString(R.string.delete_asset_message, asset.name))
-            .setNegativeButton(host.activity.getString(R.string.cancel), null)
-            .setPositiveButton(host.activity.getString(R.string.delete)) { _, _ ->
-                val entity = host.databaseAssets.firstOrNull { it.id == asset.id }
-                if (entity != null) {
-                    host.assetViewModel.deleteAsset(entity) {
-                        host.selectedAsset = null
-                        host.showScreen(AppScreen.ASSETS)
-                        host.activity.showInvestaToast(host.activity.getString(R.string.asset_deleted))
-                    }
+        showInvestaConfirmationDialog(
+            activity = host.activity,
+            title = host.activity.getString(R.string.delete_asset),
+            message = host.activity.getString(R.string.delete_asset_message, asset.name)
+        ) {
+            val entity = host.databaseAssets.firstOrNull { it.id == asset.id }
+            if (entity != null) {
+                host.assetViewModel.deleteAsset(entity) {
+                    host.selectedAsset = null
+                    host.showScreen(AppScreen.ASSETS)
+                    host.activity.showInvestaToast(host.activity.getString(R.string.asset_deleted))
                 }
             }
-            .show()
+        }
     }
 }

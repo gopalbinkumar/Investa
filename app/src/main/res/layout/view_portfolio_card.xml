@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/portfolio_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="18dp"
     android:background="@drawable/bg_portfolio_card"
+    android:tag="investa_elevated_card"
     android:orientation="vertical"
     android:padding="20dp">
 
@@ -11,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/total_portfolio_value"
-        android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
         android:textSize="13sp" />
 
     <TextView

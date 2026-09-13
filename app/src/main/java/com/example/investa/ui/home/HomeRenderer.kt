@@ -11,10 +11,12 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import com.example.investa.R
+import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.addAssetRow
 import com.example.investa.ui.common.bindLegendRows
 import com.example.investa.ui.common.chartColor
+import com.example.investa.ui.common.disableFontPaddingRecursively
 import com.example.investa.utils.assetCategories
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatSignedAmount
@@ -116,6 +118,12 @@ internal class HomeRenderer(private val host: ScreenHost) {
         )
         val allocationTitle = root.findViewById<TextView>(R.id.allocation_title)
         val allocationPager = root.findViewById<ViewPager2>(R.id.allocation_pager)
+        allocationPager.isVerticalScrollBarEnabled = false
+        allocationPager.isHorizontalScrollBarEnabled = false
+        allocationPager.getChildAt(0)?.apply {
+            isVerticalScrollBarEnabled = false
+            isHorizontalScrollBarEnabled = false
+        }
         val existingAdapter = allocationAdapter
         if (existingAdapter == null) {
             allocationAdapter = AllocationPagerAdapter(allocationPages, ::setupAllocationChart)
@@ -141,6 +149,7 @@ internal class HomeRenderer(private val host: ScreenHost) {
             .sortedByDescending { parseMoneyInput(it.value) ?: 0.0 }
             .take(3)
             .forEach { topAsset ->
+                val sourceAsset = host.databaseAssets.firstOrNull { it.id == topAsset.id }
                 addAssetRow(
                     host.activity,
                     topAssets,
@@ -150,7 +159,12 @@ internal class HomeRenderer(private val host: ScreenHost) {
                         } ?: topAsset.value
                     ),
                     true,
-                    topAsset.profitPercent
+                    topAsset.profitPercent,
+                    onClick = {
+                        host.selectedAsset = sourceAsset?.toUiAsset(host.activity) ?: topAsset
+                        host.detailOrigin = AppScreen.HOME
+                        host.showScreen(AppScreen.DETAIL)
+                    }
                 )
             }
     }
@@ -224,6 +238,7 @@ internal class HomeRenderer(private val host: ScreenHost) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
             val page = LayoutInflater.from(parent.context)
                 .inflate(R.layout.view_allocation_page, parent, false)
+            page.disableFontPaddingRecursively()
             return PageViewHolder(page)
         }
 

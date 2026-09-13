@@ -14,10 +14,13 @@ import com.example.investa.data.entity.CurrencyEntity
 import com.example.investa.R
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.ui.common.disableFontPaddingRecursively
+import com.example.investa.ui.common.setLoadingState
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.showInvestaToast
+import com.example.investa.utils.hideInvestaKeyboard
 import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.LanguageManager
 import com.example.investa.utils.IconThemeManager
@@ -37,7 +40,7 @@ internal class SettingsRenderer(private val host: ScreenHost) {
             root.findViewById(R.id.settings_preferences),
             R.drawable.ic_lucide_moon,
             host.activity.getString(R.string.theme),
-            themeLabel(ThemeManager.current(host.activity)),
+            themeSummary(),
             true
         ) {
             host.showScreen(AppScreen.THEME)
@@ -68,13 +71,11 @@ internal class SettingsRenderer(private val host: ScreenHost) {
             when (currentTheme) {
                 ThemeManager.AppTheme.DARK -> R.id.theme_dark
                 ThemeManager.AppTheme.LIGHT -> R.id.theme_light
-                ThemeManager.AppTheme.SYSTEM -> R.id.theme_system
             }
         )
         themeGroup.setOnCheckedChangeListener { _, checkedId ->
             val selected = when (checkedId) {
                 R.id.theme_light -> ThemeManager.AppTheme.LIGHT
-                R.id.theme_system -> ThemeManager.AppTheme.SYSTEM
                 else -> ThemeManager.AppTheme.DARK
             }
             selectedTheme = selected
@@ -165,13 +166,14 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         exchangeRateInput.setText(formatInputAmount(usd.exchangeRate, "IDR"))
         installMoneyInputFormatter(exchangeRateInput) { "IDR" }
         refreshButton.setOnClickListener {
-            setRefreshLoading(refreshButton, refreshIcon, refreshProgress, true)
+            setLoadingState(refreshButton, refreshIcon, refreshProgress, true)
             exchangeRateRequestJob = host.activity.lifecycleScope.launch {
                 try {
                     val latestRate = YahooFinanceApi.fetchUsdIdrRate()
                         val formatted = formatInputAmount(latestRate, "IDR")
                         exchangeRateInput.setText(formatted)
                         exchangeRateInput.setSelection(formatted.length)
+                        exchangeRateInput.hideInvestaKeyboard()
                         host.activity.showInvestaToast(host.activity.getString(R.string.latest_exchange_rate_loaded))
                 } catch (error: CancellationException) {
                     throw error
@@ -180,7 +182,7 @@ internal class SettingsRenderer(private val host: ScreenHost) {
                         host.activity.getString(R.string.failed_exchange_rate, error.message ?: error.javaClass.simpleName)
                     )
                 } finally {
-                    setRefreshLoading(refreshButton, refreshIcon, refreshProgress, false)
+                    setLoadingState(refreshButton, refreshIcon, refreshProgress, false)
                 }
             }
         }
@@ -215,22 +217,12 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         })
     }
 
-    private fun setRefreshLoading(
-        button: View,
-        icon: ImageView,
-        progress: ProgressBar,
-        loading: Boolean
-    ) {
-        button.isEnabled = !loading
-        icon.visibility = if (loading) View.GONE else View.VISIBLE
-        progress.visibility = if (loading) View.VISIBLE else View.GONE
-    }
-
     private fun themeLabel(theme: ThemeManager.AppTheme): String = when (theme) {
         ThemeManager.AppTheme.DARK -> host.activity.getString(R.string.theme_dark)
         ThemeManager.AppTheme.LIGHT -> host.activity.getString(R.string.theme_light)
-        ThemeManager.AppTheme.SYSTEM -> host.activity.getString(R.string.theme_system)
     }
+
+    private fun themeSummary(): String = themeLabel(ThemeManager.current(host.activity))
 
     private fun addSettingsRow(
         parent: ViewGroup,
@@ -241,6 +233,7 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         onClick: (() -> Unit)? = null
     ) {
         val row = LayoutInflater.from(host.activity).inflate(R.layout.view_settings_row, parent, false)
+        row.disableFontPaddingRecursively()
         row.findViewById<ImageView>(R.id.settings_icon).apply {
             setImageResource(iconRes)
             imageTintList = ColorStateList.valueOf(

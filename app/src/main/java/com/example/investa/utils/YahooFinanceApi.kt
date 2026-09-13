@@ -10,6 +10,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 internal object YahooFinanceApi {
+    data class QuoteDetails(
+        val price: Double,
+        val name: String?,
+        val shortName: String? = null,
+        val longName: String? = null
+    )
+
     private val BASE_URLS = listOf(
         "https://query1.finance.yahoo.com/v8/finance/chart/",
         "https://query2.finance.yahoo.com/v8/finance/chart/"
@@ -17,7 +24,9 @@ internal object YahooFinanceApi {
 
     suspend fun fetchUsdIdrRate(): Double = fetchQuote("IDR=X")
 
-    suspend fun fetchQuote(apiSymbol: String): Double = withContext(Dispatchers.IO) {
+    suspend fun fetchQuote(apiSymbol: String): Double = fetchQuoteDetails(apiSymbol).price
+
+    suspend fun fetchQuoteDetails(apiSymbol: String): QuoteDetails = withContext(Dispatchers.IO) {
         val normalizedSymbol = apiSymbol.trim().uppercase()
         require(normalizedSymbol.isNotBlank()) { "Yahoo Finance symbol is empty" }
         val encodedSymbol = Uri.encode(normalizedSymbol)
@@ -35,7 +44,7 @@ internal object YahooFinanceApi {
         error("Yahoo Finance unavailable: ${lastError?.message ?: "unknown network error"}")
     }
 
-    private suspend fun fetchFromEndpoint(endpoint: String): Double = withContext(Dispatchers.IO) {
+    private suspend fun fetchFromEndpoint(endpoint: String): QuoteDetails = withContext(Dispatchers.IO) {
         val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 15_000
@@ -63,7 +72,7 @@ internal object YahooFinanceApi {
         }
     }
 
-    private fun parseQuote(response: String): Double {
+    private fun parseQuote(response: String): QuoteDetails {
         val chart = JSONObject(response).optJSONObject("chart")
             ?: error("Invalid Yahoo Finance response")
         chart.optJSONObject("error")?.let { errorObject ->
@@ -74,6 +83,10 @@ internal object YahooFinanceApi {
         val result = chart.optJSONArray("result")?.optJSONObject(0)
             ?: error("Yahoo Finance quote unavailable")
         val meta = result.optJSONObject("meta")
+        val shortName = meta?.optString("shortName")?.takeIf { it.isNotBlank() }
+        val longName = meta?.optString("longName")?.takeIf { it.isNotBlank() }
+        val displayName = meta?.optString("displayName")?.takeIf { it.isNotBlank() }
+        val name = longName ?: shortName ?: displayName
         listOf(
             "regularMarketPrice",
             "postMarketPrice",
@@ -82,7 +95,7 @@ internal object YahooFinanceApi {
             "chartPreviousClose"
         ).forEach { key ->
             val metaPrice = meta?.optDouble(key, Double.NaN) ?: Double.NaN
-            if (metaPrice.isValidQuote()) return metaPrice
+            if (metaPrice.isValidQuote()) return QuoteDetails(metaPrice, name, shortName, longName)
         }
 
         val closes = result.optJSONObject("indicators")
@@ -92,7 +105,7 @@ internal object YahooFinanceApi {
             ?: error("Yahoo Finance price unavailable")
         for (index in closes.length() - 1 downTo 0) {
             val close = closes.optDouble(index, Double.NaN)
-            if (close.isValidQuote()) return close
+            if (close.isValidQuote()) return QuoteDetails(close, name, shortName, longName)
         }
         error("Yahoo Finance price unavailable")
     }

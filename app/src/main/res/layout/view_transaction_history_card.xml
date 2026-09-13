@@ -4,6 +4,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     android:background="@drawable/bg_surface"
+    android:tag="investa_elevated_card"
     android:foreground="@drawable/ripple_surface"
     android:orientation="vertical"
     android:padding="16dp">
@@ -27,7 +28,7 @@
             android:id="@+id/history_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
             android:textSize="11sp" />
     </LinearLayout>
 
@@ -47,14 +48,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/quantity"
-                android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/history_quantity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -69,14 +70,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/history_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -93,14 +94,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/realized_gain_loss_short"
-                android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/history_realized"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
                 android:textSize="12sp" />
         </LinearLayout>
 

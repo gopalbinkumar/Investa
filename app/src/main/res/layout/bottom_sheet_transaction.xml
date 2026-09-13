@@ -35,10 +35,24 @@
             android:visibility="gone" />
     </FrameLayout>
 
+    <ScrollView
+        android:id="@+id/transaction_content_scroll"
+        android:scrollbars="none"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:paddingTop="11dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="22dp"
+        android:layout_marginTop="11dp"
         android:text="@string/date"
         android:textColor="@color/investa_text_secondary"
         android:textSize="11sp" />
@@ -68,6 +82,7 @@
         android:layout_marginBottom="14dp"
         android:background="@drawable/bg_input"
         android:foreground="@drawable/ripple_surface"
+        android:tag="investa_input_field"
         android:gravity="center_vertical"
         android:addStatesFromChildren="true"
         android:orientation="horizontal"
@@ -115,6 +130,7 @@
         android:layout_marginBottom="14dp"
         android:background="@drawable/bg_input"
         android:foreground="@drawable/ripple_surface"
+        android:tag="investa_input_field"
         android:gravity="center_vertical"
         android:addStatesFromChildren="true"
         android:orientation="horizontal"
@@ -130,6 +146,7 @@
             android:layout_marginBottom="0dp"
             android:layout_weight="1"
             android:background="@android:color/transparent"
+            android:tag="@null"
             android:gravity="center_vertical|start"
             android:hint="@string/hint_price"
             android:inputType="numberDecimal"
@@ -219,4 +236,7 @@
         android:textColor="@color/investa_background"
         android:textSize="14sp"
         android:textStyle="bold" />
+
+    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

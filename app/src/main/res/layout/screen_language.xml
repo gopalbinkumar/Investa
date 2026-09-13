@@ -33,6 +33,7 @@
     </FrameLayout>
 
     <ScrollView
+        android:scrollbars="none"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -61,6 +62,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_surface"
                 android:orientation="vertical"
+                android:tag="investa_elevated_card"
                 android:paddingStart="8dp"
                 android:paddingTop="6dp"
                 android:paddingEnd="8dp"

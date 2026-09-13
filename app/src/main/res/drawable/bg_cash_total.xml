@@ -1,12 +1,4 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:angle="45"
-        android:centerColor="@color/investa_background"
-        android:endColor="@color/investa_surface"
-        android:startColor="@color/investa_surface"
-        android:type="linear" />
+    <solid android:color="@color/investa_surface" />
     <corners android:radius="20dp" />
-    <stroke
-        android:width="0.5dp"
-        android:color="@color/investa_border" />
 </shape>

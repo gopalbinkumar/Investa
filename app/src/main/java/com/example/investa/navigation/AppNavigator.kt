@@ -14,6 +14,7 @@ import com.example.investa.viewmodel.CurrencyViewModel
 import com.example.investa.viewmodel.TransactionViewModel
 import com.example.investa.R
 import com.example.investa.model.Asset
+import com.example.investa.ui.common.disableFontPaddingRecursively
 
 internal interface ScreenHost {
     val activity: ComponentActivity
@@ -46,22 +47,23 @@ internal class AppNavigator(
     private val host: ScreenHost,
     private val renderScreen: (AppScreen) -> Unit
 ) {
+    private val navigationItems = listOf(
+        R.id.nav_home to AppScreen.HOME,
+        R.id.nav_assets to AppScreen.ASSETS,
+        R.id.nav_cash to AppScreen.CASH,
+        R.id.nav_reports to AppScreen.REPORTS,
+        R.id.nav_settings to AppScreen.SETTINGS
+    )
     private var hasRenderedInitialScreen = false
     private var reportScrollYBeforeDetail = 0
 
     fun setupBottomNavigation() {
-        host.activity.findViewById<View>(R.id.nav_home)
-            .setOnClickListener { showScreen(AppScreen.HOME) }
-        host.activity.findViewById<View>(R.id.nav_assets)
-            .setOnClickListener { showScreen(AppScreen.ASSETS) }
-        host.activity.findViewById<View>(R.id.nav_cash)
-            .setOnClickListener { showScreen(AppScreen.CASH) }
+        navigationItems.forEach { (viewId, screen) ->
+            host.activity.findViewById<View>(viewId)
+                .setOnClickListener { showScreen(screen) }
+        }
         host.activity.findViewById<View>(R.id.fab)
             .setOnClickListener { showScreen(AppScreen.ADD) }
-        host.activity.findViewById<View>(R.id.nav_reports)
-            .setOnClickListener { showScreen(AppScreen.REPORTS) }
-        host.activity.findViewById<View>(R.id.nav_settings)
-            .setOnClickListener { showScreen(AppScreen.SETTINGS) }
     }
 
     fun showScreen(screen: AppScreen) {
@@ -86,13 +88,7 @@ internal class AppNavigator(
             else -> ScreenTransition.BACKWARD
         }
         host.currentScreen = screen
-        val isMainScreen = screen in listOf(
-            AppScreen.HOME,
-            AppScreen.ASSETS,
-            AppScreen.CASH,
-            AppScreen.REPORTS,
-            AppScreen.SETTINGS
-        )
+        val isMainScreen = screen.isMainScreen
         host.bottomNavigation.visibility = if (isMainScreen) View.VISIBLE else View.GONE
         host.activity.findViewById<View>(R.id.fab).visibility =
             if (screen == AppScreen.ASSETS) View.VISIBLE else View.GONE
@@ -116,6 +112,7 @@ internal class AppNavigator(
         }
         host.contentContainer.removeAllViews()
         renderScreen(screen)
+        host.contentContainer.disableFontPaddingRecursively()
         if (shouldRestoreReportScroll) {
             host.contentContainer.findViewById<ScrollView>(R.id.reports_scroll)?.let { reportsScroll ->
                 reportsScroll.post {
@@ -164,14 +161,8 @@ internal class AppNavigator(
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {
-        val ids = listOf(R.id.nav_home, R.id.nav_assets, R.id.nav_cash, R.id.nav_reports, R.id.nav_settings)
-        val selectedId = when (screen) {
-            AppScreen.HOME -> R.id.nav_home
-            AppScreen.ASSETS -> R.id.nav_assets
-            AppScreen.CASH -> R.id.nav_cash
-            AppScreen.REPORTS -> R.id.nav_reports
-            else -> R.id.nav_settings
+        navigationItems.forEach { (viewId, itemScreen) ->
+            host.activity.findViewById<View>(viewId).isSelected = itemScreen == screen
         }
-        ids.forEach { id -> host.activity.findViewById<View>(id).isSelected = id == selectedId }
     }
 }

@@ -48,6 +48,7 @@
     </FrameLayout>
 
     <ScrollView
+        android:scrollbars="none"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -97,7 +98,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
-            android:textColor="@color/investa_mint"
+            android:textColor="@color/investa_highlight"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -108,6 +109,7 @@
             android:layout_marginTop="22dp"
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
+            android:tag="investa_elevated_card"
             android:padding="16dp">
 
             <include layout="@layout/view_detail_row" />
@@ -148,7 +150,9 @@
                 android:layout_height="50dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_profit_button"
+                android:clickable="true"
                 android:foreground="@drawable/ripple_profit"
+                android:focusable="true"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -156,8 +160,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/buy"
-                    android:textColor="@color/investa_profit"
-                    android:textSize="14sp" />
+                    android:textColor="@color/investa_background"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
             </LinearLayout>
 
             <Space
@@ -170,7 +175,9 @@
                 android:layout_height="50dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_sell_button"
+                android:clickable="true"
                 android:foreground="@drawable/ripple_loss"
+                android:focusable="true"
                 android:gravity="center"
                 android:orientation="horizontal">
 
@@ -178,8 +185,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/sell"
-                    android:textColor="@color/investa_loss"
-                    android:textSize="14sp" />
+                    android:textColor="@color/investa_background"
+                    android:textSize="14sp"
+                    android:textStyle="bold"/>
             </LinearLayout>
         </LinearLayout>
 

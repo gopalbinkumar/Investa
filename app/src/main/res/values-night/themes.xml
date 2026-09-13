@@ -4,6 +4,7 @@
         <item name="android:fontFamily">@font/plus_jakarta_sans</item>
         <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:windowActionModeOverlay">true</item>
+        <item name="colorPrimary">@color/investa_primary</item>
         <item name="android:colorAccent">@color/investa_primary</item>
         <item name="android:statusBarColor">@color/investa_background</item>
         <item name="android:navigationBarColor">@color/investa_background</item>
@@ -11,7 +12,7 @@
         <item name="android:windowLightNavigationBar">false</item>
     </style>
 
-    <style name="Theme.Investa.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Investa.Splash" parent="Theme.Investa">
         <item name="android:fontFamily">@font/plus_jakarta_sans</item>
         <item name="fontFamily">@font/plus_jakarta_sans</item>
         <item name="android:windowNoTitle">true</item>

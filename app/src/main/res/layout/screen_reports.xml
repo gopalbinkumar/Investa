@@ -18,13 +18,14 @@
             android:layout_height="42dp"
             android:gravity="center"
             android:text="@string/reports"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
 
     <ScrollView
         android:id="@+id/reports_scroll"
+        android:scrollbars="none"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -43,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="@string/realized_gain_loss"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -53,6 +54,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
+            android:tag="investa_elevated_card"
             android:padding="16dp">
 
             <TextView
@@ -60,7 +62,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/zero_amount"
-                android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
                 android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -70,7 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="@string/portfolio_performance"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -80,6 +82,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
+            android:tag="investa_elevated_card"
             android:padding="16dp">
 
             <LinearLayout
@@ -97,7 +100,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/total_invested"
-                        android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
                         android:textSize="12sp" />
 
                     <TextView
@@ -105,7 +108,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/dummy_invested_amount"
-                        android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -117,7 +120,7 @@
                     android:layout_gravity="center_vertical"
                     android:contentDescription="@string/back"
                     android:src="@drawable/ic_lucide_arrow_right"
-                    android:tint="@color/investa_icon_secondary" />
+        android:tint="@color/investa_icon_secondary" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -130,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/current_value"
-                        android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
                         android:textSize="12sp" />
 
                     <TextView
@@ -138,7 +141,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/dummy_current_value"
-                        android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -169,7 +172,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/dummy_profit_amount"
-                    android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
                     android:textStyle="bold" />
 
                 <TextView
@@ -178,7 +181,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
                     android:text="@string/dummy_profit_percent"
-                    android:textColor="@color/investa_mint" />
+        android:textColor="@color/investa_highlight" />
             </LinearLayout>
         </LinearLayout>
 
@@ -187,7 +190,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="@string/summary"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -197,7 +200,8 @@
             android:layout_height="40dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_surface"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:tag="investa_elevated_card">
 
             <TextView
                 android:id="@+id/toggle_category"
@@ -208,7 +212,7 @@
                 android:foreground="@drawable/ripple_button"
                 android:gravity="center"
                 android:text="@string/by_category"
-                android:textColor="@color/investa_background"
+        android:textColor="@color/investa_background"
                 android:textSize="11sp" />
 
             <TextView
@@ -219,7 +223,7 @@
                 android:foreground="@drawable/ripple_button"
                 android:gravity="center"
                 android:text="@string/by_asset"
-                android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>
 
@@ -230,6 +234,7 @@
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_surface"
             android:orientation="vertical"
+            android:tag="investa_elevated_card"
             android:padding="16dp" />
     </LinearLayout>
     </ScrollView>

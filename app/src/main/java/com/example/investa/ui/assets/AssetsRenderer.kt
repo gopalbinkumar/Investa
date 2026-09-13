@@ -1,9 +1,7 @@
 package com.example.investa.ui.assets
 
 import android.graphics.Color
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
@@ -46,6 +44,12 @@ internal class AssetsRenderer(private val host: ScreenHost) {
     private fun setupTabsAndPager(tabs: TabLayout, viewPager: ViewPager2) {
         tabLayout = tabs
         pager = viewPager
+        viewPager.isVerticalScrollBarEnabled = false
+        viewPager.isHorizontalScrollBarEnabled = false
+        viewPager.getChildAt(0)?.apply {
+            isVerticalScrollBarEnabled = false
+            isHorizontalScrollBarEnabled = false
+        }
         val adapter = AssetCategoryPagerAdapter { asset ->
             host.selectedAsset = asset
             host.showScreen(AppScreen.DETAIL)
@@ -93,11 +97,12 @@ internal class AssetsRenderer(private val host: ScreenHost) {
 
     private fun createTabView(category: String): TextView = TextView(host.activity).apply {
         text = localizedCategory(host.activity, category)
+        includeFontPadding = false
         gravity = android.view.Gravity.CENTER
-        textSize = 12f
+        textSize = 11f
         setDuplicateParentStateEnabled(true)
         foreground = ContextCompat.getDrawable(host.activity, R.drawable.ripple_chip)
-        setPadding(host.dp(17), host.dp(9), host.dp(17), host.dp(9))
+        setPadding(host.dp(14), host.dp(7), host.dp(14), host.dp(7))
         layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -115,17 +120,19 @@ internal class AssetsRenderer(private val host: ScreenHost) {
             (tab.view.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
                 width = ViewGroup.LayoutParams.WRAP_CONTENT
                 height = ViewGroup.LayoutParams.WRAP_CONTENT
-                marginEnd = host.dp(8)
+                marginEnd = host.dp(6)
                 tab.view.layoutParams = this
             }
             tabText.background = ContextCompat.getDrawable(
                 host.activity,
                 if (selected) R.drawable.bg_chip_selected else R.drawable.bg_chip
             )
-            tabText.setTextColor(ContextCompat.getColor(
-                host.activity,
-                if (selected) R.color.investa_background else R.color.investa_text_secondary
-            ))
+            tabText.setTextColor(
+                ContextCompat.getColor(
+                    host.activity,
+                    if (selected) R.color.investa_background else R.color.investa_text_secondary
+                )
+            )
         }
         tabs.setSelectedTabIndicatorColor(Color.TRANSPARENT)
     }

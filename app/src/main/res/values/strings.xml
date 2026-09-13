@@ -3,8 +3,8 @@
     <string name="submit">Tambah aset</string>
     <string name="home">Beranda</string>
     <string name="assets">Aset</string>
-    <string name="cash">Kas</string>
-    <string name="add_cash">Tambah kas</string>
+    <string name="cash">Cash</string>
+    <string name="add_cash">Tambah Cash</string>
     <string name="reports">Laporan</string>
     <string name="settings">Pengaturan</string>
     <string name="menu">Menu</string>
@@ -22,7 +22,7 @@
     <string name="good_morning">Selamat pagi</string>
     <string name="total_portfolio_value">Total Nilai Portofolio</string>
     <string name="total_invested">Total Modal</string>
-    <string name="total_profit">Total Keuntungan</string>
+    <string name="total_profit">Total Profit</string>
     <string name="last_month">— bulan lalu</string>
     <string name="portfolio_allocation">Alokasi Portofolio</string>
     <string name="invested_allocation">Alokasi Modal</string>
@@ -32,7 +32,7 @@
     <string name="assets_count">%1$d aset</string>
     <string name="assets_count_placeholder">0 aset</string>
     <string name="portfolio_performance">Performa Portofolio</string>
-    <string name="realized_gain_loss">Keuntungan/Kerugian Terealisasi</string>
+    <string name="realized_gain_loss">Realized Gain/Loss</string>
     <string name="current_value">Nilai Saat Ini</string>
     <string name="summary">Ringkasan</string>
     <string name="by_category">Berdasarkan Kategori</string>
@@ -62,7 +62,7 @@
     <string name="select_category">Pilih Kategori</string>
     <string name="category_all">Semua</string>
     <string name="category_crypto">Kripto</string>
-    <string name="category_id_stocks">Saham Indonesia</string>
+    <string name="category_id_stocks">Saham ID</string>
     <string name="category_us_stocks">Saham AS</string>
     <string name="category_bonds">Obligasi</string>
     <string name="category_mutual_fund">Reksa Dana</string>
@@ -91,13 +91,13 @@
     <string name="hint_transaction_notes">Contoh: DCA mingguan</string>
     <string name="buy_price">Harga Beli</string>
     <string name="sell_price">Harga Jual</string>
-    <string name="realized_gain_loss_short">Keuntungan/Kerugian Terealisasi</string>
-    <string name="manage_available_cash">Kelola kas yang tersedia</string>
-    <string name="total_cash">Total Kas</string>
-    <string name="cash_accounts">Akun Kas</string>
+    <string name="realized_gain_loss_short">Realized Gain/Loss</string>
+    <string name="manage_available_cash">Kelola cash yang tersedia</string>
+    <string name="total_cash">Total Cash</string>
+    <string name="cash_accounts">Akun Cash</string>
     <string name="amount">Jumlah</string>
-    <string name="save_cash">Simpan Kas</string>
-    <string name="edit_cash">Edit Kas</string>
+    <string name="save_cash">Simpan cash</string>
+    <string name="edit_cash">Edit Cash</string>
     <string name="indonesian_rupiah">Rupiah Indonesia</string>
     <string name="hint_cash_amount">Rp1.000.000</string>
     <string name="change_exchange_rate">Ubah Kurs</string>
@@ -126,7 +126,6 @@
     <string name="language">Bahasa</string>
     <string name="theme_dark">Gelap</string>
     <string name="theme_light">Terang</string>
-    <string name="theme_system">Sistem</string>
     <string name="choose_theme">Pilih tema aplikasi</string>
     <string name="choose_icon_theme">Pilih tema ikon</string>
     <string name="change_theme">Ubah Tema</string>
@@ -162,6 +161,7 @@
     <string name="symbol_required">Simbol wajib diisi</string>
     <string name="select_category_error">Pilih kategori</string>
     <string name="valid_quantity">Masukkan kuantitas yang valid</string>
+    <string name="insufficient_asset_quantity">Kuantitas aset tidak mencukupi</string>
     <string name="valid_price">Masukkan harga yang valid</string>
     <string name="valid_fee">Masukkan biaya yang valid</string>
     <string name="valid_invested_amount">Masukkan jumlah modal yang valid</string>
@@ -171,6 +171,9 @@
     <string name="valid_exchange_rate">Masukkan kurs yang valid</string>
     <string name="yahoo_category_unavailable">Yahoo Finance tidak tersedia untuk kategori ini</string>
     <string name="refresh_current_price">Perbarui harga saat ini</string>
+    <string name="refresh_asset_data">Ambil data aset terbaru</string>
+    <string name="latest_asset_data_loaded">Data aset terbaru berhasil diambil</string>
+    <string name="failed_asset_data">Gagal mengambil data aset: %1$s</string>
     <string name="hint_transaction_quantity">Contoh: 0,005</string>
     <string name="dummy_portfolio_value">Rp125.650.000</string>
     <string name="dummy_invested_amount">Rp106.900.000</string>

@@ -14,14 +14,8 @@ interface CashAccountDao {
     @Query("SELECT * FROM cash_accounts ORDER BY currencyCode ASC")
     fun observeAllCashAccounts(): Flow<List<CashAccountEntity>>
 
-    @Query("SELECT * FROM cash_accounts ORDER BY currencyCode ASC")
-    suspend fun getAllCashAccounts(): List<CashAccountEntity>
-
     @Query("SELECT * FROM cash_accounts WHERE currencyCode = :currencyCode LIMIT 1")
     suspend fun getCashAccountByCurrency(currencyCode: String): CashAccountEntity?
-
-    @Query("SELECT balance FROM cash_accounts WHERE currencyCode = :currencyCode LIMIT 1")
-    suspend fun getCashBalance(currencyCode: String): Double?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCashAccount(account: CashAccountEntity): Long

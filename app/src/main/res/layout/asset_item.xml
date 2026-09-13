@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     android:background="@drawable/bg_surface"
+    android:tag="investa_elevated_card"
     android:foreground="@drawable/ripple_surface"
     android:gravity="center_vertical"
     android:minHeight="76dp"
@@ -21,7 +22,7 @@
             android:id="@+id/asset_symbol"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -29,22 +30,16 @@
             android:id="@+id/asset_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
             android:textSize="11sp" />
 
         <TextView
             android:id="@+id/asset_category"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text_secondary"
+        android:textColor="@color/investa_text_secondary"
             android:textSize="11sp" />
 
-        <TextView
-            android:id="@+id/asset_quantity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/investa_text_secondary"
-            android:textSize="11sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -58,7 +53,7 @@
             android:id="@+id/asset_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_text"
+        android:textColor="@color/investa_text"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -66,7 +61,7 @@
             android:id="@+id/asset_profit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
             android:textSize="11sp" />
     </LinearLayout>
 

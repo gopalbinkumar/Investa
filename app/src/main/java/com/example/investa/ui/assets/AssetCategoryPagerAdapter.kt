@@ -9,6 +9,7 @@ import com.example.investa.R
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.model.Asset
 import com.example.investa.ui.common.bindAsset
+import com.example.investa.ui.common.applyElevatedCard
 import com.example.investa.utils.toIdrDisplay
 import com.example.investa.utils.toUiAsset
 import java.util.Locale
@@ -53,7 +54,11 @@ internal class AssetCategoryPagerAdapter(
         val filteredAssets = assets
             .filter { asset -> category == "All" || asset.category == category }
             .sortedBy { it.symbol.trim().uppercase(Locale.ROOT) }
-        holder.updateList(filteredAssets, usdExchangeRate)
+        holder.updateList(
+            filteredAssets,
+            usdExchangeRate,
+            showCategory = category == "All"
+        )
     }
 
     override fun getItemCount(): Int = assetPagerCategories.size
@@ -70,8 +75,12 @@ internal class AssetCategoryPagerAdapter(
             list.adapter = listAdapter
         }
 
-        fun updateList(assets: List<AssetEntity>, usdExchangeRate: Double) {
-            listAdapter.update(assets, usdExchangeRate)
+        fun updateList(
+            assets: List<AssetEntity>,
+            usdExchangeRate: Double,
+            showCategory: Boolean
+        ) {
+            listAdapter.update(assets, usdExchangeRate, showCategory)
         }
     }
 
@@ -80,12 +89,22 @@ internal class AssetCategoryPagerAdapter(
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private var assets: List<AssetEntity> = emptyList()
         private var usdExchangeRate = 16500.0
+        private var showCategory = true
         private var hasData = false
 
-        fun update(assets: List<AssetEntity>, usdExchangeRate: Double) {
-            if (hasData && this.assets == assets && this.usdExchangeRate == usdExchangeRate) return
+        fun update(
+            assets: List<AssetEntity>,
+            usdExchangeRate: Double,
+            showCategory: Boolean
+        ) {
+            if (hasData &&
+                this.assets == assets &&
+                this.usdExchangeRate == usdExchangeRate &&
+                this.showCategory == showCategory
+            ) return
             this.assets = assets
             this.usdExchangeRate = usdExchangeRate
+            this.showCategory = showCategory
             hasData = true
             notifyDataSetChanged()
         }
@@ -97,6 +116,14 @@ internal class AssetCategoryPagerAdapter(
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val layout = if (viewType == EMPTY_VIEW) R.layout.view_empty_state else R.layout.asset_item
             val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
+            if (viewType == ASSET_VIEW) {
+                // Let item shadows draw into the RecyclerView padding and spacing.
+                // ViewPager2 still clips the page at its own viewport, so cards cannot
+                // overlap the tabs or header while the list is scrolled.
+                parent.clipChildren = false
+                parent.clipToPadding = false
+                applyElevatedCard(view)
+            }
             return if (viewType == EMPTY_VIEW) {
                 EmptyViewHolder(view)
             } else {
@@ -108,7 +135,12 @@ internal class AssetCategoryPagerAdapter(
             if (holder !is AssetViewHolder) return
             val entity = assets[position]
             val nativeAsset = entity.toUiAsset(holder.itemView.context)
-            bindAsset(holder.itemView, nativeAsset.toIdrDisplay(usdExchangeRate), compact = false)
+            bindAsset(
+                holder.itemView,
+                nativeAsset.toIdrDisplay(usdExchangeRate),
+                compact = false,
+                showCategory = showCategory
+            )
             holder.itemView.setOnClickListener { onAssetClick(nativeAsset) }
         }
 

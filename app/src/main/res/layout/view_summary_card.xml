@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_surface"
+    android:tag="investa_elevated_card"
     android:orientation="vertical"
     android:padding="15dp">
 
@@ -26,6 +27,6 @@
         android:id="@+id/summary_percent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/investa_mint"
+        android:textColor="@color/investa_highlight"
         android:textSize="11sp" />
 </LinearLayout>

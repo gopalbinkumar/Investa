@@ -6,7 +6,6 @@ import android.text.method.DigitsKeyListener
 import android.widget.EditText
 import java.math.BigDecimal
 import java.text.NumberFormat
-import java.util.Locale
 import kotlin.math.abs
 
 fun parseTransactionQuantity(value: String): Double? = parseMoneyInput(value.substringBefore(" "))
@@ -29,9 +28,9 @@ fun formatEditableAmount(
     decimalMode: Boolean? = null
 ): String {
     val parts = splitEditableAmount(value, currency, decimalMode) ?: return ""
-    val integerFormatter = NumberFormat.getIntegerInstance(Locale.GERMANY)
+    val integerFormatter = NumberFormat.getIntegerInstance(NumberFormatStyleManager.current.locale)
     val integer = integerFormatter.format(BigDecimal(parts.first))
-    return integer + (parts.second?.let { ",$it" } ?: "")
+    return integer + (parts.second?.let { "${NumberFormatStyleManager.current.decimalSeparator}$it" } ?: "")
 }
 
 fun installMoneyInputFormatter(input: EditText, currencyProvider: () -> String) =
@@ -47,7 +46,9 @@ private fun installNumericInputFormatter(
 ) {
     input.keyListener = DigitsKeyListener.getInstance("0123456789.,")
     var isFormatting = false
-    var decimalMode = input.text.toString().let { current -> current.contains(',') }
+    var decimalMode = input.text.toString().contains(
+        NumberFormatStyleManager.current.decimalSeparator
+    )
     input.addTextChangedListener(object : TextWatcher {
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
@@ -56,16 +57,23 @@ private fun installNumericInputFormatter(
             val insertedText = s?.toString()
                 ?.substring(start, (start + count).coerceAtMost(s.length))
                 .orEmpty()
-            val insertedDecimalSeparator = insertedText.contains('.') || insertedText.contains(',')
+            val insertedDecimalSeparator = insertedText.contains(
+                NumberFormatStyleManager.current.decimalSeparator
+            )
             if (insertedDecimalSeparator) decimalMode = true
-            else if (s != null && !s.toString().contains(',')) decimalMode = false
+            else if (s != null && !s.toString().contains(
+                    NumberFormatStyleManager.current.decimalSeparator
+                )
+            ) {
+                decimalMode = false
+            }
             if (s?.none(Char::isDigit) != false) decimalMode = false
         }
 
         override fun afterTextChanged(editable: Editable?) {
             if (isFormatting) return
             val source = editable?.toString().orEmpty()
-            if (source.trimEnd().endsWith('.') || source.trimEnd().endsWith(',')) {
+            if (source.trimEnd().endsWith(NumberFormatStyleManager.current.decimalSeparator)) {
                 decimalMode = true
             }
             val formattedBody = formatEditableAmount(source, currencyProvider(), decimalMode)
@@ -94,7 +102,7 @@ fun reformatMoneyInput(input: EditText, currency: String) {
 }
 
 fun formatInputAmount(amount: Double, currency: String): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.GERMANY).apply {
+    val formatter = NumberFormat.getNumberInstance(NumberFormatStyleManager.current.locale).apply {
         minimumFractionDigits = 0
         maximumFractionDigits = 8
     }
@@ -106,7 +114,7 @@ fun formatQuantityValue(quantity: Double): String =
     BigDecimal.valueOf(quantity)
         .stripTrailingZeros()
         .toPlainString()
-        .replace('.', ',')
+        .replace('.', NumberFormatStyleManager.current.decimalSeparator)
 
 fun formatCompactQuantityValue(quantity: Double): String {
     val plain = BigDecimal.valueOf(quantity)
@@ -132,13 +140,13 @@ fun formatCompactQuantityValue(quantity: Double): String {
         .take(decimalsToKeep)
         .trimEnd('0')
     return sign + integerPart +
-        if (compactFraction.isEmpty()) "" else ",$compactFraction"
+        if (compactFraction.isEmpty()) "" else "${NumberFormatStyleManager.current.decimalSeparator}$compactFraction"
 }
 
 fun formatQuantityForCard(quantityWithUnit: String): String {
     val numericPart = quantityWithUnit.substringBefore(' ')
     val amount = parseTransactionQuantity(numericPart)
-        ?: return quantityWithUnit.replace('.', ',')
+        ?: return quantityWithUnit.replace('.', NumberFormatStyleManager.current.decimalSeparator)
     val unit = quantityWithUnit.substringAfter(' ', "")
     val formatted = formatCompactQuantityValue(amount)
     return if (unit.isBlank()) formatted else "$formatted $unit"
@@ -164,9 +172,16 @@ fun formatAmount(
     currencySymbol: String,
     maxFractionDigits: Int = 8
 ): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.GERMANY).apply {
+    val isUsd = currency.equals("USD", ignoreCase = true)
+    val absoluteAmount = abs(amount)
+    val effectiveMaxFractionDigits = when {
+        !isUsd -> maxFractionDigits
+        absoluteAmount > 0.0 && absoluteAmount < 1.0 -> 3
+        else -> 2
+    }
+    val formatter = NumberFormat.getNumberInstance(NumberFormatStyleManager.current.locale).apply {
         minimumFractionDigits = 0
-        maximumFractionDigits = maxFractionDigits
+        maximumFractionDigits = effectiveMaxFractionDigits
     }
     val prefix = currencySymbol.ifBlank { currencySymbolFor(currency) }
     return "$prefix${formatter.format(amount)}"
@@ -197,8 +212,8 @@ private fun splitEditableAmount(
     val numeric = value.filter { it.isDigit() || it == '.' || it == ',' }
     if (numeric.isEmpty()) return null
 
-    val primarySeparator = ','
-    val alternateSeparator = '.'
+    val primarySeparator = NumberFormatStyleManager.current.decimalSeparator
+    val alternateSeparator = if (primarySeparator == ',') '.' else ','
     val primaryIndex = numeric.lastIndexOf(primarySeparator)
     val alternateIndex = numeric.lastIndexOf(alternateSeparator)
     val decimalIndex = if (decimalMode != null) {

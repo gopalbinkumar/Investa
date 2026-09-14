@@ -9,15 +9,17 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.investa.data.dao.AssetDao
 import com.example.investa.data.dao.CashAccountDao
 import com.example.investa.data.dao.CurrencyDao
+import com.example.investa.data.dao.AppPreferenceDao
 import com.example.investa.data.dao.TransactionDao
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.CashAccountEntity
 import com.example.investa.data.entity.CurrencyEntity
 import com.example.investa.data.entity.TransactionEntity
+import com.example.investa.data.entity.AppPreferenceEntity
 
 @Database(
-    entities = [AssetEntity::class, TransactionEntity::class, CurrencyEntity::class, CashAccountEntity::class],
-    version = 8,
+    entities = [AssetEntity::class, TransactionEntity::class, CurrencyEntity::class, CashAccountEntity::class, AppPreferenceEntity::class],
+    version = 10,
     exportSchema = false
 )
 abstract class InvestaDatabase : RoomDatabase() {
@@ -25,6 +27,7 @@ abstract class InvestaDatabase : RoomDatabase() {
     abstract fun cashAccountDao(): CashAccountDao
     abstract fun transactionDao(): TransactionDao
     abstract fun currencyDao(): CurrencyDao
+    abstract fun appPreferenceDao(): AppPreferenceDao
 
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -230,6 +233,30 @@ abstract class InvestaDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS app_preferences (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        primaryCurrencyCode TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "INSERT OR IGNORE INTO app_preferences (id, primaryCurrencyCode) VALUES (1, 'IDR')"
+                )
+            }
+        }
+
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE app_preferences ADD COLUMN numberFormatStyle TEXT NOT NULL DEFAULT 'ID'"
+                )
+            }
+        }
+
         @Volatile
         private var instance: InvestaDatabase? = null
 
@@ -246,6 +273,8 @@ abstract class InvestaDatabase : RoomDatabase() {
                     .addMigrations(MIGRATION_5_6)
                     .addMigrations(MIGRATION_6_7)
                     .addMigrations(MIGRATION_7_8)
+                    .addMigrations(MIGRATION_8_9)
+                    .addMigrations(MIGRATION_9_10)
                     .build().also { instance = it }
             }
     }

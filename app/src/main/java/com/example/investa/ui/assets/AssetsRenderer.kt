@@ -1,6 +1,7 @@
 package com.example.investa.ui.assets
 
 import android.graphics.Color
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -8,6 +9,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.investa.R
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.utils.NumberFormatStyle
 import com.example.investa.utils.localizedCategory
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -27,10 +29,16 @@ internal class AssetsRenderer(private val host: ScreenHost) {
         val viewPager = root.findViewById<ViewPager2>(R.id.asset_category_pager)
         if (!isInitialized) {
             setupTabsAndPager(tabs, viewPager)
+            root.findViewById<View>(R.id.assets_add).setOnClickListener {
+                host.showScreen(AppScreen.ADD)
+            }
             isInitialized = true
         }
 
-        pagerAdapter?.updateAssets(host.databaseAssets, host.exchangeRateFor("USD"))
+        pagerAdapter?.updateAssets(
+            host.databaseAssets,
+            host.numberFormatStyle
+        )
         val selectedIndex = assetPagerCategories.indexOf(host.selectedCategory)
             .coerceIn(0, assetPagerCategories.lastIndex)
         if (viewPager.currentItem != selectedIndex) {
@@ -56,7 +64,7 @@ internal class AssetsRenderer(private val host: ScreenHost) {
         }
         adapter.updateAssets(
             host.databaseAssets,
-            host.exchangeRateFor("USD"),
+            host.numberFormatStyle,
             notifyAdapter = false
         )
         pagerAdapter = adapter

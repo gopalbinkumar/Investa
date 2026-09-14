@@ -10,8 +10,8 @@ import com.example.investa.data.entity.AssetEntity
 import com.example.investa.model.Asset
 import com.example.investa.ui.common.bindAsset
 import com.example.investa.ui.common.applyElevatedCard
-import com.example.investa.utils.toIdrDisplay
 import com.example.investa.utils.toUiAsset
+import com.example.investa.utils.NumberFormatStyle
 import java.util.Locale
 
 internal val assetPagerCategories = listOf(
@@ -28,17 +28,17 @@ internal class AssetCategoryPagerAdapter(
     private val onAssetClick: (Asset) -> Unit
 ) : RecyclerView.Adapter<AssetCategoryPagerAdapter.PageViewHolder>() {
     private var assets: List<AssetEntity> = emptyList()
-    private var usdExchangeRate = 16500.0
+    private var numberFormatStyle = NumberFormatStyle.INDONESIAN
     private var hasData = false
 
     fun updateAssets(
         assets: List<AssetEntity>,
-        usdExchangeRate: Double,
+        numberFormatStyle: NumberFormatStyle,
         notifyAdapter: Boolean = true
     ) {
-        if (hasData && this.assets == assets && this.usdExchangeRate == usdExchangeRate) return
+        if (hasData && this.assets == assets && this.numberFormatStyle == numberFormatStyle) return
         this.assets = assets
-        this.usdExchangeRate = usdExchangeRate
+        this.numberFormatStyle = numberFormatStyle
         hasData = true
         if (notifyAdapter) notifyDataSetChanged()
     }
@@ -56,7 +56,7 @@ internal class AssetCategoryPagerAdapter(
             .sortedBy { it.symbol.trim().uppercase(Locale.ROOT) }
         holder.updateList(
             filteredAssets,
-            usdExchangeRate,
+            numberFormatStyle,
             showCategory = category == "All"
         )
     }
@@ -77,10 +77,10 @@ internal class AssetCategoryPagerAdapter(
 
         fun updateList(
             assets: List<AssetEntity>,
-            usdExchangeRate: Double,
+            numberFormatStyle: NumberFormatStyle,
             showCategory: Boolean
         ) {
-            listAdapter.update(assets, usdExchangeRate, showCategory)
+            listAdapter.update(assets, numberFormatStyle, showCategory)
         }
     }
 
@@ -88,22 +88,22 @@ internal class AssetCategoryPagerAdapter(
         private val onAssetClick: (Asset) -> Unit
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private var assets: List<AssetEntity> = emptyList()
-        private var usdExchangeRate = 16500.0
+        private var numberFormatStyle = NumberFormatStyle.INDONESIAN
         private var showCategory = true
         private var hasData = false
 
         fun update(
             assets: List<AssetEntity>,
-            usdExchangeRate: Double,
+            numberFormatStyle: NumberFormatStyle,
             showCategory: Boolean
         ) {
             if (hasData &&
                 this.assets == assets &&
-                this.usdExchangeRate == usdExchangeRate &&
+                this.numberFormatStyle == numberFormatStyle &&
                 this.showCategory == showCategory
             ) return
             this.assets = assets
-            this.usdExchangeRate = usdExchangeRate
+            this.numberFormatStyle = numberFormatStyle
             this.showCategory = showCategory
             hasData = true
             notifyDataSetChanged()
@@ -137,7 +137,7 @@ internal class AssetCategoryPagerAdapter(
             val nativeAsset = entity.toUiAsset(holder.itemView.context)
             bindAsset(
                 holder.itemView,
-                nativeAsset.toIdrDisplay(usdExchangeRate),
+                nativeAsset,
                 compact = false,
                 showCategory = showCategory
             )

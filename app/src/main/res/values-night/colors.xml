@@ -5,13 +5,6 @@
     <color name="investa_card_shadow">#FF080808</color>
     <color name="investa_surface">@color/investa_card_surface</color>
     <color name="investa_surface_elevated">#FF292929</color>
-
-<!--    <color name="investa_background">#FF101112</color>-->
-<!--    <color name="investa_card_surface">#FF1C1D1F</color>-->
-<!--    <color name="investa_card_shadow">#FF080909</color>-->
-<!--    <color name="investa_surface">@color/investa_card_surface</color>-->
-<!--    <color name="investa_surface_elevated">#FF25272A</color>-->
-
     <color name="investa_primary">#FFF5F5F5</color>
     <color name="investa_highlight">#FFD9D9D9</color>
     <color name="investa_text">#FFF5F5F5</color>

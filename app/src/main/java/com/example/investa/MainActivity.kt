@@ -1,6 +1,5 @@
 package com.example.investa
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +23,7 @@ import com.example.investa.data.repository.AssetRepository
 import com.example.investa.data.repository.CashRepository
 import com.example.investa.data.repository.CurrencyRepository
 import com.example.investa.data.repository.TransactionRepository
+import com.example.investa.data.repository.AppPreferenceRepository
 import com.example.investa.model.Asset
 import com.example.investa.navigation.AppNavigator
 import com.example.investa.navigation.AppScreen
@@ -44,6 +44,8 @@ import com.example.investa.utils.LanguageManager
 import com.example.investa.utils.IconThemeManager
 import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.toUiAsset
+import com.example.investa.utils.NumberFormatStyle
+import com.example.investa.utils.NumberFormatStyleManager
 import com.example.investa.viewmodel.AssetViewModel
 import com.example.investa.viewmodel.AssetViewModelFactory
 import com.example.investa.viewmodel.CashViewModel
@@ -52,6 +54,8 @@ import com.example.investa.viewmodel.CurrencyViewModel
 import com.example.investa.viewmodel.CurrencyViewModelFactory
 import com.example.investa.viewmodel.TransactionViewModel
 import com.example.investa.viewmodel.TransactionViewModelFactory
+import com.example.investa.viewmodel.AppPreferenceViewModel
+import com.example.investa.viewmodel.AppPreferenceViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), ScreenHost {
@@ -65,6 +69,8 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     override var currentScreen = AppScreen.HOME
     override var detailOrigin = AppScreen.ASSETS
     override var selectedCategory = "All"
+    override var primaryCurrency = "IDR"
+    override var numberFormatStyle = NumberFormatStyle.INDONESIAN
     override var assetsRoot: View? = null
     override var databaseAssets: List<AssetEntity> = emptyList()
     override var databaseTransactions: List<TransactionEntity> = emptyList()
@@ -85,6 +91,9 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     }
     override val currencyViewModel: CurrencyViewModel by viewModels {
         CurrencyViewModelFactory(CurrencyRepository(database.currencyDao()))
+    }
+    override val appPreferenceViewModel: AppPreferenceViewModel by viewModels {
+        AppPreferenceViewModelFactory(AppPreferenceRepository(database.appPreferenceDao()))
     }
     override val cashViewModel: CashViewModel by viewModels {
         CashViewModelFactory(CashRepository(database))
@@ -108,10 +117,6 @@ class MainActivity : AppCompatActivity(), ScreenHost {
         window.statusBarColor = ContextCompat.getColor(this, R.color.investa_background)
         window.navigationBarColor = ContextCompat.getColor(this, R.color.investa_background)
         setContentView(R.layout.activity_main)
-        findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab)
-            .imageTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(this, R.color.investa_background)
-            )
         contentContainer = findViewById(R.id.content_container)
         bottomNavigation = findViewById(R.id.bottom_navigation)
         setupSystemBarInsets()
@@ -137,6 +142,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
         navigator.setupBottomNavigation()
         currencyViewModel.ensureDefaults()
         cashViewModel.ensureDefaultAccounts()
+        appPreferenceViewModel.ensureDefaults()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -190,6 +196,37 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                 }
             }
         }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                appPreferenceViewModel.primaryCurrency.collect { currency ->
+                    primaryCurrency = currency
+                    when (currentScreen) {
+                        AppScreen.HOME -> homeRenderer.render()
+                        AppScreen.CASH -> cashRenderer.render()
+                        AppScreen.REPORTS -> reportsRenderer.render()
+                        AppScreen.SETTINGS -> settingsRenderer.render()
+                        else -> Unit
+                    }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                appPreferenceViewModel.numberFormatStyle.collect { styleId ->
+                    numberFormatStyle = NumberFormatStyle.fromId(styleId)
+                    NumberFormatStyleManager.apply(numberFormatStyle)
+                    when (currentScreen) {
+                        AppScreen.HOME -> homeRenderer.render()
+                        AppScreen.ASSETS -> assetsRenderer.render()
+                        AppScreen.CASH -> cashRenderer.render()
+                        AppScreen.REPORTS -> reportsRenderer.render()
+                        AppScreen.SETTINGS -> settingsRenderer.render()
+                        AppScreen.DETAIL -> assetDetailRenderer.render()
+                        else -> Unit
+                    }
+                }
+            }
+        }
         val restoredScreen = savedInstanceState
             ?.getString(SCREEN_STATE_KEY)
             ?.let { screenName -> runCatching { AppScreen.valueOf(screenName) }.getOrNull() }
@@ -213,13 +250,6 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             (bottomNavigation.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
                 params.bottomMargin = systemNavigationInset
                 bottomNavigation.layoutParams = params
-            }
-
-            findViewById<View>(R.id.fab)?.let { fab ->
-                (fab.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
-                    params.bottomMargin = dp(72) + systemNavigationInset
-                    fab.layoutParams = params
-                }
             }
 
             (contentContainer.layoutParams as? ViewGroup.MarginLayoutParams)?.let { params ->
@@ -256,6 +286,9 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             AppScreen.THEME -> settingsRenderer.renderTheme()
             AppScreen.LANGUAGE -> settingsRenderer.renderLanguage()
             AppScreen.EXCHANGE_RATE -> settingsRenderer.renderExchangeRate()
+            AppScreen.PRIMARY_CURRENCY -> settingsRenderer.renderPrimaryCurrency()
+            AppScreen.NUMBER_FORMAT -> settingsRenderer.renderNumberFormat()
+            AppScreen.ABOUT -> settingsRenderer.renderAbout()
             AppScreen.DETAIL -> assetDetailRenderer.render()
             AppScreen.ADD -> assetFormHandler.render(null)
             AppScreen.EDIT -> {

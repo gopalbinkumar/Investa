@@ -24,6 +24,8 @@ internal interface ScreenHost {
     var currentScreen: AppScreen
     var detailOrigin: AppScreen
     var selectedCategory: String
+    var primaryCurrency: String
+    var numberFormatStyle: com.example.investa.utils.NumberFormatStyle
     var assetsRoot: View?
     var databaseAssets: List<AssetEntity>
     var databaseTransactions: List<TransactionEntity>
@@ -34,6 +36,7 @@ internal interface ScreenHost {
     val transactionViewModel: TransactionViewModel
     val cashViewModel: CashViewModel
     val currencyViewModel: CurrencyViewModel
+    val appPreferenceViewModel: com.example.investa.viewmodel.AppPreferenceViewModel
 
     fun showScreen(screen: AppScreen)
     fun inflate(layout: Int): View
@@ -62,8 +65,6 @@ internal class AppNavigator(
             host.activity.findViewById<View>(viewId)
                 .setOnClickListener { showScreen(screen) }
         }
-        host.activity.findViewById<View>(R.id.fab)
-            .setOnClickListener { showScreen(AppScreen.ADD) }
     }
 
     fun showScreen(screen: AppScreen) {
@@ -90,8 +91,6 @@ internal class AppNavigator(
         host.currentScreen = screen
         val isMainScreen = screen.isMainScreen
         host.bottomNavigation.visibility = if (isMainScreen) View.VISIBLE else View.GONE
-        host.activity.findViewById<View>(R.id.fab).visibility =
-            if (screen == AppScreen.ASSETS) View.VISIBLE else View.GONE
         val contentParams = host.contentContainer.layoutParams as ViewGroup.MarginLayoutParams
         contentParams.bottomMargin = when {
             isMainScreen -> host.dp(56) + host.systemNavigationInset
@@ -136,6 +135,9 @@ internal class AppNavigator(
         AppScreen.THEME -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.LANGUAGE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.EXCHANGE_RATE -> { showScreen(AppScreen.SETTINGS); true }
+        AppScreen.PRIMARY_CURRENCY -> { showScreen(AppScreen.SETTINGS); true }
+        AppScreen.NUMBER_FORMAT -> { showScreen(AppScreen.SETTINGS); true }
+        AppScreen.ABOUT -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.DETAIL -> { showScreen(host.detailOrigin); true }
         AppScreen.ADD -> { showScreen(AppScreen.ASSETS); true }
         AppScreen.EDIT -> { showScreen(AppScreen.DETAIL); true }
@@ -155,9 +157,12 @@ internal class AppNavigator(
         AppScreen.THEME -> 5
         AppScreen.LANGUAGE -> 6
         AppScreen.EXCHANGE_RATE -> 7
-        AppScreen.DETAIL -> 8
-        AppScreen.ADD -> 9
-        AppScreen.EDIT -> 10
+        AppScreen.PRIMARY_CURRENCY -> 8
+        AppScreen.NUMBER_FORMAT -> 9
+        AppScreen.ABOUT -> 10
+        AppScreen.DETAIL -> 11
+        AppScreen.ADD -> 12
+        AppScreen.EDIT -> 13
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {

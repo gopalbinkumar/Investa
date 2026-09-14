@@ -83,11 +83,11 @@ internal class AssetDetailRenderer(
         }
         root.findViewById<View>(R.id.detail_back).setOnClickListener { host.showScreen(host.detailOrigin) }
         root.findViewById<View>(R.id.detail_buy).setOnClickListener {
-            transactionHandler.showTransactionDrawer(displayAsset, isBuy = true)
+            transactionHandler.showTransactionDrawer(asset, isBuy = true)
         }
         root.findViewById<View>(R.id.detail_sell).setOnClickListener {
             val currentQuantity = host.databaseAssets
-                .firstOrNull { it.id == displayAsset.id }
+                .firstOrNull { it.id == asset.id }
                 ?.quantity
                 ?: 0.0
             if (currentQuantity <= 0.0) {
@@ -95,13 +95,13 @@ internal class AssetDetailRenderer(
                     host.activity.getString(R.string.insufficient_asset_quantity)
                 )
             } else {
-                transactionHandler.showTransactionDrawer(displayAsset, isBuy = false)
+                transactionHandler.showTransactionDrawer(asset, isBuy = false)
             }
         }
         root.findViewById<View>(R.id.detail_change_current_price).setOnClickListener {
-            showCurrentPriceDrawer(displayAsset)
+            showCurrentPriceDrawer(asset)
         }
-        root.findViewById<View>(R.id.detail_more).setOnClickListener { showAssetOptions(displayAsset) }
+        root.findViewById<View>(R.id.detail_more).setOnClickListener { showAssetOptions(asset) }
         val rows = listOf(
             host.activity.getString(R.string.quantity) to displayAsset.quantity,
             host.activity.getString(R.string.invested_amount) to displayAsset.invested,
@@ -116,7 +116,11 @@ internal class AssetDetailRenderer(
             row.findViewById<TextView>(R.id.detail_row_label).text = label
             row.findViewById<TextView>(R.id.detail_row_value).text = value
         }
-        populateTransactionHistory(root, displayAsset, currentTransactions)
+        populateTransactionHistory(
+            root,
+            asset,
+            currentTransactions
+        )
     }
 
     fun refreshSelectedAsset(assets: List<AssetEntity>) {

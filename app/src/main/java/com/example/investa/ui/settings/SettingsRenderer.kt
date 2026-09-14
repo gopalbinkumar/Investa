@@ -1,6 +1,7 @@
 package com.example.investa.ui.settings
 
 import android.content.res.ColorStateList
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,29 +34,49 @@ internal class SettingsRenderer(private val host: ScreenHost) {
     fun render() {
         val root = host.inflate(R.layout.screen_settings)
         host.attach(root)
-        addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_circle_dollar, host.activity.getString(R.string.exchange_rate_setting), "USD / IDR", true) {
+        addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_circle_dollar, host.activity.getString(R.string.exchange_rate_setting), "", true) {
             host.showScreen(AppScreen.EXCHANGE_RATE)
+        }
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_banknote,
+            host.activity.getString(R.string.primary_currency),
+            "",
+            true
+        ) {
+            host.showScreen(AppScreen.PRIMARY_CURRENCY)
+        }
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_circle_dollar,
+            host.activity.getString(R.string.number_format),
+            "",
+            true
+        ) {
+            host.showScreen(AppScreen.NUMBER_FORMAT)
         }
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
             R.drawable.ic_lucide_moon,
             host.activity.getString(R.string.theme),
-            themeSummary(),
+            "",
             true
         ) {
             host.showScreen(AppScreen.THEME)
         }
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
-            R.drawable.ic_lucide_languages, host.activity.getString(R.string.language), LanguageManager.label(host.activity), true) {
+            R.drawable.ic_lucide_languages, host.activity.getString(R.string.language), "", true) {
             host.showScreen(AppScreen.LANGUAGE)
         }
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_upload, host.activity.getString(R.string.data_backup), "", true)
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_download, host.activity.getString(R.string.data_restore), "", true)
-        addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, host.activity.getString(R.string.about_investa), "", true)
-        addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, host.activity.getString(R.string.version), "1.0.0", false)
+        addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, host.activity.getString(R.string.about_investa), "", true) {
+            host.showScreen(AppScreen.ABOUT)
+        }
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_message_circle, host.activity.getString(R.string.feedback), "", true)
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_star, host.activity.getString(R.string.rate_investa), "", true)
+        addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, host.activity.getString(R.string.version), "1.0.0", false)
     }
 
     fun renderTheme() {
@@ -217,12 +238,73 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         })
     }
 
-    private fun themeLabel(theme: ThemeManager.AppTheme): String = when (theme) {
-        ThemeManager.AppTheme.DARK -> host.activity.getString(R.string.theme_dark)
-        ThemeManager.AppTheme.LIGHT -> host.activity.getString(R.string.theme_light)
+    fun renderPrimaryCurrency() {
+        val root = host.inflate(R.layout.screen_primary_currency)
+        host.attach(root)
+        root.findViewById<View>(R.id.primary_currency_back)
+            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
+
+        var selectedCurrency = host.primaryCurrency
+        val currencyGroup = root.findViewById<android.widget.RadioGroup>(R.id.primary_currency_radio_group)
+        currencyGroup.check(
+            if (selectedCurrency == "USD") R.id.primary_currency_usd
+            else R.id.primary_currency_idr
+        )
+        currencyGroup.setOnCheckedChangeListener { _, checkedId ->
+            selectedCurrency = if (checkedId == R.id.primary_currency_usd) "USD" else "IDR"
+        }
+        root.findViewById<TextView>(R.id.primary_currency_save).setOnClickListener {
+            host.appPreferenceViewModel.savePrimaryCurrency(selectedCurrency)
+            host.activity.showInvestaToast(host.activity.getString(R.string.primary_currency_changed))
+            host.showScreen(AppScreen.SETTINGS)
+        }
     }
 
-    private fun themeSummary(): String = themeLabel(ThemeManager.current(host.activity))
+    fun renderNumberFormat() {
+        val root = host.inflate(R.layout.screen_number_format)
+        host.attach(root)
+        root.findViewById<View>(R.id.number_format_back)
+            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
+
+        var selectedStyle = host.numberFormatStyle
+        val formatGroup = root.findViewById<android.widget.RadioGroup>(R.id.number_format_radio_group)
+        formatGroup.check(
+            if (selectedStyle == com.example.investa.utils.NumberFormatStyle.ENGLISH) {
+                R.id.number_format_english
+            } else {
+                R.id.number_format_indonesian
+            }
+        )
+        formatGroup.setOnCheckedChangeListener { _, checkedId ->
+            selectedStyle = if (checkedId == R.id.number_format_english) {
+                com.example.investa.utils.NumberFormatStyle.ENGLISH
+            } else {
+                com.example.investa.utils.NumberFormatStyle.INDONESIAN
+            }
+        }
+        root.findViewById<TextView>(R.id.number_format_save).setOnClickListener {
+            host.appPreferenceViewModel.saveNumberFormatStyle(selectedStyle.id)
+            host.activity.showInvestaToast(host.activity.getString(R.string.number_format_changed))
+            host.showScreen(AppScreen.SETTINGS)
+        }
+    }
+
+    fun renderAbout() {
+        val root = host.inflate(R.layout.screen_about)
+        host.attach(root)
+        root.findViewById<View>(R.id.about_back)
+            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
+        root.findViewById<View>(R.id.about_feedback).setOnClickListener {
+            val feedbackIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, host.activity.getString(R.string.feedback_subject))
+            }
+            host.activity.startActivity(Intent.createChooser(feedbackIntent, null))
+        }
+        root.findViewById<View>(R.id.about_privacy).setOnClickListener {
+            host.activity.showInvestaToast(host.activity.getString(R.string.privacy_policy_message))
+        }
+    }
 
     private fun addSettingsRow(
         parent: ViewGroup,

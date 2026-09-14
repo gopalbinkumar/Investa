@@ -21,7 +21,8 @@ import com.example.investa.utils.localizedCategory
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.parseMoneyInput
-import com.example.investa.utils.toIdrDisplay
+import com.example.investa.utils.toDisplayCurrency
+import com.example.investa.utils.convertCurrencyAmount
 import com.example.investa.utils.toUiAsset
 import com.example.investa.utils.LanguageManager
 import com.github.mikephil.charting.charts.LineChart
@@ -51,19 +52,27 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         root.findViewById<android.widget.ImageView>(R.id.reports_back)
             .setOnClickListener { host.showScreen(AppScreen.HOME) }
         val usdExchangeRate = host.exchangeRateFor("USD")
+        val displayCurrency = host.primaryCurrency
         val displayAssets = host.databaseAssets.map { asset ->
-            asset.toUiAsset(host.activity).toIdrDisplay(usdExchangeRate)
+            asset.toUiAsset(host.activity).toDisplayCurrency(displayCurrency, usdExchangeRate)
+        }
+        val nativeAssets = host.databaseAssets.map { asset ->
+            asset.toUiAsset(host.activity)
         }
         val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
         val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
         val totalProfit = totalValue - totalInvested
         val totalProfitPercentage = if (totalInvested == 0.0) 0.0 else totalProfit * 100.0 / totalInvested
-        val displayCurrency = "IDR"
         val realizedPL = host.databaseTransactions
             .asSequence()
             .filter { it.action.trim().equals("SELL", ignoreCase = true) }
             .sumOf { transaction ->
-                (transaction.total - transaction.costBasis) * host.exchangeRateFor(transaction.currency)
+                convertCurrencyAmount(
+                    transaction.total - transaction.costBasis,
+                    transaction.currency,
+                    displayCurrency,
+                    usdExchangeRate
+                )
             }
         root.findViewById<TextView>(R.id.reports_realized_pl).apply {
             text = formatSignedAmount(realizedPL, displayCurrency, 0)
@@ -87,7 +96,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         val performance = dailyPerformanceSnapshots(
             assets = host.databaseAssets,
             transactions = host.databaseTransactions,
-            usdExchangeRate = usdExchangeRate
+            usdExchangeRate = usdExchangeRate,
+            displayCurrency = displayCurrency
         )
         setupPerformanceChart(
             root.findViewById(R.id.performance_chart),
@@ -101,7 +111,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             if (byAsset) {
                 summary.background = null
                 summary.setPadding(0, 0, 0, 0)
-                val groupedAssets = displayAssets.groupBy { it.category }
+                val groupedAssets = nativeAssets.groupBy { it.category }
                 val categories = assetCategories + groupedAssets.keys
                     .filterNot { it in assetCategories }
                     .sortedBy { it.lowercase(Locale.ENGLISH) }
@@ -143,13 +153,21 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                         )
                     })
                     categoryAssets.forEach { asset ->
-                        val value = parseMoneyInput(asset.value) ?: 0.0
-                        val percentage = if (totalValue == 0.0) 0 else ((value * 100.0) / totalValue).roundToInt()
+                        val nativeValue = parseMoneyInput(asset.value) ?: 0.0
+                        val displayValue = convertCurrencyAmount(
+                            nativeValue,
+                            asset.currency,
+                            displayCurrency,
+                            usdExchangeRate
+                        )
+                        val percentage = if (totalValue == 0.0) 0 else {
+                            ((displayValue * 100.0) / totalValue).roundToInt()
+                        }
                         addReportSummaryRow(
                             host.activity,
                             categoryCard,
                             asset.symbol,
-                            formatAmount(value, displayCurrency, 0),
+                            formatAmount(nativeValue, asset.currency, 0),
                             "$percentage%",
                             onClick = {
                                 host.selectedAsset = host.databaseAssets
@@ -209,8 +227,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         fun updateSummary(index: Int) {
             val selectedIndex = index.coerceIn(0, (performance.size - 1).coerceAtLeast(0))
             val selected = performance.getOrNull(selectedIndex) ?: return
-            investedSummary.text = formatAmount(selected.invested.toDouble(), "IDR", 0)
-            currentSummary.text = formatAmount(selected.current.toDouble(), "IDR", 0)
+            investedSummary.text = formatAmount(selected.invested.toDouble(), host.primaryCurrency, 0)
+            currentSummary.text = formatAmount(selected.current.toDouble(), host.primaryCurrency, 0)
         }
 
         updateSummary(performance.lastIndex)
@@ -330,7 +348,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
     private fun dailyPerformanceSnapshots(
         assets: List<AssetEntity>,
         transactions: List<TransactionEntity>,
-        usdExchangeRate: Double
+        usdExchangeRate: Double,
+        displayCurrency: String
     ): List<DailyPerformance> {
         val calendar = Calendar.getInstance().apply {
             set(Calendar.DAY_OF_MONTH, 1)
@@ -401,8 +420,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             performance += DailyPerformance(
                 dateLabel = dateFormat.format(calendar.time),
                 monthLabel = monthFormat.format(calendar.time),
-                invested = invested.roundToLong(),
-                current = current.roundToLong()
+                invested = convertCurrencyAmount(invested, "IDR", displayCurrency, usdExchangeRate).roundToLong(),
+                current = convertCurrencyAmount(current, "IDR", displayCurrency, usdExchangeRate).roundToLong()
             )
             calendar.add(Calendar.DAY_OF_MONTH, 1)
         }

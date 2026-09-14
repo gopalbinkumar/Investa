@@ -21,7 +21,8 @@ import com.example.investa.utils.assetCategories
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.parseMoneyInput
-import com.example.investa.utils.toIdrDisplay
+import com.example.investa.utils.toDisplayCurrency
+import com.example.investa.utils.convertCurrencyAmount
 import com.example.investa.utils.toUiAsset
 import com.example.investa.utils.withCalculatedCurrentValue
 import com.github.mikephil.charting.charts.PieChart
@@ -39,19 +40,19 @@ internal class HomeRenderer(private val host: ScreenHost) {
         val root = homeRoot ?: host.inflate(R.layout.screen_home).also { homeRoot = it }
         if (root.parent == null) host.attach(root)
         val usdExchangeRate = host.exchangeRateFor("USD")
+        val displayCurrency = host.primaryCurrency
         val displayAssets = host.databaseAssets.map { asset ->
-            asset.toUiAsset(host.activity).toIdrDisplay(usdExchangeRate)
+            asset.toUiAsset(host.activity).toDisplayCurrency(displayCurrency, usdExchangeRate)
         }
         val investmentValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
-        val cashValue = host.databaseCashAccounts.sumOf { account ->
+        val cashValueInIdr = host.databaseCashAccounts.sumOf { account ->
             account.balance * host.exchangeRateFor(account.currencyCode)
         }
+        val cashValue = convertCurrencyAmount(cashValueInIdr, "IDR", displayCurrency, usdExchangeRate)
         val totalValue = investmentValue + cashValue
         val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
         val totalProfit = investmentValue - totalInvested
         val totalProfitPercentage = if (totalInvested == 0.0) 0.0 else totalProfit * 100.0 / totalInvested
-        val displayCurrency = "IDR"
-
         root.findViewById<TextView>(R.id.portfolio_value).text = formatAmount(totalValue, displayCurrency, 0)
         root.findViewById<TextView>(R.id.portfolio_profit).apply {
             text = formatSignedAmount(totalProfit, displayCurrency, 0)
@@ -144,12 +145,19 @@ internal class HomeRenderer(private val host: ScreenHost) {
 
         val topAssets = root.findViewById<LinearLayout>(R.id.top_assets_container)
         topAssets.removeAllViews()
-        displayAssets
+        val nativeAssets = host.databaseAssets.map { it.toUiAsset(host.activity) }
+        nativeAssets
             .map { it.withCalculatedCurrentValue() }
-            .sortedByDescending { parseMoneyInput(it.value) ?: 0.0 }
+            .sortedByDescending {
+                convertCurrencyAmount(
+                    parseMoneyInput(it.value) ?: 0.0,
+                    it.currency,
+                    "IDR",
+                    usdExchangeRate
+                )
+            }
             .take(3)
             .forEach { topAsset ->
-                val sourceAsset = host.databaseAssets.firstOrNull { it.id == topAsset.id }
                 addAssetRow(
                     host.activity,
                     topAssets,
@@ -161,7 +169,10 @@ internal class HomeRenderer(private val host: ScreenHost) {
                     true,
                     topAsset.profitPercent,
                     onClick = {
-                        host.selectedAsset = sourceAsset?.toUiAsset(host.activity) ?: topAsset
+                        host.selectedAsset = host.databaseAssets
+                            .firstOrNull { it.id == topAsset.id }
+                            ?.toUiAsset(host.activity)
+                            ?: topAsset
                         host.detailOrigin = AppScreen.HOME
                         host.showScreen(AppScreen.DETAIL)
                     }

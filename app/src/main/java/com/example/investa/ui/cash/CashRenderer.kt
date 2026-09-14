@@ -21,6 +21,7 @@ import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
+import com.example.investa.utils.convertCurrencyAmount
 import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.enableImeScrolling
 import com.example.investa.utils.localizedCurrencyName
@@ -36,10 +37,23 @@ internal class CashRenderer(private val host: ScreenHost) {
         val totalCash = host.databaseCashAccounts.sumOf { account ->
             account.balance * exchangeRate(account.currencyCode)
         }
+        val displayCurrency = host.primaryCurrency
+        val usdExchangeRate = host.exchangeRateFor("USD")
         root.findViewById<TextView>(R.id.cash_total_value).text =
-            formatAmount(totalCash, "IDR", "Rp", 0)
+            formatAmount(
+                convertCurrencyAmount(totalCash, "IDR", displayCurrency, usdExchangeRate),
+                displayCurrency,
+                0
+            )
         root.findViewById<TextView>(R.id.cash_total_usd_value).text =
-            formatAmount(totalCash / host.exchangeRateFor("USD").coerceAtLeast(1.0), "USD", "\$", 2)
+            host.activity.getString(
+                R.string.approx_amount,
+                formatAmount(
+                    convertCurrencyAmount(totalCash, "IDR", if (displayCurrency == "IDR") "USD" else "IDR", usdExchangeRate),
+                    if (displayCurrency == "IDR") "USD" else "IDR",
+                    2
+                )
+            )
 
         val accountsContainer = root.findViewById<LinearLayout>(R.id.cash_accounts_container)
         host.databaseCashAccounts
@@ -55,12 +69,21 @@ internal class CashRenderer(private val host: ScreenHost) {
                 row.findViewById<TextView>(R.id.cash_account_balance).text =
                     formatAmount(account.balance, currency.code, currency.symbol, 2)
                 row.findViewById<TextView>(R.id.cash_account_idr_value).apply {
-                    if (currency.code == "IDR") {
+                    if (currency.code == displayCurrency) {
                         visibility = View.GONE
                     } else {
                         text = host.activity.getString(
                             R.string.approx_amount,
-                            formatAmount(account.balance * exchangeRate(currency.code), "IDR", "Rp", 0)
+                            formatAmount(
+                                convertCurrencyAmount(
+                                    account.balance,
+                                    currency.code,
+                                    displayCurrency,
+                                    usdExchangeRate
+                                ),
+                                displayCurrency,
+                                0
+                            )
                         )
                     }
                 }

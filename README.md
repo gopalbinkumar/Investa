@@ -68,35 +68,6 @@ Database lokal mencakup tabel berikut:
 - **Cash BUY/SELL**: BUY mengurangi cash sebesar total termasuk fee; SELL menambah cash sebesar total/net proceeds setelah fee.
 - **Konversi USD**: `USD amount × USD.exchangeRate`, dengan exchange rate didefinisikan sebagai jumlah IDR untuk 1 USD.
 
-## Menjalankan proyek
-
-### Prasyarat
-
-- Android Studio terbaru.
-- Android SDK dengan `compileSdk 36`.
-- Perangkat atau emulator Android API 24 atau lebih baru.
-- JDK yang sesuai dengan konfigurasi Android Studio/Gradle proyek.
-
-### Langkah
-
-1. Clone atau unduh repository ini.
-2. Buka folder proyek melalui Android Studio.
-3. Pastikan Android SDK yang dibutuhkan tersedia, lalu lakukan **Sync Project with Gradle Files**.
-4. Pilih perangkat atau emulator.
-5. Jalankan konfigurasi `app`.
-
-Alternatif melalui terminal:
-
-```bash
-./gradlew assembleDebug
-```
-
-APK debug akan tersedia di:
-
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
-
 ## Catatan koneksi internet
 
 Aplikasi tidak membutuhkan backend, Firebase, maupun akun pengguna. Koneksi internet hanya digunakan saat pengguna secara manual meminta pembaruan harga market atau kurs USD/IDR dari Yahoo Finance. Data lokal di Room tetap menjadi *source of truth* dan aplikasi dapat dipakai tanpa internet.

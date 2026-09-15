@@ -31,7 +31,7 @@ Investa adalah aplikasi Android *offline-first* untuk mencatat dan memantau port
 | List & paging UI | RecyclerView dan ViewPager2 |
 | Chart | MPAndroidChart |
 | Komponen | Material Components |
-| Ikon | Lucide Android Vector Drawables |
+| Ikon | Lucide - Android Vector Drawables |
 
 ## Arsitektur singkat
 

@@ -20,7 +20,8 @@
             android:text="@string/reports"
         android:textColor="@color/investa_text"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
     </LinearLayout>
 
     <ScrollView
@@ -46,7 +47,8 @@
             android:text="@string/realized_gain_loss"
         android:textColor="@color/investa_text"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -64,7 +66,8 @@
                 android:text="@string/zero_amount"
         android:textColor="@color/investa_highlight"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
         </LinearLayout>
 
         <TextView
@@ -74,7 +77,8 @@
             android:text="@string/portfolio_performance"
         android:textColor="@color/investa_text"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -110,7 +114,8 @@
                         android:text="@string/dummy_invested_amount"
         android:textColor="@color/investa_text"
                         android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
                 </LinearLayout>
 
                 <ImageView
@@ -143,7 +148,8 @@
                         android:text="@string/dummy_current_value"
         android:textColor="@color/investa_highlight"
                         android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -173,7 +179,8 @@
                     android:layout_height="wrap_content"
                     android:text="@string/dummy_profit_amount"
         android:textColor="@color/investa_highlight"
-                    android:textStyle="bold" />
+                    android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
                 <TextView
                     android:id="@+id/reports_profit_percent"
@@ -192,7 +199,8 @@
             android:text="@string/summary"
         android:textColor="@color/investa_text"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
         <LinearLayout
             android:id="@+id/report_toggle"
@@ -210,6 +218,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/bg_primary_button"
                 android:foreground="@drawable/ripple_button"
+                android:stateListAnimator="@animator/press_scale_button"
                 android:gravity="center"
                 android:text="@string/by_category"
         android:textColor="@color/investa_background"
@@ -221,6 +230,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:foreground="@drawable/ripple_button"
+                android:stateListAnimator="@animator/press_scale_button"
                 android:gravity="center"
                 android:text="@string/by_asset"
         android:textColor="@color/investa_text_secondary"

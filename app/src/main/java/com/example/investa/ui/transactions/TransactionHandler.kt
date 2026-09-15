@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -148,11 +149,11 @@ internal class TransactionHandler(private val host: ScreenHost) {
             } else {
                 null
             }
-            listOf(feeInput, notesInput).forEach { input ->
+            listOf(notesInput).forEach { input ->
                 input.background = background?.constantState?.newDrawable()
                 input.foreground = foreground?.constantState?.newDrawable()
             }
-            listOf(quantityInput, priceInput).forEach { input ->
+            listOf(quantityInput, priceInput, feeInput).forEach { input ->
                 val container = input.parent as? View
                 container?.background = background?.constantState?.newDrawable()
                 container?.foreground = foreground?.constantState?.newDrawable()
@@ -266,8 +267,13 @@ internal class TransactionHandler(private val host: ScreenHost) {
         }
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
+            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
             bottomSheet?.let { sheet ->
+                // Keep all form drawing inside the drawer itself. Horizontal shadows
+                // still have room in the drawer's own side padding.
+                sheet.clipChildren = true
+                sheet.clipToPadding = true
                 val baseBottomPadding = drawer.paddingBottom
                 ViewCompat.setOnApplyWindowInsetsListener(sheet) { _, insets ->
                     val navigationInset = if (android.os.Build.VERSION.SDK_INT >= 35) {

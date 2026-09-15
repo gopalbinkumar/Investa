@@ -19,6 +19,16 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
     suspend fun getAllTransactions(): List<TransactionEntity> =
         repository.getAllTransactions()
 
+    suspend fun getTransactionHistoryPage(limit: Int, offset: Int): List<TransactionEntity> =
+        repository.getTransactionHistoryPage(limit, offset)
+
+    suspend fun getTransactionHistoryPageForAsset(
+        assetId: Long,
+        limit: Int,
+        offset: Int
+    ): List<TransactionEntity> =
+        repository.getTransactionHistoryPageForAsset(assetId, limit, offset)
+
     fun addTransaction(
         transaction: TransactionEntity,
         onSaved: () -> Unit,

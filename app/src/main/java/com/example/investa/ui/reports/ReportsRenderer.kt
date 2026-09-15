@@ -1,7 +1,6 @@
 package com.example.investa.ui.reports
 
 import android.graphics.Color
-import android.graphics.Typeface
 import android.view.MotionEvent
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -140,12 +139,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
                         includeFontPadding = false
                         setTextColor(ContextCompat.getColor(host.activity, R.color.investa_text_secondary))
                         textSize = 12f
-                        setTypeface(
-                            Typeface.create(
-                                ResourcesCompat.getFont(host.activity, R.font.plus_jakarta_sans),
-                                Typeface.BOLD
-                            )
-                        )
+                        typeface = ResourcesCompat.getFont(host.activity, R.font.poppins_semibold)
                         setPadding(host.dp(16), 0, host.dp(16), 0)
                         layoutParams = LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,

@@ -29,7 +29,8 @@
             android:text="@string/number_format"
             android:textColor="@color/investa_text"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
     </FrameLayout>
 
     <ScrollView
@@ -96,11 +97,13 @@
                 android:layout_marginTop="24dp"
                 android:background="@drawable/bg_primary_button"
                 android:foreground="@drawable/ripple_button"
+                android:stateListAnimator="@animator/press_scale_button"
                 android:gravity="center"
                 android:text="@string/save"
                 android:textColor="@color/investa_background"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

@@ -34,12 +34,9 @@ internal class SettingsRenderer(private val host: ScreenHost) {
     fun render() {
         val root = host.inflate(R.layout.screen_settings)
         host.attach(root)
-        addSettingsRow(root.findViewById(R.id.settings_preferences), R.drawable.ic_lucide_circle_dollar, host.activity.getString(R.string.exchange_rate_setting), "", true) {
-            host.showScreen(AppScreen.EXCHANGE_RATE)
-        }
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
-            R.drawable.ic_lucide_banknote,
+            R.drawable.ic_lucide_circle_dollar,
             host.activity.getString(R.string.primary_currency),
             "",
             true
@@ -48,12 +45,21 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         }
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
-            R.drawable.ic_lucide_circle_dollar,
+            R.drawable.ic_lucide_decimals_arrow_right,
             host.activity.getString(R.string.number_format),
             "",
             true
         ) {
             host.showScreen(AppScreen.NUMBER_FORMAT)
+        }
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_banknote,
+            host.activity.getString(R.string.exchange_rate_setting),
+            "",
+            true
+        ) {
+            host.showScreen(AppScreen.EXCHANGE_RATE)
         }
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),

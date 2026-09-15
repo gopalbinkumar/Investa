@@ -24,7 +24,8 @@
         android:text="@string/dummy_portfolio_value"
         android:textColor="@color/investa_text"
         android:textSize="28sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -39,7 +40,8 @@
             android:text="@string/dummy_profit_amount"
             android:textColor="@color/investa_profit"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+            android:tag="investa_semibold_text" />
 
         <TextView
             android:id="@+id/portfolio_profit_percent"

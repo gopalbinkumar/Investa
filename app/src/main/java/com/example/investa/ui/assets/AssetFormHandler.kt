@@ -285,7 +285,7 @@ internal class AssetFormHandler(private val host: ScreenHost) {
 
     private fun setupSpinner(spinner: Spinner, values: List<String>, selected: String) {
         val adapter = ArrayAdapter(host.activity, R.layout.spinner_item, values).also {
-            it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            it.setDropDownViewResource(R.layout.spinner_dropdown_item)
         }
         spinner.adapter = adapter
         spinner.setSelection(values.indexOf(selected).coerceAtLeast(0))
@@ -295,7 +295,7 @@ internal class AssetFormHandler(private val host: ScreenHost) {
         val values = listOf(SELECT_CATEGORY) + assetCategories
         val displayValues = values.map { localizedCategory(host.activity, it) }
         val adapter = ArrayAdapter(host.activity, R.layout.spinner_item, displayValues).also {
-            it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            it.setDropDownViewResource(R.layout.spinner_dropdown_item)
         }
         spinner.adapter = adapter
         spinner.setSelection(values.indexOf(selected).coerceAtLeast(0))

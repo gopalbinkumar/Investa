@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="investa_background">#FFF3F4F2</color>
-    <color name="investa_card_surface">#FFFAFAF8</color>
+<color name="investa_card_surface">#FFFAFAF8</color>
     <color name="investa_card_shadow">#FFBDBDBD</color>
     <color name="investa_surface">@color/investa_card_surface</color>
-    <color name="investa_surface_elevated">#FFE5E5E5</color>
+<color name="investa_surface_elevated">#FFE5E5E5</color>
+<color name="investa_portfolio_gradient_mid">#FFEFEFEE</color>
     <color name="investa_primary">#FF1A1A1A</color>
     <color name="investa_highlight">#FF4A4A4A</color>
     <color name="investa_text">#FF111111</color>

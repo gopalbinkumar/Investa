@@ -29,6 +29,7 @@
     <string name="top_assets">Aset Teratas</string>
     <string name="see_all">Lihat semua</string>
     <string name="total_assets">Total Aset</string>
+    <string name="all_assets">Semua Aset</string>
     <string name="assets_count">%1$d aset</string>
     <string name="assets_count_placeholder">0 aset</string>
     <string name="portfolio_performance">Performa Portofolio</string>
@@ -44,6 +45,7 @@
     <string name="buy">Beli</string>
     <string name="sell">Jual</string>
     <string name="history">Riwayat</string>
+    <string name="transaction_history">Riwayat Transaksi</string>
     <string name="quantity">Kuantitas</string>
     <string name="invested_amount">Jumlah Modal</string>
     <string name="average_price">Harga Rata-rata</string>

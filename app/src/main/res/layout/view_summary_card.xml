@@ -21,7 +21,8 @@
         android:layout_marginTop="7dp"
         android:textColor="@color/investa_text"
         android:textSize="14sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
     <TextView
         android:id="@+id/summary_percent"

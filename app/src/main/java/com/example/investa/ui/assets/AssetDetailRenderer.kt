@@ -1,7 +1,6 @@
 package com.example.investa.ui.assets
 
 import android.graphics.Color
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -11,13 +10,12 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.investa.data.entity.AssetEntity
-import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.R
 import com.example.investa.model.Asset
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.transactions.TransactionHandler
-import com.example.investa.ui.common.applyElevatedCard
+import com.example.investa.ui.transactions.TransactionHistoryListController
 import com.example.investa.ui.common.InvestaPopupOption
 import com.example.investa.ui.common.disableFontPaddingRecursively
 import com.example.investa.ui.common.applyElevatedCards
@@ -27,8 +25,8 @@ import com.example.investa.ui.common.setLoadingState
 import com.example.investa.utils.currencySymbolFor
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
+import com.example.investa.utils.formatQuantityForCard
 import com.example.investa.utils.formatSignedAmount
-import com.example.investa.utils.formatTransactionDate
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.showInvestaToast
@@ -48,9 +46,7 @@ internal class AssetDetailRenderer(
     private val host: ScreenHost,
     private val transactionHandler: TransactionHandler
 ) {
-    private var transactionObservation: Job? = null
-    private var observedTransactionAssetId: Long? = null
-    private var currentTransactions: List<TransactionEntity> = emptyList()
+    private var historyController: TransactionHistoryListController? = null
 
     fun render() {
         host.contentContainer.removeAllViews()
@@ -60,7 +56,6 @@ internal class AssetDetailRenderer(
             host.showScreen(AppScreen.ASSETS)
             return
         }
-        observeTransactions(asset)
         val currencySymbol = host.databaseCurrencies
             .firstOrNull { it.code == asset.currency }
             ?.symbol
@@ -103,7 +98,7 @@ internal class AssetDetailRenderer(
         }
         root.findViewById<View>(R.id.detail_more).setOnClickListener { showAssetOptions(asset) }
         val rows = listOf(
-            host.activity.getString(R.string.quantity) to displayAsset.quantity,
+            host.activity.getString(R.string.quantity) to formatQuantityForCard(displayAsset.quantity),
             host.activity.getString(R.string.invested_amount) to displayAsset.invested,
             host.activity.getString(R.string.average_price) to displayAsset.averagePrice,
             host.activity.getString(R.string.current_price) to displayAsset.currentPrice,
@@ -116,11 +111,31 @@ internal class AssetDetailRenderer(
             row.findViewById<TextView>(R.id.detail_row_label).text = label
             row.findViewById<TextView>(R.id.detail_row_value).text = value
         }
-        populateTransactionHistory(
-            root,
-            asset,
-            currentTransactions
+        historyController?.cancel()
+        historyController = TransactionHistoryListController(
+            host = host,
+            scrollView = root.findViewById(R.id.detail_scroll),
+            historyContainer = root.findViewById(R.id.detail_history_container),
+            assetForTransaction = { asset },
+            onTransactionClick = { clickedAsset, transaction ->
+                transactionHandler.showTransactionDrawer(
+                    clickedAsset,
+                    transaction.action.equals("BUY", ignoreCase = true),
+                    transaction
+                )
+            },
+            loadPage = { limit, offset ->
+                host.transactionViewModel.getTransactionHistoryPageForAsset(
+                    asset.id,
+                    limit,
+                    offset
+                )
+            },
+            isActive = {
+                host.currentScreen == AppScreen.DETAIL && host.selectedAsset?.id == asset.id
+            }
         )
+        historyController?.refresh()
     }
 
     fun refreshSelectedAsset(assets: List<AssetEntity>) {
@@ -132,105 +147,6 @@ internal class AssetDetailRenderer(
         } else {
             host.selectedAsset = refreshedEntity.toUiAsset(host.activity)
             render()
-        }
-    }
-
-    private fun observeTransactions(asset: Asset) {
-        if (asset.id == 0L) {
-            transactionObservation?.cancel()
-            transactionObservation = null
-            observedTransactionAssetId = null
-            currentTransactions = emptyList()
-            return
-        }
-        if (observedTransactionAssetId == asset.id) return
-        transactionObservation?.cancel()
-        currentTransactions = emptyList()
-        observedTransactionAssetId = asset.id
-        transactionObservation = host.activity.lifecycleScope.launch {
-            host.transactionViewModel.observeTransactions(asset.id).collect { transactions ->
-                currentTransactions = transactions
-                if (host.currentScreen == AppScreen.DETAIL && host.selectedAsset?.id == asset.id) {
-                    render()
-                }
-            }
-        }
-    }
-
-    private fun populateTransactionHistory(
-        root: View,
-        asset: Asset,
-        transactions: List<TransactionEntity>
-    ) {
-        val historyContainer = root.findViewById<LinearLayout>(R.id.detail_history_container)
-        if (transactions.isEmpty()) {
-            val empty = LayoutInflater.from(host.activity)
-                .inflate(R.layout.view_empty_state, historyContainer, false)
-            empty.disableFontPaddingRecursively()
-            empty.findViewById<TextView>(R.id.empty_title).text = host.activity.getString(R.string.no_transactions_found)
-            empty.findViewById<TextView>(R.id.empty_message).text = host.activity.getString(R.string.add_buy_sell_transaction)
-            historyContainer.addView(empty)
-            return
-        }
-        transactions.forEach { transaction ->
-            val action = transaction.action.trim().uppercase()
-            val actionLabel = host.activity.getString(
-                if (action == "BUY") R.string.buy else R.string.sell
-            )
-            val card = LayoutInflater.from(host.activity)
-                .inflate(R.layout.view_transaction_history_card, historyContainer, false)
-            card.disableFontPaddingRecursively()
-            card.findViewById<TextView>(R.id.history_type).apply {
-                text = actionLabel
-                setTextColor(ContextCompat.getColor(
-                    host.activity,
-                    if (transaction.action.equals("BUY", ignoreCase = true)) {
-                        R.color.investa_profit
-                    } else {
-                        R.color.investa_loss
-                    }
-                ))
-            }
-            card.findViewById<TextView>(R.id.history_date).text = formatTransactionDate(host.activity, transaction.date)
-            card.findViewById<TextView>(R.id.history_quantity).text =
-                com.example.investa.utils.formatTransactionQuantity(transaction.quantity, asset.symbol)
-            card.findViewById<TextView>(R.id.history_price_label).text =
-                host.activity.getString(R.string.history_price, actionLabel)
-            card.findViewById<TextView>(R.id.history_price).text =
-                formatAmount(
-                    transaction.price,
-                    transaction.currency,
-                    host.databaseCurrencies.firstOrNull { it.code == transaction.currency }?.symbol
-                        ?: currencySymbolFor(transaction.currency),
-                    2
-                )
-            val realizedRow = card.findViewById<View>(R.id.history_realized_row)
-            val realizedValue = card.findViewById<TextView>(R.id.history_realized)
-            if (transaction.action.equals("SELL", ignoreCase = true)) {
-                val realizedPL = transaction.total - transaction.costBasis
-                realizedRow.visibility = View.VISIBLE
-                realizedValue.text = formatSignedAmount(
-                    realizedPL,
-                    transaction.currency,
-                    host.databaseCurrencies.firstOrNull { it.code == transaction.currency }?.symbol
-                        ?: currencySymbolFor(transaction.currency),
-                    2
-                )
-                realizedValue.setTextColor(
-                    if (realizedPL >= 0.0) {
-                        ContextCompat.getColor(host.activity, R.color.investa_profit)
-                    } else {
-                        ContextCompat.getColor(host.activity, R.color.investa_loss)
-                    }
-                )
-            } else {
-                realizedRow.visibility = View.GONE
-            }
-            card.setOnClickListener {
-                transactionHandler.showTransactionDrawer(asset, transaction.action == "BUY", transaction)
-            }
-            historyContainer.addView(card)
-            applyElevatedCard(card)
         }
     }
 
@@ -307,8 +223,10 @@ internal class AssetDetailRenderer(
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
-            bottomSheet?.let {
-                BottomSheetBehavior.from(it).apply {
+            bottomSheet?.let { sheet ->
+                sheet.clipChildren = true
+                sheet.clipToPadding = true
+                BottomSheetBehavior.from(sheet).apply {
                     isDraggable = false
                     state = BottomSheetBehavior.STATE_EXPANDED
                 }

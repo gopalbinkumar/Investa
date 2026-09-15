@@ -29,6 +29,7 @@
     <string name="top_assets">Top Assets</string>
     <string name="see_all">See all</string>
     <string name="total_assets">Total Assets</string>
+    <string name="all_assets">All Assets</string>
     <string name="assets_count">%1$d Assets</string>
     <string name="assets_count_placeholder">0 Assets</string>
     <string name="portfolio_performance">Portfolio Performance</string>
@@ -44,6 +45,7 @@
     <string name="buy">Buy</string>
     <string name="sell">Sell</string>
     <string name="history">History</string>
+    <string name="transaction_history">Transaction History</string>
     <string name="quantity">Quantity</string>
     <string name="invested_amount">Invested Amount</string>
     <string name="average_price">Average Price</string>

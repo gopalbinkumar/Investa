@@ -9,6 +9,8 @@ import androidx.viewpager2.widget.ViewPager2
 import com.example.investa.R
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
+import com.example.investa.ui.common.InvestaPopupOption
+import com.example.investa.ui.common.showInvestaPopup
 import com.example.investa.utils.NumberFormatStyle
 import com.example.investa.utils.localizedCategory
 import com.google.android.material.tabs.TabLayout
@@ -29,8 +31,18 @@ internal class AssetsRenderer(private val host: ScreenHost) {
         val viewPager = root.findViewById<ViewPager2>(R.id.asset_category_pager)
         if (!isInitialized) {
             setupTabsAndPager(tabs, viewPager)
-            root.findViewById<View>(R.id.assets_add).setOnClickListener {
-                host.showScreen(AppScreen.ADD)
+            root.findViewById<View>(R.id.assets_more).setOnClickListener { anchor ->
+                showInvestaPopup(
+                    anchor,
+                    listOf(
+                        InvestaPopupOption(host.activity.getString(R.string.add_asset)) {
+                            host.showScreen(AppScreen.ADD)
+                        },
+                        InvestaPopupOption(host.activity.getString(R.string.transaction_history)) {
+                            host.showScreen(AppScreen.TRANSACTION_HISTORY)
+                        }
+                    )
+                )
             }
             isInitialized = true
         }
@@ -150,6 +162,12 @@ internal class AssetsRenderer(private val host: ScreenHost) {
             position == 0 || asset.category == assetPagerCategories[position]
         }
         val root = host.assetsRoot ?: return
+        root.findViewById<TextView>(R.id.asset_count_label).text =
+            if (position == 0) {
+                host.activity.getString(R.string.all_assets)
+            } else {
+                localizedCategory(host.activity, assetPagerCategories[position])
+            }
         root.findViewById<TextView>(R.id.asset_count).text = host.activity.getString(R.string.assets_count, count)
     }
 }

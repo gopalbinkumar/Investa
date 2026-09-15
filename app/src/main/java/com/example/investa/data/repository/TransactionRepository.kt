@@ -21,6 +21,16 @@ class TransactionRepository(private val database: InvestaDatabase) {
     suspend fun getAllTransactions(): List<TransactionEntity> =
         transactionDao.getAllTransactions()
 
+    suspend fun getTransactionHistoryPage(limit: Int, offset: Int): List<TransactionEntity> =
+        transactionDao.getTransactionHistoryPage(limit, offset)
+
+    suspend fun getTransactionHistoryPageForAsset(
+        assetId: Long,
+        limit: Int,
+        offset: Int
+    ): List<TransactionEntity> =
+        transactionDao.getTransactionHistoryPageForAsset(assetId, limit, offset)
+
     fun observeTotalRealizedPL(currencyCode: String): Flow<Double> =
         transactionDao.observeTotalRealizedPL(currencyCode)
 

@@ -7,7 +7,8 @@
     android:tag="investa_elevated_card"
     android:foreground="@drawable/ripple_surface"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:stateListAnimator="@animator/press_scale_asset">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,7 +23,8 @@
             android:layout_weight="1"
             android:textColor="@color/investa_profit"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
         <TextView
             android:id="@+id/history_date"

@@ -1,2 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="16dp" android:paddingEnd="12dp" android:foreground="@drawable/ripple_surface"><ImageView android:id="@+id/settings_icon" android:layout_width="24dp" android:layout_height="24dp" android:tint="@color/investa_icon_primary" android:contentDescription="@null" /><TextView android:id="@+id/settings_label" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:textColor="@color/investa_text_secondary" android:textSize="13sp" /><TextView android:id="@+id/settings_value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/investa_text" android:textSize="13sp" /><ImageView android:id="@+id/settings_chevron" android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/ic_lucide_chevron_right" android:tint="@color/investa_icon_secondary" android:contentDescription="@null" /></LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="52dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="12dp"
+    android:foreground="@drawable/ripple_surface">
+
+    <ImageView
+        android:id="@+id/settings_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:tint="@color/investa_icon_primary"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/settings_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:textColor="@color/investa_text_secondary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/settings_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/investa_text"
+        android:textSize="13sp" />
+
+    <ImageView
+        android:id="@+id/settings_chevron"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:src="@drawable/ic_lucide_chevron_right"
+        android:tint="@color/investa_icon_secondary"
+        android:contentDescription="@null" />
+</LinearLayout>

@@ -109,6 +109,9 @@ fun Asset.withAmountPrecision(maxFractionDigits: Int, currencySymbol: String? = 
         if (profit.trimStart().startsWith("-")) -amount else amount
     }
     return copy(
+        quantity = parseTransactionQuantity(quantity)?.let { amount ->
+            formatQuantityWithUnit(amount, quantity.substringAfter(" ", ""))
+        } ?: quantity.replace('.', NumberFormatStyleManager.current.decimalSeparator),
         value = parseMoneyInput(value)?.let {
             formatAmount(it, currency, displayCurrencySymbol, maxFractionDigits)
         } ?: value,

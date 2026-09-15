@@ -110,11 +110,13 @@ fun formatInputAmount(amount: Double, currency: String): String {
     return "${currencySymbolFor(currency)}$formatted"
 }
 
-fun formatQuantityValue(quantity: Double): String =
-    BigDecimal.valueOf(quantity)
-        .stripTrailingZeros()
-        .toPlainString()
-        .replace('.', NumberFormatStyleManager.current.decimalSeparator)
+fun formatQuantityValue(quantity: Double): String {
+    val formatter = NumberFormat.getNumberInstance(NumberFormatStyleManager.current.locale).apply {
+        minimumFractionDigits = 0
+        maximumFractionDigits = 8
+    }
+    return formatter.format(quantity)
+}
 
 fun formatCompactQuantityValue(quantity: Double): String {
     val plain = BigDecimal.valueOf(quantity)
@@ -123,7 +125,12 @@ fun formatCompactQuantityValue(quantity: Double): String {
     val sign = if (plain.startsWith("-")) "-" else ""
     val unsigned = plain.removePrefix("-")
     val decimalIndex = unsigned.indexOf('.')
-    if (decimalIndex < 0) return sign + unsigned
+    if (decimalIndex < 0) {
+        val formattedInteger = NumberFormat.getIntegerInstance(
+            NumberFormatStyleManager.current.locale
+        ).format(BigDecimal(unsigned))
+        return sign + formattedInteger
+    }
 
     val integerPart = unsigned.substring(0, decimalIndex)
     val fraction = unsigned.substring(decimalIndex + 1)
@@ -139,7 +146,10 @@ fun formatCompactQuantityValue(quantity: Double): String {
     val compactFraction = fraction
         .take(decimalsToKeep)
         .trimEnd('0')
-    return sign + integerPart +
+    val formattedIntegerPart = NumberFormat.getIntegerInstance(
+        NumberFormatStyleManager.current.locale
+    ).format(BigDecimal(integerPart))
+    return sign + formattedIntegerPart +
         if (compactFraction.isEmpty()) "" else "${NumberFormatStyleManager.current.decimalSeparator}$compactFraction"
 }
 
@@ -149,7 +159,13 @@ fun formatQuantityForCard(quantityWithUnit: String): String {
         ?: return quantityWithUnit.replace('.', NumberFormatStyleManager.current.decimalSeparator)
     val unit = quantityWithUnit.substringAfter(' ', "")
     val formatted = formatCompactQuantityValue(amount)
-    return if (unit.isBlank()) formatted else "$formatted $unit"
+    val displayUnit = if (unit.endsWith("(s)")) {
+        val singularUnit = unit.removeSuffix("(s)")
+        if (amount != 1.0) "${singularUnit}s" else singularUnit
+    } else {
+        unit
+    }
+    return if (displayUnit.isBlank()) formatted else "$formatted $displayUnit"
 }
 
 fun formatQuantityWithUnit(quantity: Double, unit: String): String =

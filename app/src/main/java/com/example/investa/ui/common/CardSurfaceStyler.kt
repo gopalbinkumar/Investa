@@ -1,6 +1,8 @@
 package com.example.investa.ui.common
 
 import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.LayerDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
@@ -27,10 +29,14 @@ internal fun applyElevatedCard(
     val shape = ShapeAppearanceModel.builder()
         .setAllCornerSizes(cornerRadiusDp * density)
         .build()
-    val background = MaterialShapeDrawable(shape).apply {
-            fillColor = ColorStateList.valueOf(
-                ContextCompat.getColor(view.context, R.color.investa_card_surface)
+    val isPortfolioCard = view.id == R.id.portfolio_card
+    val shadowBackground = MaterialShapeDrawable(shape).apply {
+        fillColor = ColorStateList.valueOf(
+            if (isPortfolioCard) Color.TRANSPARENT else ContextCompat.getColor(
+                view.context,
+                R.color.investa_card_surface
             )
+        )
         shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
         elevation = shadowRadius.toFloat()
         setShadowRadius(shadowRadius)
@@ -38,7 +44,19 @@ internal fun applyElevatedCard(
             setShadowColor(ContextCompat.getColor(view.context, R.color.investa_card_shadow))
     }
 
-    view.background = background
+    view.background = if (isPortfolioCard) {
+        val portfolioSurface = ContextCompat.getDrawable(
+            view.context,
+            R.drawable.bg_portfolio_card
+        )?.mutate()
+        if (portfolioSurface == null) {
+            shadowBackground
+        } else {
+            LayerDrawable(arrayOf(shadowBackground, portfolioSurface))
+        }
+    } else {
+        shadowBackground
+    }
     view.clipToOutline = false
     ViewCompat.setElevation(view, 0f)
     allowShadowInsideScrollViewport(view)

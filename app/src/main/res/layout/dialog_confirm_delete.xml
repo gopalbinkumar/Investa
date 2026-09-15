@@ -13,7 +13,8 @@
         android:text="@string/delete_asset"
         android:textColor="@color/investa_text"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
     <TextView
         android:id="@+id/delete_dialog_message"
@@ -38,12 +39,14 @@
             android:clickable="true"
             android:focusable="true"
             android:foreground="@drawable/ripple_button"
+            android:stateListAnimator="@animator/press_scale_button"
             android:gravity="center"
             android:minWidth="88dp"
             android:text="@string/cancel"
             android:textColor="@color/investa_background"
             android:textSize="13sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 
         <TextView
             android:id="@+id/delete_dialog_confirm"
@@ -54,11 +57,13 @@
             android:clickable="true"
             android:focusable="true"
             android:foreground="@drawable/ripple_loss"
+            android:stateListAnimator="@animator/press_scale_button"
             android:gravity="center"
             android:minWidth="88dp"
             android:text="@string/delete"
             android:textColor="@color/investa_background"
             android:textSize="13sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
     </LinearLayout>
 </LinearLayout>

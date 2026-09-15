@@ -88,6 +88,9 @@ internal class AppNavigator(
             screenOrder(screen) >= screenOrder(host.currentScreen) -> ScreenTransition.FORWARD
             else -> ScreenTransition.BACKWARD
         }
+        if (previousScreen == AppScreen.REPORTS && screen != AppScreen.REPORTS) {
+            host.databaseTransactions = emptyList()
+        }
         host.currentScreen = screen
         val isMainScreen = screen.isMainScreen
         host.bottomNavigation.visibility = if (isMainScreen) View.VISIBLE else View.GONE
@@ -139,6 +142,7 @@ internal class AppNavigator(
         AppScreen.NUMBER_FORMAT -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.ABOUT -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.DETAIL -> { showScreen(host.detailOrigin); true }
+        AppScreen.TRANSACTION_HISTORY -> { showScreen(AppScreen.ASSETS); true }
         AppScreen.ADD -> { showScreen(AppScreen.ASSETS); true }
         AppScreen.EDIT -> { showScreen(AppScreen.DETAIL); true }
         AppScreen.ASSETS,
@@ -161,8 +165,9 @@ internal class AppNavigator(
         AppScreen.NUMBER_FORMAT -> 9
         AppScreen.ABOUT -> 10
         AppScreen.DETAIL -> 11
-        AppScreen.ADD -> 12
-        AppScreen.EDIT -> 13
+        AppScreen.TRANSACTION_HISTORY -> 12
+        AppScreen.ADD -> 13
+        AppScreen.EDIT -> 14
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {

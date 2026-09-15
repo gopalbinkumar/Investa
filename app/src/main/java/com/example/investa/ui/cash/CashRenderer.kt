@@ -112,7 +112,7 @@ internal class CashRenderer(private val host: ScreenHost) {
             host.activity,
             R.layout.spinner_item,
             currencyCodes
-        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        ).also { it.setDropDownViewResource(R.layout.spinner_dropdown_item) }
         currencySpinner.setSelection(currencyCodes.indexOf(initialCurrency).coerceAtLeast(0))
         currencySpinner.isEnabled = account == null
         title.text = host.activity.getString(if (account == null) R.string.add_cash else R.string.edit_cash)
@@ -167,8 +167,10 @@ internal class CashRenderer(private val host: ScreenHost) {
                 com.google.android.material.R.id.design_bottom_sheet
             )
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
-            bottomSheet?.let {
-                BottomSheetBehavior.from(it).apply {
+            bottomSheet?.let { sheet ->
+                sheet.clipChildren = true
+                sheet.clipToPadding = true
+                BottomSheetBehavior.from(sheet).apply {
                     isDraggable = false
                     state = BottomSheetBehavior.STATE_EXPANDED
                 }

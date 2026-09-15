@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
@@ -53,7 +54,11 @@ internal class HomeRenderer(private val host: ScreenHost) {
         val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
         val totalProfit = investmentValue - totalInvested
         val totalProfitPercentage = if (totalInvested == 0.0) 0.0 else totalProfit * 100.0 / totalInvested
-        root.findViewById<TextView>(R.id.portfolio_value).text = formatAmount(totalValue, displayCurrency, 0)
+        root.findViewById<TextView>(R.id.portfolio_value).apply {
+            text = formatAmount(totalValue, displayCurrency, 0)
+            // Set explicitly at render time because this value is updated dynamically.
+            typeface = ResourcesCompat.getFont(host.activity, R.font.poppins_semibold)
+        }
         root.findViewById<TextView>(R.id.portfolio_profit).apply {
             text = formatSignedAmount(totalProfit, displayCurrency, 0)
             setTextColor(ContextCompat.getColor(

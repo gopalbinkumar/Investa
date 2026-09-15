@@ -20,6 +20,16 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date ASC, id ASC")
     suspend fun getAllTransactions(): List<TransactionEntity>
 
+    @Query("SELECT * FROM transactions ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getTransactionHistoryPage(limit: Int, offset: Int): List<TransactionEntity>
+
+    @Query("SELECT * FROM transactions WHERE assetId = :assetId ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getTransactionHistoryPageForAsset(
+        assetId: Long,
+        limit: Int,
+        offset: Int
+    ): List<TransactionEntity>
+
     @Query("SELECT COALESCE(SUM(total - costBasis), 0.0) FROM transactions WHERE UPPER(action) = 'SELL' AND currency = :currencyCode")
     fun observeTotalRealizedPL(currencyCode: String): Flow<Double>
 

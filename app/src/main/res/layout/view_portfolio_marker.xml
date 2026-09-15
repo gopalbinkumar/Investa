@@ -16,5 +16,6 @@
         android:layout_height="wrap_content"
         android:textColor="@color/investa_highlight"
         android:textSize="11sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 </LinearLayout>

@@ -39,6 +39,7 @@ import com.example.investa.ui.home.HomeRenderer
 import com.example.investa.ui.reports.ReportsRenderer
 import com.example.investa.ui.settings.SettingsRenderer
 import com.example.investa.ui.transactions.TransactionHandler
+import com.example.investa.ui.transactions.TransactionHistoryRenderer
 import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.LanguageManager
 import com.example.investa.utils.IconThemeManager
@@ -104,6 +105,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     private lateinit var assetsRenderer: AssetsRenderer
     private lateinit var cashRenderer: CashRenderer
     private lateinit var transactionHandler: TransactionHandler
+    private lateinit var transactionHistoryRenderer: TransactionHistoryRenderer
     private lateinit var assetDetailRenderer: AssetDetailRenderer
     private lateinit var assetFormHandler: AssetFormHandler
     private lateinit var reportsRenderer: ReportsRenderer
@@ -135,6 +137,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
         assetsRenderer = AssetsRenderer(this)
         cashRenderer = CashRenderer(this)
         transactionHandler = TransactionHandler(this)
+        transactionHistoryRenderer = TransactionHistoryRenderer(this, transactionHandler)
         assetDetailRenderer = AssetDetailRenderer(this, transactionHandler)
         assetFormHandler = AssetFormHandler(this)
         reportsRenderer = ReportsRenderer(this)
@@ -152,18 +155,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                         AppScreen.HOME -> homeRenderer.render()
                         AppScreen.ASSETS -> assetsRenderer.render()
                         AppScreen.DETAIL -> assetDetailRenderer.refreshSelectedAsset(assets)
-                        AppScreen.REPORTS -> reportsRenderer.render()
-                        else -> Unit
-                    }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                transactionViewModel.observeAllTransactions().collect { transactions ->
-                    databaseTransactions = transactions
-                    when (currentScreen) {
-                        AppScreen.HOME -> homeRenderer.render()
+                        AppScreen.TRANSACTION_HISTORY -> transactionHistoryRenderer.refresh()
                         AppScreen.REPORTS -> reportsRenderer.render()
                         else -> Unit
                     }
@@ -177,6 +169,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                     when (currentScreen) {
                         AppScreen.HOME -> homeRenderer.render()
                         AppScreen.ASSETS -> assetsRenderer.render()
+                        AppScreen.TRANSACTION_HISTORY -> transactionHistoryRenderer.refresh()
                         AppScreen.REPORTS -> reportsRenderer.render()
                         AppScreen.CASH -> cashRenderer.render()
                         else -> Unit
@@ -204,6 +197,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                         AppScreen.HOME -> homeRenderer.render()
                         AppScreen.CASH -> cashRenderer.render()
                         AppScreen.REPORTS -> reportsRenderer.render()
+                        AppScreen.TRANSACTION_HISTORY -> transactionHistoryRenderer.refresh()
                         AppScreen.SETTINGS -> settingsRenderer.render()
                         else -> Unit
                     }
@@ -281,7 +275,17 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             AppScreen.HOME -> homeRenderer.render()
             AppScreen.ASSETS -> assetsRenderer.render()
             AppScreen.CASH -> cashRenderer.render()
-            AppScreen.REPORTS -> reportsRenderer.render()
+            AppScreen.REPORTS -> {
+                reportsRenderer.render()
+                // Rendering the chart again while the screen-slide animation is running can
+                // interrupt its frames. Load the complete report data immediately after the
+                // navigator's 220 ms transition has settled instead.
+                contentContainer.postDelayed({
+                    if (currentScreen == AppScreen.REPORTS) {
+                        refreshTransactions()
+                    }
+                }, 240L)
+            }
             AppScreen.SETTINGS -> settingsRenderer.render()
             AppScreen.THEME -> settingsRenderer.renderTheme()
             AppScreen.LANGUAGE -> settingsRenderer.renderLanguage()
@@ -290,6 +294,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
             AppScreen.NUMBER_FORMAT -> settingsRenderer.renderNumberFormat()
             AppScreen.ABOUT -> settingsRenderer.renderAbout()
             AppScreen.DETAIL -> assetDetailRenderer.render()
+            AppScreen.TRANSACTION_HISTORY -> transactionHistoryRenderer.render()
             AppScreen.ADD -> assetFormHandler.render(null)
             AppScreen.EDIT -> {
                 val entity = databaseAssets.firstOrNull { it.id == selectedAsset?.id }
@@ -327,10 +332,12 @@ class MainActivity : AppCompatActivity(), ScreenHost {
 
     override fun refreshTransactions() {
         lifecycleScope.launch {
-            databaseTransactions = transactionViewModel.getAllTransactions()
             when (currentScreen) {
-                AppScreen.HOME -> homeRenderer.render()
-                AppScreen.REPORTS -> reportsRenderer.render()
+                AppScreen.TRANSACTION_HISTORY -> transactionHistoryRenderer.refresh()
+                AppScreen.REPORTS -> {
+                    databaseTransactions = transactionViewModel.getAllTransactions()
+                    reportsRenderer.render()
+                }
                 else -> Unit
             }
         }

@@ -32,5 +32,6 @@
         android:gravity="end"
         android:textColor="@color/investa_highlight"
         android:textSize="12sp"
-        android:textStyle="bold" />
+        android:fontFamily="@font/poppins_semibold"
+        android:tag="investa_semibold_text" />
 </LinearLayout>

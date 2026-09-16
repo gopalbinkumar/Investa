@@ -23,6 +23,17 @@ internal class AssetsRenderer(private val host: ScreenHost) {
     private var tabMediator: TabLayoutMediator? = null
     private var isInitialized = false
 
+    fun invalidateThemeCache() {
+        tabMediator?.detach()
+        tabMediator = null
+        pager?.adapter = null
+        pager = null
+        tabLayout = null
+        pagerAdapter = null
+        isInitialized = false
+        host.assetsRoot = null
+    }
+
     fun render() {
         val root = host.assetsRoot ?: host.inflate(R.layout.screen_assets).also { host.assetsRoot = it }
         if (root.parent == null) host.attach(root)

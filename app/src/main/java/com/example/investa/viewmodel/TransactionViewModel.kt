@@ -19,8 +19,21 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
     suspend fun getAllTransactions(): List<TransactionEntity> =
         repository.getAllTransactions()
 
+    suspend fun getTransactionById(id: Long): TransactionEntity? =
+        repository.getTransactionById(id)
+
     suspend fun getTransactionHistoryPage(limit: Int, offset: Int): List<TransactionEntity> =
         repository.getTransactionHistoryPage(limit, offset)
+
+    suspend fun getTransactionHistoryPageMatchingAssets(
+        searchQuery: String,
+        limit: Int,
+        offset: Int
+    ): List<TransactionEntity> = repository.getTransactionHistoryPageMatchingAssets(
+        searchQuery,
+        limit,
+        offset
+    )
 
     suspend fun getTransactionHistoryPageForAsset(
         assetId: Long,

@@ -10,6 +10,10 @@
     <string name="menu">Menu</string>
     <string name="notifications">Notifications</string>
     <string name="search">Search</string>
+    <string name="hint_search_transactions">Search by asset symbol or name</string>
+    <string name="clear_search">Clear search</string>
+    <string name="no_matching_transactions">No matching transactions</string>
+    <string name="try_another_asset_search">Try another asset symbol or name</string>
     <string name="more_options">More options</string>
     <string name="back">Back</string>
     <string name="close">Close</string>
@@ -82,6 +86,9 @@
     <string name="hint_notes">Ex: Long term investment</string>
     <string name="add_transaction">Add Transaction</string>
     <string name="transaction_detail">Transaction Detail</string>
+    <string name="transaction_action_asset">%1$s %2$s</string>
+    <string name="transaction_fee_label">Fee</string>
+    <string name="total_transaction">Transaction Total</string>
     <string name="date">Date</string>
     <string name="price">Price</string>
     <string name="fee_optional">Fee (Optional)</string>
@@ -146,13 +153,8 @@
     <string name="number_format">Number Format</string>
     <string name="choose_number_format">Choose a number separator style</string>
     <string name="number_format_changed">Number format updated</string>
-    <string name="theme">Theme</string>
+    <string name="dark_theme">Dark Theme</string>
     <string name="language">Language</string>
-    <string name="theme_dark">Dark</string>
-    <string name="theme_light">Light</string>
-    <string name="choose_theme">Choose your app theme</string>
-    <string name="choose_icon_theme">Choose your icon theme</string>
-    <string name="change_theme">Change Theme</string>
     <string name="choose_language">Choose your app language</string>
     <string name="language_english">English</string>
     <string name="language_indonesian">Bahasa Indonesia</string>

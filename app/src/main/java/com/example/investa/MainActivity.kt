@@ -1,9 +1,11 @@
 package com.example.investa
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -40,9 +43,7 @@ import com.example.investa.ui.reports.ReportsRenderer
 import com.example.investa.ui.settings.SettingsRenderer
 import com.example.investa.ui.transactions.TransactionHandler
 import com.example.investa.ui.transactions.TransactionHistoryRenderer
-import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.LanguageManager
-import com.example.investa.utils.IconThemeManager
 import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.toUiAsset
 import com.example.investa.utils.NumberFormatStyle
@@ -112,13 +113,14 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     private lateinit var settingsRenderer: SettingsRenderer
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        IconThemeManager.apply(this)
-        ThemeManager.apply(this)
         LanguageManager.apply(this)
         super.onCreate(savedInstanceState)
-        window.statusBarColor = ContextCompat.getColor(this, R.color.investa_background)
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.investa_background)
+        applySystemBarTheme(resources.configuration)
         setContentView(R.layout.activity_main)
+        // Apply the text metric globally to the static activity layout as well.
+        // Dynamically rendered screens are covered again from attach() and the
+        // existing recursive calls in their renderers.
+        findViewById<View>(android.R.id.content).disableFontPaddingRecursively()
         contentContainer = findViewById(R.id.content_container)
         bottomNavigation = findViewById(R.id.bottom_navigation)
         setupSystemBarInsets()
@@ -268,6 +270,55 @@ class MainActivity : AppCompatActivity(), ScreenHost {
         super.onSaveInstanceState(outState)
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+
+        applySystemBarTheme(newConfig)
+        (contentContainer.parent as? View)?.setBackgroundColor(
+            ContextCompat.getColor(this, R.color.investa_background)
+        )
+        bottomNavigation.background = ContextCompat.getDrawable(this, R.drawable.bg_bottom_navigation)
+        refreshNavigationIconColors(bottomNavigation)
+
+        contentContainer.animate().cancel()
+        contentContainer.translationX = 0f
+        contentContainer.alpha = 1f
+        contentContainer.removeAllViews()
+        homeRenderer.invalidateThemeCache()
+        assetsRenderer.invalidateThemeCache()
+        reportsRenderer.invalidateThemeCache()
+        transactionHistoryRenderer.invalidateThemeCache()
+        renderScreen(currentScreen)
+        if (LanguageManager.consumeLanguageChangedToast(this)) {
+            showInvestaToast(getString(R.string.language_changed))
+        }
+    }
+
+    private fun applySystemBarTheme(configuration: Configuration) {
+        val backgroundColor = ContextCompat.getColor(this, R.color.investa_background)
+        window.statusBarColor = backgroundColor
+        window.navigationBarColor = backgroundColor
+
+        val isDarkTheme = configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+            Configuration.UI_MODE_NIGHT_YES
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !isDarkTheme
+            isAppearanceLightNavigationBars = !isDarkTheme
+        }
+    }
+
+    private fun refreshNavigationIconColors(view: View) {
+        if (view is ImageView) {
+            view.imageTintList = ContextCompat.getColorStateList(this, R.color.nav_icon_tint)
+            view.foreground = ContextCompat.getDrawable(this, R.drawable.ripple_icon)
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                refreshNavigationIconColors(view.getChildAt(index))
+            }
+        }
+    }
+
     override fun showScreen(screen: AppScreen) = navigator.showScreen(screen)
 
     private fun renderScreen(screen: AppScreen) {
@@ -287,7 +338,6 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                 }, 240L)
             }
             AppScreen.SETTINGS -> settingsRenderer.render()
-            AppScreen.THEME -> settingsRenderer.renderTheme()
             AppScreen.LANGUAGE -> settingsRenderer.renderLanguage()
             AppScreen.EXCHANGE_RATE -> settingsRenderer.renderExchangeRate()
             AppScreen.PRIMARY_CURRENCY -> settingsRenderer.renderPrimaryCurrency()

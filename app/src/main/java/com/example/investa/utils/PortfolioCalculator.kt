@@ -31,7 +31,7 @@ fun AssetEntity.toUiAsset(context: Context? = null): Asset {
         value = formatAmount(currentValueAmount, currency),
         invested = formatAmount(investedAmount, currency),
         profit = formatSignedAmount(profitAmount, currency),
-        profitPercent = String.format(Locale.US, "%+.2f%%", profitPercentage),
+        profitPercent = String.format(Locale.US, "(%+.2f%%)", profitPercentage),
         averagePrice = formatAmount(averagePrice, currency),
         currentPrice = formatAmount(currentPrice, currency),
         notes = notes,
@@ -76,7 +76,7 @@ fun Asset.withTransactionHistory(
         value = formatAmount(currentValueAmount, currency, displayCurrencySymbol, maxFractionDigits),
         invested = formatAmount(costBasis, currency, displayCurrencySymbol, maxFractionDigits),
         profit = formatSignedAmount(profitAmount, currency, displayCurrencySymbol, maxFractionDigits),
-        profitPercent = String.format(Locale.US, "%+.2f%%", profitPercentage),
+        profitPercent = String.format(Locale.US, "(%+.2f%%)", profitPercentage),
         averagePrice = formatAmount(
             if (holdingQuantity > 0.0) costBasis / holdingQuantity else 0.0,
             currency,
@@ -99,7 +99,7 @@ fun Asset.withCalculatedCurrentValue(): Asset {
     return copy(
         value = formatAmount(currentValueAmount, currency),
         profit = formatSignedAmount(profitAmount, currency),
-        profitPercent = String.format(Locale.US, "%+.2f%%", profitPercentage)
+        profitPercent = String.format(Locale.US, "(%+.2f%%)", profitPercentage)
     )
 }
 

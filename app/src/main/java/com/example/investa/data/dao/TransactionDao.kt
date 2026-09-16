@@ -23,6 +23,23 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
     suspend fun getTransactionHistoryPage(limit: Int, offset: Int): List<TransactionEntity>
 
+    @Query(
+        """
+        SELECT transactions.* FROM transactions
+        INNER JOIN assets ON assets.id = transactions.assetId
+        WHERE :searchQuery = ''
+            OR INSTR(LOWER(assets.symbol), LOWER(:searchQuery)) > 0
+            OR INSTR(LOWER(assets.name), LOWER(:searchQuery)) > 0
+        ORDER BY transactions.date DESC, transactions.id DESC
+        LIMIT :limit OFFSET :offset
+        """
+    )
+    suspend fun getTransactionHistoryPageMatchingAssets(
+        searchQuery: String,
+        limit: Int,
+        offset: Int
+    ): List<TransactionEntity>
+
     @Query("SELECT * FROM transactions WHERE assetId = :assetId ORDER BY date DESC, id DESC LIMIT :limit OFFSET :offset")
     suspend fun getTransactionHistoryPageForAsset(
         assetId: Long,

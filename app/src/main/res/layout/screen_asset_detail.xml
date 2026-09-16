@@ -93,7 +93,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:textColor="@color/investa_text"
-            android:textSize="30sp"
+            android:textSize="25sp"
             android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text" />
 
@@ -210,7 +210,7 @@
             android:textColor="@color/investa_text"
             android:textSize="16sp"
             android:fontFamily="@font/poppins_semibold"
-        android:tag="investa_semibold_text" />
+            android:tag="investa_semibold_text" />
 
         <LinearLayout
             android:id="@+id/detail_history_container"

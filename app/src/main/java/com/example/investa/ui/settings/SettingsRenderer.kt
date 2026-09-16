@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.investa.data.entity.CurrencyEntity
@@ -24,13 +25,16 @@ import com.example.investa.utils.showInvestaToast
 import com.example.investa.utils.hideInvestaKeyboard
 import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.LanguageManager
-import com.example.investa.utils.IconThemeManager
 import com.example.investa.utils.YahooFinanceApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 
 internal class SettingsRenderer(private val host: ScreenHost) {
+    companion object {
+        private const val THEME_SWITCH_ANIMATION_DELAY_MS = 220L
+    }
+
     fun render() {
         val root = host.inflate(R.layout.screen_settings)
         host.attach(root)
@@ -39,109 +43,60 @@ internal class SettingsRenderer(private val host: ScreenHost) {
             R.drawable.ic_lucide_circle_dollar,
             host.activity.getString(R.string.primary_currency),
             "",
-            true
-        ) {
-            host.showScreen(AppScreen.PRIMARY_CURRENCY)
-        }
+            true,
+            onClick = { host.showScreen(AppScreen.PRIMARY_CURRENCY) }
+        )
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
             R.drawable.ic_lucide_decimals_arrow_right,
             host.activity.getString(R.string.number_format),
             "",
-            true
-        ) {
-            host.showScreen(AppScreen.NUMBER_FORMAT)
-        }
+            true,
+            onClick = { host.showScreen(AppScreen.NUMBER_FORMAT) }
+        )
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
-            R.drawable.ic_lucide_banknote,
+            R.drawable.ic_lucide_chart_no_axes_combined,
             host.activity.getString(R.string.exchange_rate_setting),
             "",
-            true
-        ) {
-            host.showScreen(AppScreen.EXCHANGE_RATE)
-        }
+            true,
+            onClick = { host.showScreen(AppScreen.EXCHANGE_RATE) }
+        )
+        addSettingsRow(
+            root.findViewById(R.id.settings_preferences),
+            R.drawable.ic_lucide_languages,
+            host.activity.getString(R.string.language),
+            "",
+            true,
+            onClick = { host.showScreen(AppScreen.LANGUAGE) }
+        )
         addSettingsRow(
             root.findViewById(R.id.settings_preferences),
             R.drawable.ic_lucide_moon,
-            host.activity.getString(R.string.theme),
+            host.activity.getString(R.string.dark_theme),
             "",
-            true
-        ) {
-            host.showScreen(AppScreen.THEME)
-        }
-        addSettingsRow(
-            root.findViewById(R.id.settings_preferences),
-            R.drawable.ic_lucide_languages, host.activity.getString(R.string.language), "", true) {
-            host.showScreen(AppScreen.LANGUAGE)
-        }
+            false,
+            switchVisible = true,
+            switchChecked = ThemeManager.isDarkModeEnabled(host.activity),
+            onSwitchChanged = { isDark ->
+                if (ThemeManager.update(host.activity, isDark)) {
+                    host.activity.showInvestaToast(host.activity.getString(R.string.theme_changed))
+                }
+            }
+        )
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_upload, host.activity.getString(R.string.data_backup), "", true)
         addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_download, host.activity.getString(R.string.data_restore), "", true)
-        addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, host.activity.getString(R.string.about_investa), "", true) {
-            host.showScreen(AppScreen.ABOUT)
-        }
+        addSettingsRow(
+            root.findViewById(R.id.settings_about),
+            R.drawable.ic_lucide_info,
+            host.activity.getString(R.string.about_investa),
+            "",
+            true,
+            onClick = { host.showScreen(AppScreen.ABOUT) }
+        )
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_message_circle, host.activity.getString(R.string.feedback), "", true)
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_star, host.activity.getString(R.string.rate_investa), "", true)
         addSettingsRow(root.findViewById(R.id.settings_about), R.drawable.ic_lucide_info, host.activity.getString(R.string.version), "1.0.0", false)
-    }
-
-    fun renderTheme() {
-        val root = host.inflate(R.layout.screen_theme)
-        host.attach(root)
-        root.findViewById<View>(R.id.theme_back)
-            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
-
-        val currentTheme = ThemeManager.current(host.activity)
-        var selectedTheme = currentTheme
-        val themeGroup = root.findViewById<android.widget.RadioGroup>(R.id.theme_radio_group)
-        themeGroup.check(
-            when (currentTheme) {
-                ThemeManager.AppTheme.DARK -> R.id.theme_dark
-                ThemeManager.AppTheme.LIGHT -> R.id.theme_light
-            }
-        )
-        themeGroup.setOnCheckedChangeListener { _, checkedId ->
-            val selected = when (checkedId) {
-                R.id.theme_light -> ThemeManager.AppTheme.LIGHT
-                else -> ThemeManager.AppTheme.DARK
-            }
-            selectedTheme = selected
-        }
-
-        val currentIconTheme = IconThemeManager.current(host.activity)
-        var selectedIconTheme = currentIconTheme
-        val iconThemeGroup = root.findViewById<android.widget.RadioGroup>(R.id.icon_theme_radio_group)
-        iconThemeGroup.check(
-            when (currentIconTheme) {
-                IconThemeManager.IconTheme.LIGHT -> R.id.icon_theme_light
-                IconThemeManager.IconTheme.DARK -> R.id.icon_theme_dark
-            }
-        )
-        iconThemeGroup.setOnCheckedChangeListener { _, checkedId ->
-            selectedIconTheme = when (checkedId) {
-                R.id.icon_theme_light -> IconThemeManager.IconTheme.LIGHT
-                else -> IconThemeManager.IconTheme.DARK
-            }
-        }
-        root.findViewById<TextView>(R.id.theme_save).setOnClickListener {
-            val appThemeChanged = ThemeManager.current(host.activity) != selectedTheme
-            val iconThemeChanged = IconThemeManager.current(host.activity) != selectedIconTheme
-
-            if (appThemeChanged) {
-                ThemeManager.save(host.activity, selectedTheme)
-            }
-            if (iconThemeChanged) {
-                IconThemeManager.save(host.activity, selectedIconTheme)
-                IconThemeManager.apply(host.activity)
-                host.activity.finishAffinity()
-                host.activity.finishAndRemoveTask()
-                return@setOnClickListener
-            }
-            host.activity.showInvestaToast(host.activity.getString(R.string.theme_changed))
-            if (appThemeChanged) {
-                ThemeManager.apply(host.activity)
-            }
-        }
     }
 
     fun renderLanguage() {
@@ -318,6 +273,9 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         label: String,
         value: String,
         chevron: Boolean,
+        switchVisible: Boolean = false,
+        switchChecked: Boolean = false,
+        onSwitchChanged: ((Boolean) -> Unit)? = null,
         onClick: (() -> Unit)? = null
     ) {
         val row = LayoutInflater.from(host.activity).inflate(R.layout.view_settings_row, parent, false)
@@ -331,8 +289,42 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         row.findViewById<TextView>(R.id.settings_label).text = label
         row.findViewById<TextView>(R.id.settings_value).text = value
         row.findViewById<ImageView>(R.id.settings_chevron).visibility = if (chevron) View.VISIBLE else View.GONE
-        row.setOnClickListener { onClick?.invoke() }
-        row.isClickable = onClick != null
+        val themeSwitch = row.findViewById<SwitchMaterial>(R.id.settings_switch)
+        themeSwitch.visibility = if (switchVisible) View.VISIBLE else View.GONE
+        // Theme changes recreate the activity. Restoring this view's old checked
+        // state would overwrite the value just loaded from theme preferences.
+        themeSwitch.isSaveEnabled = false
+        themeSwitch.isChecked = switchChecked
+        if (switchVisible) {
+            // Handle only a direct click on the switch. A checked-change listener
+            // can also run for programmatic state restoration during recreation.
+            themeSwitch.setOnCheckedChangeListener(null)
+            themeSwitch.setOnClickListener {
+                val requestedDarkMode = themeSwitch.isChecked
+                themeSwitch.isClickable = false
+                themeSwitch.postDelayed({
+                    onSwitchChanged?.invoke(requestedDarkMode)
+                    themeSwitch.isClickable = true
+                }, THEME_SWITCH_ANIMATION_DELAY_MS)
+            }
+            themeSwitch.isClickable = true
+            themeSwitch.isFocusable = true
+
+            // This row must never participate in the gesture. Only the switch is
+            // interactive, and removing the foreground also removes pressed/ripple.
+            row.foreground = null
+            row.setOnClickListener(null)
+            row.isClickable = false
+            row.isFocusable = false
+        } else if (onClick != null) {
+            row.setOnClickListener { onClick.invoke() }
+            row.isClickable = true
+            row.isFocusable = true
+        } else {
+            row.setOnClickListener(null)
+            row.isClickable = false
+            row.isFocusable = false
+        }
         parent.addView(row)
     }
 }

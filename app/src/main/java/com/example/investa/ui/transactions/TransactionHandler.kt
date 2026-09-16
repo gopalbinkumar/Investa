@@ -8,11 +8,13 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.ScrollView
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.R
 import com.example.investa.model.Asset
@@ -23,10 +25,13 @@ import com.example.investa.ui.common.applyElevatedCards
 import com.example.investa.ui.common.showInvestaConfirmationDialog
 import com.example.investa.ui.common.showInvestaPopup
 import com.example.investa.utils.calculateTransactionTotal
+import com.example.investa.utils.currencySymbolFor
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatEditableAmount
 import com.example.investa.utils.formatInputAmount
+import com.example.investa.utils.formatQuantityForCard
 import com.example.investa.utils.formatQuantityValue
+import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.formatTransactionDate
 import com.example.investa.utils.installDecimalInputFormatter
 import com.example.investa.utils.installMoneyInputFormatter
@@ -43,6 +48,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import kotlinx.coroutines.launch
 
 internal class TransactionHandler(private val host: ScreenHost) {
     fun showTransactionDrawer(
@@ -68,6 +74,10 @@ internal class TransactionHandler(private val host: ScreenHost) {
         val notesInput = drawer.findViewById<EditText>(R.id.transaction_notes)
         val total = drawer.findViewById<TextView>(R.id.transaction_total)
         val saveButton = drawer.findViewById<View>(R.id.transaction_save)
+        val readonlyContent = drawer.findViewById<View>(R.id.transaction_readonly_content)
+        val readonlyCard = drawer.findViewById<LinearLayout>(R.id.transaction_readonly_card)
+        val editContent = drawer.findViewById<View>(R.id.transaction_edit_content)
+        var activeTransaction = transaction
         val dateFormat = SimpleDateFormat("dd MMMM yyyy", LanguageManager.locale(host.activity))
 
         drawer.findViewById<TextView>(R.id.transaction_price_label).text =
@@ -160,6 +170,37 @@ internal class TransactionHandler(private val host: ScreenHost) {
             }
         }
 
+        fun setEditingMode(editing: Boolean) {
+            if (transaction == null) return
+
+            readonlyContent.visibility = if (editing) View.GONE else View.VISIBLE
+            editContent.visibility = if (editing) View.VISIBLE else View.GONE
+            moreButton.visibility = if (editing) View.GONE else View.VISIBLE
+            saveButton.visibility = if (editing) View.VISIBLE else View.GONE
+
+            val inputs = listOf(quantityInput, priceInput, feeInput, notesInput)
+            if (editing) {
+                updateTransactionFieldAppearance(editable = true)
+                inputs.forEach { input ->
+                    input.isFocusable = true
+                    input.isFocusableInTouchMode = true
+                }
+                feeToggle.isClickable = true
+                feeToggle.isFocusable = true
+            } else {
+                updateTransactionFieldAppearance(editable = false)
+                inputs.forEach { input ->
+                    input.isFocusable = false
+                    input.isFocusableInTouchMode = false
+                }
+                feeToggle.isClickable = false
+                feeToggle.isFocusable = false
+                drawer.findViewById<ScrollView>(R.id.transaction_content_scroll).post {
+                    drawer.findViewById<ScrollView>(R.id.transaction_content_scroll).scrollTo(0, 0)
+                }
+            }
+        }
+
         saveButton.setOnClickListener {
             if (transaction == null && asset.id == 0L) {
                 host.activity.showInvestaToast(host.activity.getString(R.string.save_asset_first))
@@ -181,7 +222,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
                     error = host.activity.getString(R.string.valid_fee); requestFocus()
                 }
                 else -> {
-                    val updatedTransaction = transaction?.copy(
+                    val updatedTransaction = activeTransaction?.copy(
                         date = parseTransactionDate(host.activity, dateInput.text.toString()),
                         quantity = quantity,
                         price = price,
@@ -196,8 +237,22 @@ internal class TransactionHandler(private val host: ScreenHost) {
                             transaction = updatedTransaction,
                             onSaved = {
                                 host.refreshTransactions()
-                                dialog.dismiss()
-                                host.activity.showInvestaToast(host.activity.getString(R.string.transaction_updated))
+                                host.activity.lifecycleScope.launch {
+                                    val savedTransaction = host.transactionViewModel.getTransactionById(
+                                        updatedTransaction.id
+                                    ) ?: updatedTransaction
+                                    activeTransaction = savedTransaction
+                                    bindTransactionReadOnlyDetails(
+                                        readonlyCard,
+                                        drawer,
+                                        asset,
+                                        savedTransaction
+                                    )
+                                    setEditingMode(editing = false)
+                                    host.activity.showInvestaToast(
+                                        host.activity.getString(R.string.transaction_updated)
+                                    )
+                                }
                             },
                             onError = { message ->
                                 host.activity.showInvestaToast(message)
@@ -235,35 +290,19 @@ internal class TransactionHandler(private val host: ScreenHost) {
 
         if (transaction != null) {
             title.text = host.activity.getString(R.string.transaction_detail)
-            moreButton.visibility = View.VISIBLE
-            moreButton.setOnClickListener { showTransactionOptions(moreButton, transaction, dialog) }
-            saveButton.visibility = View.GONE
-            updateTransactionFieldAppearance(editable = false)
-            val inputs = listOf(quantityInput, priceInput, feeInput, notesInput)
-            fun enableEditing() {
-                updateTransactionFieldAppearance(editable = true)
-                inputs.forEach { editableInput ->
-                    editableInput.isFocusable = true
-                    editableInput.isFocusableInTouchMode = true
-                }
-                feeToggle.isClickable = true
-                feeToggle.isFocusable = true
-                saveButton.visibility = View.VISIBLE
+            bindTransactionReadOnlyDetails(readonlyCard, drawer, asset, transaction)
+            setEditingMode(editing = false)
+            moreButton.setOnClickListener {
+                showTransactionOptions(
+                    anchor = moreButton,
+                    dialog = dialog,
+                    onEdit = { setEditingMode(editing = true) },
+                    currentTransaction = { activeTransaction ?: transaction }
+                )
             }
-            inputs.forEach { input ->
-                input.isFocusable = false
-                input.isFocusableInTouchMode = false
-                input.setOnClickListener {
-                    enableEditing()
-                    input.requestFocus()
-                }
-            }
-            dateInput.setOnClickListener {
-                enableEditing()
-                showDatePicker()
-            }
-            feeToggle.isClickable = false
-            feeToggle.isFocusable = false
+        } else {
+            readonlyContent.visibility = View.GONE
+            editContent.visibility = View.VISIBLE
         }
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
@@ -306,19 +345,115 @@ internal class TransactionHandler(private val host: ScreenHost) {
         dialog.show()
     }
 
+    private fun bindTransactionReadOnlyDetails(
+        card: LinearLayout,
+        drawer: View,
+        asset: Asset,
+        transaction: TransactionEntity
+    ) {
+        val isBuy = transaction.action.equals("BUY", ignoreCase = true)
+        val actionLabel = host.activity.getString(if (isBuy) R.string.buy else R.string.sell)
+        val assetSymbol = asset.symbol.ifBlank { asset.name }
+        drawer.findViewById<TextView>(R.id.transaction_action_asset).apply {
+            text = host.activity.getString(R.string.transaction_action_asset, actionLabel, assetSymbol)
+            setTextColor(
+                ContextCompat.getColor(
+                    host.activity,
+                    if (isBuy) R.color.investa_profit else R.color.investa_loss
+                )
+            )
+        }
+        drawer.findViewById<TextView>(R.id.transaction_asset_name).text =
+            asset.name.ifBlank { asset.symbol }
+
+        val currencySymbol = host.databaseCurrencies
+            .firstOrNull { it.code == transaction.currency }
+            ?.symbol
+            ?.takeIf { it.isNotBlank() }
+            ?: currencySymbolFor(transaction.currency)
+        val quantityUnit = quantityUnitHint(host.activity, asset.category, asset.symbol)
+        val quantity = formatQuantityValue(transaction.quantity).let { formatted ->
+            if (quantityUnit.isBlank()) formatQuantityForCard(formatted)
+            else formatQuantityForCard("$formatted $quantityUnit")
+        }
+        val rows = listOf(
+            R.string.date to formatTransactionDate(host.activity, transaction.date),
+            R.string.quantity to quantity,
+            (if (isBuy) R.string.buy_price else R.string.sell_price) to formatAmount(
+                transaction.price,
+                transaction.currency,
+                currencySymbol,
+                2
+            ),
+            R.string.transaction_fee_label to formatAmount(
+                transaction.fee,
+                transaction.currency,
+                currencySymbol,
+                2
+            ),
+            R.string.notes to transaction.notes.ifBlank { "—" }
+        )
+
+        card.removeAllViews()
+        rows.forEach { (labelRes, valueText) ->
+            val row = host.activity.layoutInflater
+                .inflate(R.layout.view_detail_row, card, false)
+            row.disableFontPaddingRecursively()
+            row.findViewById<TextView>(R.id.detail_row_label).text = host.activity.getString(labelRes)
+            row.findViewById<TextView>(R.id.detail_row_value).apply {
+                text = valueText
+                if (labelRes == R.string.notes) {
+                    val params = layoutParams as LinearLayout.LayoutParams
+                    params.width = 0
+                    params.weight = 1f
+                    layoutParams = params
+                    gravity = android.view.Gravity.END
+                }
+            }
+            card.addView(row)
+        }
+
+        drawer.findViewById<TextView>(R.id.transaction_readonly_total).text = formatAmount(
+            transaction.total,
+            transaction.currency,
+            currencySymbol,
+            2
+        )
+        val realizedRow = drawer.findViewById<View>(R.id.transaction_readonly_realized_row)
+        if (isBuy) {
+            realizedRow.visibility = View.GONE
+        } else {
+            val realized = transaction.total - transaction.costBasis
+            drawer.findViewById<TextView>(R.id.transaction_readonly_realized).apply {
+                text = formatSignedAmount(realized, transaction.currency, currencySymbol, 2)
+                setTextColor(
+                    ContextCompat.getColor(
+                        host.activity,
+                        if (realized >= 0.0) R.color.investa_profit else R.color.investa_loss
+                    )
+                )
+            }
+            realizedRow.visibility = View.VISIBLE
+        }
+    }
+
     private fun showTransactionOptions(
         anchor: View,
-        transaction: TransactionEntity,
-        dialog: BottomSheetDialog
+        dialog: BottomSheetDialog,
+        onEdit: () -> Unit,
+        currentTransaction: () -> TransactionEntity
     ) {
         showInvestaPopup(
             anchor,
             listOf(
+                InvestaPopupOption(host.activity.getString(R.string.edit)) {
+                    onEdit()
+                },
                 InvestaPopupOption(
                     host.activity.getString(R.string.delete),
                     destructive = true
                 ) {
-                    confirmDeleteTransaction(transaction, dialog)
+                    confirmDeleteTransaction(currentTransaction(), dialog)
                 }
             )
         )

@@ -21,8 +21,21 @@ class TransactionRepository(private val database: InvestaDatabase) {
     suspend fun getAllTransactions(): List<TransactionEntity> =
         transactionDao.getAllTransactions()
 
+    suspend fun getTransactionById(id: Long): TransactionEntity? =
+        transactionDao.findById(id)
+
     suspend fun getTransactionHistoryPage(limit: Int, offset: Int): List<TransactionEntity> =
         transactionDao.getTransactionHistoryPage(limit, offset)
+
+    suspend fun getTransactionHistoryPageMatchingAssets(
+        searchQuery: String,
+        limit: Int,
+        offset: Int
+    ): List<TransactionEntity> = transactionDao.getTransactionHistoryPageMatchingAssets(
+        searchQuery,
+        limit,
+        offset
+    )
 
     suspend fun getTransactionHistoryPageForAsset(
         assetId: Long,

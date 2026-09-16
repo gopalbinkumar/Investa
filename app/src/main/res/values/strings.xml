@@ -10,6 +10,10 @@
     <string name="menu">Menu</string>
     <string name="notifications">Notifikasi</string>
     <string name="search">Cari</string>
+    <string name="hint_search_transactions">Cari symbol atau nama aset</string>
+    <string name="clear_search">Hapus pencarian</string>
+    <string name="no_matching_transactions">Tidak ada transaksi yang cocok</string>
+    <string name="try_another_asset_search">Coba symbol atau nama aset lain</string>
     <string name="more_options">Opsi lainnya</string>
     <string name="back">Kembali</string>
     <string name="close">Tutup</string>
@@ -82,6 +86,9 @@
     <string name="hint_notes">Contoh: Investasi jangka panjang</string>
     <string name="add_transaction">Tambah Transaksi</string>
     <string name="transaction_detail">Detail Transaksi</string>
+    <string name="transaction_action_asset">%1$s %2$s</string>
+    <string name="transaction_fee_label">Biaya</string>
+    <string name="total_transaction">Total Transaksi</string>
     <string name="date">Tanggal</string>
     <string name="price">Harga</string>
     <string name="fee_optional">Biaya (Opsional)</string>
@@ -146,13 +153,8 @@
     <string name="number_format">Format Angka</string>
     <string name="choose_number_format">Pilih gaya pemisah angka</string>
     <string name="number_format_changed">Format angka berhasil diubah</string>
-    <string name="theme">Tema</string>
+    <string name="dark_theme">Tema Gelap</string>
     <string name="language">Bahasa</string>
-    <string name="theme_dark">Gelap</string>
-    <string name="theme_light">Terang</string>
-    <string name="choose_theme">Pilih tema aplikasi</string>
-    <string name="choose_icon_theme">Pilih tema ikon</string>
-    <string name="change_theme">Ubah Tema</string>
     <string name="choose_language">Pilih bahasa aplikasi</string>
     <string name="language_english">English</string>
     <string name="language_indonesian">Bahasa Indonesia</string>

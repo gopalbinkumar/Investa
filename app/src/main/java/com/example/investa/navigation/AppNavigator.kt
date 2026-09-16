@@ -135,7 +135,6 @@ internal class AppNavigator(
     }
 
     fun handleBack(): Boolean = when (host.currentScreen) {
-        AppScreen.THEME -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.LANGUAGE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.EXCHANGE_RATE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.PRIMARY_CURRENCY -> { showScreen(AppScreen.SETTINGS); true }
@@ -158,12 +157,11 @@ internal class AppNavigator(
         AppScreen.CASH -> 2
         AppScreen.REPORTS -> 3
         AppScreen.SETTINGS -> 4
-        AppScreen.THEME -> 5
-        AppScreen.LANGUAGE -> 6
-        AppScreen.EXCHANGE_RATE -> 7
-        AppScreen.PRIMARY_CURRENCY -> 8
-        AppScreen.NUMBER_FORMAT -> 9
-        AppScreen.ABOUT -> 10
+        AppScreen.LANGUAGE -> 5
+        AppScreen.EXCHANGE_RATE -> 6
+        AppScreen.PRIMARY_CURRENCY -> 7
+        AppScreen.NUMBER_FORMAT -> 8
+        AppScreen.ABOUT -> 9
         AppScreen.DETAIL -> 11
         AppScreen.TRANSACTION_HISTORY -> 12
         AppScreen.ADD -> 13

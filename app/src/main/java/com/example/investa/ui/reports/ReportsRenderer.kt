@@ -42,6 +42,10 @@ internal class ReportsRenderer(private val host: ScreenHost) {
     private var summaryByAsset = false
     private var reportsRoot: android.view.View? = null
 
+    fun invalidateThemeCache() {
+        reportsRoot = null
+    }
+
     fun render() {
         val root = reportsRoot ?: host.inflate(R.layout.screen_reports).also { reportsRoot = it }
         val categoryToggle = root.findViewById<TextView>(R.id.toggle_category)
@@ -89,7 +93,7 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss))
         }
         root.findViewById<TextView>(R.id.reports_profit_percent).apply {
-            text = String.format(Locale.US, "%+.2f%%", totalProfitPercentage)
+            text = String.format(Locale.US, "(%+.2f%%)", totalProfitPercentage)
             setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss))
         }
         val performance = dailyPerformanceSnapshots(

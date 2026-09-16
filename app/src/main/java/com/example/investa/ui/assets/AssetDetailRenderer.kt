@@ -46,6 +46,12 @@ internal class AssetDetailRenderer(
     private val host: ScreenHost,
     private val transactionHandler: TransactionHandler
 ) {
+    companion object {
+        // Let the detail screen finish its navigation animation before inflating
+        // transaction cards on the main thread.
+        private const val HISTORY_LOAD_DELAY_MS = 260L
+    }
+
     private var historyController: TransactionHistoryListController? = null
 
     fun render() {
@@ -124,7 +130,7 @@ internal class AssetDetailRenderer(
                     transaction
                 )
             },
-            loadPage = { limit, offset ->
+            loadPage = { _, limit, offset ->
                 host.transactionViewModel.getTransactionHistoryPageForAsset(
                     asset.id,
                     limit,
@@ -135,7 +141,17 @@ internal class AssetDetailRenderer(
                 host.currentScreen == AppScreen.DETAIL && host.selectedAsset?.id == asset.id
             }
         )
-        historyController?.refresh()
+        val renderedRoot = root
+        val renderedAssetId = asset.id
+        renderedRoot.postDelayed({
+            if (
+                renderedRoot.parent != null &&
+                host.currentScreen == AppScreen.DETAIL &&
+                host.selectedAsset?.id == renderedAssetId
+            ) {
+                historyController?.refresh()
+            }
+        }, HISTORY_LOAD_DELAY_MS)
     }
 
     fun refreshSelectedAsset(assets: List<AssetEntity>) {

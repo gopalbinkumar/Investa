@@ -26,6 +26,7 @@ import com.example.investa.utils.currencySymbolFor
 import com.example.investa.utils.formatAmount
 import com.example.investa.utils.formatInputAmount
 import com.example.investa.utils.formatQuantityForCard
+import com.example.investa.utils.formatQuantityValue
 import com.example.investa.utils.formatSignedAmount
 import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.parseMoneyInput
@@ -211,6 +212,7 @@ internal class AssetDetailRenderer(
             }
         }
         priceUnit.text = priceUnitSuffix(host.activity, asset.category, asset.symbol)
+        priceInput.hint = formatQuantityValue(1_200_000_000.0)
         priceInput.setText(parseMoneyInput(asset.currentPrice)?.let { formatInputAmount(it, asset.currency) }.orEmpty())
         com.example.investa.utils.installMoneyInputFormatter(priceInput) { asset.currency }
         saveButton.setOnClickListener {

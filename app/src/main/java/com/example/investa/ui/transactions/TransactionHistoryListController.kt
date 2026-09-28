@@ -35,6 +35,7 @@ internal class TransactionHistoryListController(
     private var pendingSearchJob: Job? = null
     private var searchQuery = ""
     private var requestVersion = 0
+    private var hasLoadedContent = false
     private val loadingIndicator = ProgressBar(host.activity).apply {
         isIndeterminate = true
         layoutParams = LinearLayout.LayoutParams(host.dp(28), host.dp(28)).apply {
@@ -68,8 +69,11 @@ internal class TransactionHistoryListController(
         hideLoadingIndicator()
         loadedCount = 0
         hasMorePages = true
+        hasLoadedContent = false
         loadPage(clearExisting = true)
     }
+
+    fun hasLoadedContent(): Boolean = hasLoadedContent
 
     fun setSearchQuery(query: String) {
         val normalizedQuery = query.trim()
@@ -85,6 +89,7 @@ internal class TransactionHistoryListController(
         isLoading = false
         loadedCount = 0
         hasMorePages = true
+        hasLoadedContent = false
         hideLoadingIndicator()
         historyContainer.removeAllViews()
         scrollView.scrollTo(0, 0)
@@ -152,6 +157,7 @@ internal class TransactionHistoryListController(
                         }
                     )
                 }
+                hasLoadedContent = true
                 loadedCount += page.size
             } catch (error: CancellationException) {
                 throw error

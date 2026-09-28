@@ -43,6 +43,7 @@ import com.example.investa.utils.priceUnitSuffix
 import com.example.investa.utils.quantityUnitHint
 import com.example.investa.utils.LanguageManager
 import com.example.investa.utils.enableImeScrolling
+import com.example.investa.utils.hideInvestaKeyboard
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
@@ -56,7 +57,12 @@ internal class TransactionHandler(private val host: ScreenHost) {
         isBuy: Boolean,
         transaction: TransactionEntity? = null
     ) {
+        host.activity.currentFocus?.hideInvestaKeyboard()
         val dialog = BottomSheetDialog(host.activity)
+        dialog.window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        )
         val drawer = host.activity.layoutInflater.inflate(R.layout.bottom_sheet_transaction, null)
         drawer.disableFontPaddingRecursively()
         applyElevatedCards(drawer)
@@ -89,6 +95,12 @@ internal class TransactionHandler(private val host: ScreenHost) {
                 ?: dateFormat.format(Date())
         )
         fun selectedCurrency(): String = asset.currency
+        quantityInput.hint = host.activity.getString(
+            R.string.hint_number_example,
+            formatQuantityValue(0.005)
+        )
+        priceInput.hint = formatQuantityValue(1_200_000_000.0)
+        feeInput.hint = formatInputAmount(25_000.0, selectedCurrency())
         quantityInput.setText(
             transaction?.let { formatEditableAmount(formatQuantityValue(it.quantity), "IDR") } ?: ""
         )
@@ -168,6 +180,12 @@ internal class TransactionHandler(private val host: ScreenHost) {
                 container?.background = background?.constantState?.newDrawable()
                 container?.foreground = foreground?.constantState?.newDrawable()
             }
+            if (editable) {
+                // Replacing the wrapper backgrounds above removes their generated
+                // elevation layer. Restore it for every tagged input so the date,
+                // quantity, price, fee, and notes fields share one shadow treatment.
+                applyElevatedCards(editContent)
+            }
         }
 
         fun setEditingMode(editing: Boolean) {
@@ -229,6 +247,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
                         fee = fee,
                         total = calculateTransactionTotal(isBuy, quantity, price, fee),
                         currency = currency,
+                        exchangeRateToIdr = host.exchangeRateFor(currency),
                         notes = notesInput.text.toString().trim(),
                         updatedAt = now
                     )
@@ -269,6 +288,7 @@ internal class TransactionHandler(private val host: ScreenHost) {
                                 fee = fee,
                                 total = calculateTransactionTotal(isBuy, quantity, price, fee),
                                 currency = currency,
+                                exchangeRateToIdr = host.exchangeRateFor(currency),
                                 notes = notesInput.text.toString().trim(),
                                 createdAt = now,
                                 updatedAt = now
@@ -306,7 +326,10 @@ internal class TransactionHandler(private val host: ScreenHost) {
         }
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
-            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            dialog.window?.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN or
+                    WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            )
             bottomSheet?.setBackgroundColor(Color.TRANSPARENT)
             bottomSheet?.let { sheet ->
                 // Keep all form drawing inside the drawer itself. Horizontal shadows

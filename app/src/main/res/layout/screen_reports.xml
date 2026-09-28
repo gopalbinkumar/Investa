@@ -153,11 +153,34 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/performance_range_1m" style="@style/PerformanceRangeChip" android:text="1M" />
+                <TextView android:id="@+id/performance_range_3m" style="@style/PerformanceRangeChip" android:text="3M" />
+                <TextView android:id="@+id/performance_range_6m" style="@style/PerformanceRangeChip" android:text="6M" />
+                <TextView android:id="@+id/performance_range_1y" style="@style/PerformanceRangeChip" android:text="1Y" />
+                <TextView android:id="@+id/performance_range_all" style="@style/PerformanceRangeChip" android:text="@string/period_all" />
+            </LinearLayout>
+
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/performance_chart"
                 android:layout_width="match_parent"
                 android:layout_height="160dp"
                 android:layout_marginTop="20dp" />
+
+            <TextView
+                android:id="@+id/performance_chart_empty"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:textColor="@color/investa_text_secondary"
+                android:textSize="13sp" />
 
             <LinearLayout
                 android:id="@+id/performance_month_labels"
@@ -221,7 +244,7 @@
                 android:stateListAnimator="@animator/press_scale_button"
                 android:gravity="center"
                 android:text="@string/by_category"
-        android:textColor="@color/investa_background"
+        android:textColor="@color/investa_on_primary"
                 android:textSize="11sp" />
 
             <TextView

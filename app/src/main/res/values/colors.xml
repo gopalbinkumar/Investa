@@ -6,7 +6,9 @@
     <color name="investa_surface">@color/investa_card_surface</color>
 <color name="investa_surface_elevated">#FFE5E5E5</color>
 <color name="investa_portfolio_gradient_mid">#FFEFEFEE</color>
-    <color name="investa_primary">#FF1A1A1A</color>
+    <!-- Blue is reserved for interactive and selected states; surfaces stay neutral. -->
+    <color name="investa_primary">#FF3B82F6</color>
+    <color name="investa_on_primary">#FFFFFFFF</color>
     <color name="investa_highlight">#FF4A4A4A</color>
     <color name="investa_text">#FF111111</color>
     <color name="investa_text_secondary">#FF666666</color>

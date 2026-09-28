@@ -5,6 +5,7 @@ import com.example.investa.data.entity.AssetEntity
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,9 @@ import kotlinx.coroutines.flow.Flow
 interface AssetDao {
     @Query("SELECT * FROM assets ORDER BY createdAt DESC")
     fun observeAssets(): Flow<List<AssetEntity>>
+
+    @Query("SELECT * FROM assets")
+    suspend fun getAllAssets(): List<AssetEntity>
 
     @Query("SELECT * FROM assets WHERE id = :id LIMIT 1")
     suspend fun findById(id: Long): AssetEntity?
@@ -25,4 +29,10 @@ interface AssetDao {
 
     @Delete
     suspend fun delete(asset: AssetEntity)
+
+    @Query("DELETE FROM assets")
+    suspend fun clearAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllForBackup(assets: List<AssetEntity>)
 }

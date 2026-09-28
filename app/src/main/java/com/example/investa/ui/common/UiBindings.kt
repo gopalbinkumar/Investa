@@ -121,13 +121,13 @@ internal fun setReportToggle(
     category.setTextColor(
         ContextCompat.getColor(
             context,
-            if (categorySelected) R.color.investa_background else R.color.investa_text_secondary
+            if (categorySelected) R.color.investa_on_primary else R.color.investa_text_secondary
         )
     )
     asset.setTextColor(
         ContextCompat.getColor(
             context,
-            if (categorySelected) R.color.investa_text_secondary else R.color.investa_background
+            if (categorySelected) R.color.investa_text_secondary else R.color.investa_on_primary
         )
     )
 }
@@ -148,21 +148,10 @@ internal fun tint(view: View, color: Int) {
 }
 
 internal fun chartColor(index: Int) = intArrayOf(
-    0xFF0000FF.toInt(),
-    0xFF0070FF.toInt(),
-    0xFF00A0FF.toInt(),
-    0xFF00C6E8.toInt(),
-    0xFF00E788.toInt(),
-    0xFF00FF00.toInt()
+    0xFFFF6B6B.toInt(), // Coral / Red
+    0xFFFFB547.toInt(), // Amber
+    0xFF4DD0B5.toInt(), // Mint / Green
+    0xFFF15BB5.toInt(), // Pink
+    0xFF4D96FF.toInt(), // Blue
+    0xFF9B6DFF.toInt() // Purple
 )[index % 6]
-
-
-
-//internal fun chartColor(index: Int) = intArrayOf(
-//    0xFFFF6B6B.toInt(), // Coral / Red
-//    0xFFFFB547.toInt(), // Amber
-//    0xFF4DD0B5.toInt(), // Mint / Green
-//    0xFFF15BB5.toInt(), // Pink
-//    0xFF4D96FF.toInt(), // Blue
-//    0xFF9B6DFF.toInt() // Purple
-//)[index % 6]

@@ -5,6 +5,7 @@ import com.example.investa.data.entity.TransactionEntity
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -64,4 +65,10 @@ interface TransactionDao {
 
     @Delete
     suspend fun delete(transaction: TransactionEntity)
+
+    @Query("DELETE FROM transactions")
+    suspend fun clearAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllForBackup(transactions: List<TransactionEntity>)
 }

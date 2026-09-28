@@ -29,6 +29,7 @@ data class TransactionEntity(
     val total: Double,
     val costBasis: Double = 0.0,
     val currency: String,
+    val exchangeRateToIdr: Double = 1.0,
     val notes: String,
     val createdAt: Long,
     val updatedAt: Long

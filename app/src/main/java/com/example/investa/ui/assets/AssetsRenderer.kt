@@ -161,7 +161,7 @@ internal class AssetsRenderer(private val host: ScreenHost) {
             tabText.setTextColor(
                 ContextCompat.getColor(
                     host.activity,
-                    if (selected) R.color.investa_background else R.color.investa_text_secondary
+                    if (selected) R.color.investa_on_primary else R.color.investa_text
                 )
             )
         }

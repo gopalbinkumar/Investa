@@ -22,6 +22,7 @@ import com.example.investa.utils.SELECT_CATEGORY
 import com.example.investa.utils.assetCategories
 import com.example.investa.utils.formatEditableAmount
 import com.example.investa.utils.formatInputAmount
+import com.example.investa.utils.formatQuantityValue
 import com.example.investa.utils.installDecimalInputFormatter
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.enableImeScrolling
@@ -157,6 +158,24 @@ internal class AssetFormHandler(private val host: ScreenHost) {
         }
         val moneyInputs = listOf(averagePriceInput, currentPriceInput)
         fun selectedCurrency(): String = currencySpinner.selectedItem?.toString() ?: "IDR"
+        fun updateNumberFormatHints() {
+            quantityInput.hint = host.activity.getString(
+                R.string.hint_number_example,
+                formatQuantityValue(0.045)
+            )
+            averagePriceInput.hint = host.activity.getString(
+                R.string.hint_number_example,
+                formatQuantityValue(1_200_000.0)
+            )
+            investedInput.hint = host.activity.getString(
+                R.string.hint_number_example,
+                formatInputAmount(500_000.0, selectedCurrency())
+            )
+            currentPriceInput.hint = host.activity.getString(
+                R.string.hint_number_example,
+                formatQuantityValue(1_000_000.0)
+            )
+        }
         fun updateInvestedAmount() {
             val quantity = parseTransactionQuantity(quantityInput.text.toString())
             val averagePrice = parseMoneyInput(averagePriceInput.text.toString())
@@ -173,6 +192,7 @@ internal class AssetFormHandler(private val host: ScreenHost) {
         currencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 moneyInputs.forEach { input -> reformatMoneyInput(input, selectedCurrency()) }
+                updateNumberFormatHints()
                 updateInvestedAmount()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
@@ -185,6 +205,7 @@ internal class AssetFormHandler(private val host: ScreenHost) {
             })
         }
         updateInvestedAmount()
+        updateNumberFormatHints()
 
         fun selectedCategory(): String = canonicalCategoryAt(categorySpinner.selectedItemPosition)
         fun updateQuantityUnitHint() {

@@ -116,14 +116,14 @@
                 android:layout_height="20dp"
                 android:contentDescription="@string/add_cash"
                 android:src="@drawable/ic_lucide_plus"
-                android:tint="@color/investa_background" />
+                android:tint="@color/investa_on_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="@string/add_cash"
-                android:textColor="@color/investa_background"
+                android:textColor="@color/investa_on_primary"
                 android:textSize="14sp"
                 android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text" />

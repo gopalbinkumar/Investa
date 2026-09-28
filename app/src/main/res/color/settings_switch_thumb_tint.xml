@@ -3,3 +3,4 @@
     <item android:color="@color/investa_text" android:state_checked="true" />
     <item android:color="@color/investa_icon_inactive" />
 </selector>
+ 

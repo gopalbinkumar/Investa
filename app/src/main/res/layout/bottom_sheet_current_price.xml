@@ -126,7 +126,7 @@
         android:stateListAnimator="@animator/press_scale_button"
         android:gravity="center"
         android:text="@string/save"
-        android:textColor="@color/investa_background"
+        android:textColor="@color/investa_on_primary"
         android:textSize="14sp"
         android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text" />

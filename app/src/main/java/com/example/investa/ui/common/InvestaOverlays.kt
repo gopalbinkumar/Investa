@@ -79,6 +79,7 @@ internal fun showInvestaConfirmationDialog(
     activity: ComponentActivity,
     title: String,
     message: String,
+    confirmLabel: String? = null,
     onConfirm: () -> Unit
 ): Dialog {
     val dialog = Dialog(activity)
@@ -87,6 +88,9 @@ internal fun showInvestaConfirmationDialog(
     dialogView.disableFontPaddingRecursively()
     dialogView.findViewById<TextView>(R.id.delete_dialog_title).text = title
     dialogView.findViewById<TextView>(R.id.delete_dialog_message).text = message
+    confirmLabel?.let { label ->
+        dialogView.findViewById<TextView>(R.id.delete_dialog_confirm).text = label
+    }
     dialogView.findViewById<View>(R.id.delete_dialog_cancel).setOnClickListener {
         dialog.dismiss()
     }

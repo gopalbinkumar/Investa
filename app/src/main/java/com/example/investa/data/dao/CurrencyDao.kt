@@ -13,6 +13,9 @@ interface CurrencyDao {
     @Query("SELECT * FROM currencies WHERE isActive = 1 ORDER BY code ASC")
     fun observeActiveCurrencies(): Flow<List<CurrencyEntity>>
 
+    @Query("SELECT * FROM currencies WHERE isActive = 1")
+    suspend fun getActiveCurrencies(): List<CurrencyEntity>
+
     @Query("SELECT * FROM currencies WHERE code = :code LIMIT 1")
     suspend fun findByCode(code: String): CurrencyEntity?
 
@@ -21,4 +24,10 @@ interface CurrencyDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(currency: CurrencyEntity)
+
+    @Query("DELETE FROM currencies")
+    suspend fun clearAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllForBackup(currencies: List<CurrencyEntity>)
 }

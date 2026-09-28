@@ -168,7 +168,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/buy"
-                    android:textColor="@color/investa_background"
+                    android:textColor="@color/investa_on_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text"/>
@@ -195,7 +195,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/sell"
-                    android:textColor="@color/investa_background"
+                    android:textColor="@color/investa_on_primary"
                     android:textSize="14sp"
                     android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text"/>

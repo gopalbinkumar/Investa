@@ -3,6 +3,7 @@ package com.example.investa.utils
 import android.view.ViewGroup
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -10,7 +11,13 @@ import androidx.core.widget.NestedScrollView
 
 internal fun View.enableImeScrolling() {
     val basePaddingBottom = paddingBottom
+    var wasImeVisible = false
     ViewCompat.setOnApplyWindowInsetsListener(this) { view, insets ->
+        val isImeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+        if (wasImeVisible && !isImeVisible) {
+            (view.rootView.findFocus() as? EditText)?.clearFocus()
+        }
+        wasImeVisible = isImeVisible
         val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
         val navigationBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
         val extraImePadding = (imeBottom - navigationBottom).coerceAtLeast(0)

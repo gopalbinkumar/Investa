@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Calendar
 
 internal object YahooFinanceApi {
     data class QuoteDetails(
@@ -16,6 +17,8 @@ internal object YahooFinanceApi {
         val shortName: String? = null,
         val longName: String? = null
     )
+
+    data class HistoricalQuote(val day: Long, val close: Double)
 
     private val BASE_URLS = listOf(
         "https://query1.finance.yahoo.com/v8/finance/chart/",
@@ -44,7 +47,34 @@ internal object YahooFinanceApi {
         error("Yahoo Finance unavailable: ${lastError?.message ?: "unknown network error"}")
     }
 
+    suspend fun fetchDailyHistory(apiSymbol: String, fromDay: Long): List<HistoricalQuote> =
+        withContext(Dispatchers.IO) {
+            val normalizedSymbol = apiSymbol.trim().uppercase()
+            require(normalizedSymbol.isNotBlank()) { "Yahoo Finance symbol is empty" }
+            val encodedSymbol = Uri.encode(normalizedSymbol)
+            val nowSeconds = System.currentTimeMillis() / 1_000L
+            val fromSeconds = fromDay / 1_000L
+            var lastError: Throwable? = null
+            for (baseUrl in BASE_URLS) {
+                try {
+                    val response = fetchRaw(
+                        "$baseUrl$encodedSymbol?period1=$fromSeconds&period2=$nowSeconds&interval=1d&events=history"
+                    )
+                    return@withContext parseDailyHistory(response)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    lastError = error
+                }
+            }
+            error("Yahoo Finance unavailable: ${lastError?.message ?: "unknown network error"}")
+        }
+
     private suspend fun fetchFromEndpoint(endpoint: String): QuoteDetails = withContext(Dispatchers.IO) {
+        return@withContext parseQuote(fetchRaw(endpoint))
+    }
+
+    private suspend fun fetchRaw(endpoint: String): String = withContext(Dispatchers.IO) {
         val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = 15_000
@@ -64,8 +94,7 @@ internal object YahooFinanceApi {
             if (responseCode !in 200..299) {
                 error("HTTP $responseCode")
             }
-            val response = connection.inputStream.bufferedReader().use { it.readText() }
-            return@withContext parseQuote(response)
+            return@withContext connection.inputStream.bufferedReader().use { it.readText() }
         } finally {
             cancellationHandle?.dispose()
             connection.disconnect()
@@ -108,6 +137,29 @@ internal object YahooFinanceApi {
             if (close.isValidQuote()) return QuoteDetails(close, name, shortName, longName)
         }
         error("Yahoo Finance price unavailable")
+    }
+
+    private fun parseDailyHistory(response: String): List<HistoricalQuote> {
+        val result = JSONObject(response).optJSONObject("chart")
+            ?.optJSONArray("result")?.optJSONObject(0)
+            ?: error("Yahoo Finance history unavailable")
+        val timestamps = result.optJSONArray("timestamp") ?: return emptyList()
+        val closes = result.optJSONObject("indicators")
+            ?.optJSONArray("quote")?.optJSONObject(0)
+            ?.optJSONArray("close") ?: return emptyList()
+        val calendar = Calendar.getInstance()
+        return buildList {
+            for (index in 0 until minOf(timestamps.length(), closes.length())) {
+                val close = closes.optDouble(index, Double.NaN)
+                if (!close.isValidQuote()) continue
+                calendar.timeInMillis = timestamps.optLong(index) * 1_000L
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                add(HistoricalQuote(calendar.timeInMillis, close))
+            }
+        }
     }
 
     private fun Double.isValidQuote(): Boolean = isFinite() && this > 0.0

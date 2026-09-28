@@ -14,6 +14,9 @@ interface CashAccountDao {
     @Query("SELECT * FROM cash_accounts ORDER BY currencyCode ASC")
     fun observeAllCashAccounts(): Flow<List<CashAccountEntity>>
 
+    @Query("SELECT * FROM cash_accounts")
+    suspend fun getAllCashAccounts(): List<CashAccountEntity>
+
     @Query("SELECT * FROM cash_accounts WHERE currencyCode = :currencyCode LIMIT 1")
     suspend fun getCashAccountByCurrency(currencyCode: String): CashAccountEntity?
 
@@ -28,4 +31,10 @@ interface CashAccountDao {
 
     @Query("UPDATE cash_accounts SET balance = :balance, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateBalance(id: Long, balance: Double, updatedAt: Long)
+
+    @Query("DELETE FROM cash_accounts")
+    suspend fun clearAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllForBackup(accounts: List<CashAccountEntity>)
 }

@@ -18,4 +18,20 @@
         android:textSize="11sp"
         android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text" />
+
+    <TextView
+        android:id="@+id/marker_current"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/investa_text"
+        android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/marker_invested"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/investa_text_secondary"
+        android:textSize="10sp" />
 </LinearLayout>

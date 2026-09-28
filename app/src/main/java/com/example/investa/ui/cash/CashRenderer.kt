@@ -119,12 +119,16 @@ internal class CashRenderer(private val host: ScreenHost) {
         saveButton.text = host.activity.getString(if (account == null) R.string.save_cash else R.string.save_changes)
 
         fun selectedCurrency(): String = currencySpinner.selectedItem?.toString() ?: "IDR"
+        fun updateAmountHint() {
+            amountInput.hint = formatInputAmount(1_000_000.0, selectedCurrency())
+        }
         amountInput.setText(
             account?.let { formatInputAmount(it.balance, it.currencyCode) }.orEmpty()
         )
         installMoneyInputFormatter(amountInput) { selectedCurrency() }
         currencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                updateAmountHint()
                 val amount = parseMoneyInput(amountInput.text.toString()) ?: return
                 val formatted = formatInputAmount(amount, selectedCurrency())
                 if (amountInput.text.toString() != formatted) {
@@ -135,6 +139,7 @@ internal class CashRenderer(private val host: ScreenHost) {
 
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
+        updateAmountHint()
         saveButton.setOnClickListener {
             val amount = parseMoneyInput(amountInput.text.toString())
             when {

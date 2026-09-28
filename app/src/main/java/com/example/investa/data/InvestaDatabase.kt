@@ -11,15 +11,19 @@ import com.example.investa.data.dao.CashAccountDao
 import com.example.investa.data.dao.CurrencyDao
 import com.example.investa.data.dao.AppPreferenceDao
 import com.example.investa.data.dao.TransactionDao
+import com.example.investa.data.dao.PerformanceSnapshotDao
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.CashAccountEntity
 import com.example.investa.data.entity.CurrencyEntity
 import com.example.investa.data.entity.TransactionEntity
 import com.example.investa.data.entity.AppPreferenceEntity
+import com.example.investa.data.entity.AssetPriceSnapshotEntity
+import com.example.investa.data.entity.CurrencyRateSnapshotEntity
+import com.example.investa.data.entity.CashBalanceSnapshotEntity
 
 @Database(
-    entities = [AssetEntity::class, TransactionEntity::class, CurrencyEntity::class, CashAccountEntity::class, AppPreferenceEntity::class],
-    version = 10,
+    entities = [AssetEntity::class, TransactionEntity::class, CurrencyEntity::class, CashAccountEntity::class, AppPreferenceEntity::class, AssetPriceSnapshotEntity::class, CurrencyRateSnapshotEntity::class, CashBalanceSnapshotEntity::class],
+    version = 12,
     exportSchema = false
 )
 abstract class InvestaDatabase : RoomDatabase() {
@@ -28,6 +32,7 @@ abstract class InvestaDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun currencyDao(): CurrencyDao
     abstract fun appPreferenceDao(): AppPreferenceDao
+    abstract fun performanceSnapshotDao(): PerformanceSnapshotDao
 
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -257,6 +262,63 @@ abstract class InvestaDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS asset_price_snapshots (
+                        assetId INTEGER NOT NULL,
+                        day INTEGER NOT NULL,
+                        price REAL NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        PRIMARY KEY(assetId, day),
+                        FOREIGN KEY(assetId) REFERENCES assets(id) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_asset_price_snapshots_assetId_day ON asset_price_snapshots(assetId, day)")
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS currency_rate_snapshots (
+                        currencyCode TEXT NOT NULL,
+                        day INTEGER NOT NULL,
+                        rateToIdr REAL NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        PRIMARY KEY(currencyCode, day)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_currency_rate_snapshots_currencyCode_day ON currency_rate_snapshots(currencyCode, day)")
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS cash_balance_snapshots (
+                        currencyCode TEXT NOT NULL,
+                        day INTEGER NOT NULL,
+                        balance REAL NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        PRIMARY KEY(currencyCode, day)
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_cash_balance_snapshots_currencyCode_day ON cash_balance_snapshots(currencyCode, day)")
+            }
+        }
+
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN exchangeRateToIdr REAL NOT NULL DEFAULT 1.0")
+                db.execSQL(
+                    """
+                    UPDATE transactions
+                    SET exchangeRateToIdr = COALESCE(
+                        (SELECT exchangeRate FROM currencies WHERE currencies.code = transactions.currency),
+                        CASE WHEN currency = 'USD' THEN 16500.0 ELSE 1.0 END
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         @Volatile
         private var instance: InvestaDatabase? = null
 
@@ -275,6 +337,8 @@ abstract class InvestaDatabase : RoomDatabase() {
                     .addMigrations(MIGRATION_7_8)
                     .addMigrations(MIGRATION_8_9)
                     .addMigrations(MIGRATION_9_10)
+                    .addMigrations(MIGRATION_10_11)
+                    .addMigrations(MIGRATION_11_12)
                     .build().also { instance = it }
             }
     }

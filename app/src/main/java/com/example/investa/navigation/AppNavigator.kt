@@ -15,6 +15,7 @@ import com.example.investa.viewmodel.TransactionViewModel
 import com.example.investa.R
 import com.example.investa.model.Asset
 import com.example.investa.ui.common.disableFontPaddingRecursively
+import com.example.investa.data.repository.PortfolioPerformanceRepository
 
 internal interface ScreenHost {
     val activity: ComponentActivity
@@ -37,6 +38,7 @@ internal interface ScreenHost {
     val cashViewModel: CashViewModel
     val currencyViewModel: CurrencyViewModel
     val appPreferenceViewModel: com.example.investa.viewmodel.AppPreferenceViewModel
+    val portfolioPerformanceRepository: PortfolioPerformanceRepository
 
     fun showScreen(screen: AppScreen)
     fun inflate(layout: Int): View
@@ -44,6 +46,8 @@ internal interface ScreenHost {
     fun exchangeRateFor(currency: String): Double
     fun dp(value: Int): Int
     fun refreshTransactions()
+    fun exportBackup(fileName: String, content: String)
+    fun restoreBackup()
 }
 
 internal class AppNavigator(
@@ -135,6 +139,8 @@ internal class AppNavigator(
     }
 
     fun handleBack(): Boolean = when (host.currentScreen) {
+        AppScreen.EXPORT_BACKUP -> { showScreen(AppScreen.SETTINGS); true }
+        AppScreen.RESTORE_BACKUP -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.LANGUAGE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.EXCHANGE_RATE -> { showScreen(AppScreen.SETTINGS); true }
         AppScreen.PRIMARY_CURRENCY -> { showScreen(AppScreen.SETTINGS); true }
@@ -157,15 +163,17 @@ internal class AppNavigator(
         AppScreen.CASH -> 2
         AppScreen.REPORTS -> 3
         AppScreen.SETTINGS -> 4
-        AppScreen.LANGUAGE -> 5
-        AppScreen.EXCHANGE_RATE -> 6
-        AppScreen.PRIMARY_CURRENCY -> 7
-        AppScreen.NUMBER_FORMAT -> 8
-        AppScreen.ABOUT -> 9
-        AppScreen.DETAIL -> 11
-        AppScreen.TRANSACTION_HISTORY -> 12
-        AppScreen.ADD -> 13
-        AppScreen.EDIT -> 14
+        AppScreen.EXPORT_BACKUP -> 5
+        AppScreen.RESTORE_BACKUP -> 6
+        AppScreen.LANGUAGE -> 7
+        AppScreen.EXCHANGE_RATE -> 8
+        AppScreen.PRIMARY_CURRENCY -> 9
+        AppScreen.NUMBER_FORMAT -> 10
+        AppScreen.ABOUT -> 11
+        AppScreen.DETAIL -> 12
+        AppScreen.TRANSACTION_HISTORY -> 13
+        AppScreen.ADD -> 14
+        AppScreen.EDIT -> 15
     }
 
     private fun updateSelectedNavigation(screen: AppScreen) {

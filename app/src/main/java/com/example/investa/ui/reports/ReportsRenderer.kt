@@ -6,9 +6,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.investa.R
-import com.example.investa.data.entity.AssetEntity
-import com.example.investa.data.entity.TransactionEntity
+import com.example.investa.data.repository.PerformanceRange
+import com.example.investa.data.repository.PortfolioPerformancePoint
 import com.example.investa.model.Asset
 import com.example.investa.navigation.AppScreen
 import com.example.investa.navigation.ScreenHost
@@ -31,8 +32,11 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.components.YAxis
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -41,8 +45,13 @@ import kotlin.math.roundToLong
 internal class ReportsRenderer(private val host: ScreenHost) {
     private var summaryByAsset = false
     private var reportsRoot: android.view.View? = null
+    private var performanceRange = PerformanceRange.THREE_MONTHS
+    private var performanceJob: Job? = null
+    private var performanceRequestId = 0
 
     fun invalidateThemeCache() {
+        performanceJob?.cancel()
+        performanceJob = null
         reportsRoot = null
     }
 
@@ -62,8 +71,12 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         val nativeAssets = host.databaseAssets.map { asset ->
             asset.toUiAsset(host.activity)
         }
-        val totalValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
-        val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 }
+        val totalAssetValue = displayAssets.sumOf { parseMoneyInput(it.value) ?: 0.0 }
+        val totalCashValue = host.databaseCashAccounts.sumOf { account ->
+            convertCurrencyAmount(account.balance, account.currencyCode, displayCurrency, usdExchangeRate)
+        }
+        val totalValue = totalAssetValue + totalCashValue
+        val totalInvested = displayAssets.sumOf { parseMoneyInput(it.invested) ?: 0.0 } + totalCashValue
         val totalProfit = totalValue - totalInvested
         val totalProfitPercentage = if (totalInvested == 0.0) 0.0 else totalProfit * 100.0 / totalInvested
         val realizedPL = host.databaseTransactions
@@ -96,18 +109,8 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             text = String.format(Locale.US, "(%+.2f%%)", totalProfitPercentage)
             setTextColor(ContextCompat.getColor(host.activity, if (totalProfit >= 0) R.color.investa_profit else R.color.investa_loss))
         }
-        val performance = dailyPerformanceSnapshots(
-            assets = host.databaseAssets,
-            transactions = host.databaseTransactions,
-            usdExchangeRate = usdExchangeRate,
-            displayCurrency = displayCurrency
-        )
-        setupPerformanceChart(
-            root.findViewById(R.id.performance_chart),
-            performance,
-            root.findViewById(R.id.reports_invested_value),
-            root.findViewById(R.id.reports_current_value)
-        )
+        setupPerformanceRangeControls(root)
+        loadPerformance(root)
         val summary = root.findViewById<LinearLayout>(R.id.category_summary)
         fun renderSummary(byAsset: Boolean) {
             summary.removeAllViews()
@@ -212,6 +215,70 @@ internal class ReportsRenderer(private val host: ScreenHost) {
         }
     }
 
+    private fun setupPerformanceRangeControls(root: android.view.View) {
+        val ranges = listOf(
+            R.id.performance_range_1m to PerformanceRange.ONE_MONTH,
+            R.id.performance_range_3m to PerformanceRange.THREE_MONTHS,
+            R.id.performance_range_6m to PerformanceRange.SIX_MONTHS,
+            R.id.performance_range_1y to PerformanceRange.ONE_YEAR,
+            R.id.performance_range_all to PerformanceRange.ALL
+        )
+        ranges.forEach { (id, range) ->
+            val button = root.findViewById<TextView>(id)
+            val selected = range == performanceRange
+            button.setBackgroundResource(if (selected) R.drawable.bg_chip_selected else R.drawable.bg_chip)
+            button.setTextColor(ContextCompat.getColor(host.activity, if (selected) R.color.investa_on_primary else R.color.investa_text_secondary))
+            button.setOnClickListener {
+                if (performanceRange != range) {
+                    performanceRange = range
+                    setupPerformanceRangeControls(root)
+                    loadPerformance(root)
+                }
+            }
+        }
+    }
+
+    private fun loadPerformance(root: android.view.View) {
+        val chart = root.findViewById<LineChart>(R.id.performance_chart)
+        val empty = root.findViewById<TextView>(R.id.performance_chart_empty)
+        val requestId = ++performanceRequestId
+        performanceJob?.cancel()
+        chart.visibility = android.view.View.INVISIBLE
+        empty.visibility = android.view.View.VISIBLE
+        empty.text = host.activity.getString(R.string.loading_portfolio_performance)
+        val displayCurrency = host.primaryCurrency
+        performanceJob = host.activity.lifecycleScope.launch {
+            val points = runCatching {
+                withContext(Dispatchers.IO) {
+                    host.portfolioPerformanceRepository.load(performanceRange, displayCurrency)
+                }
+            }.getOrDefault(emptyList())
+            if (requestId != performanceRequestId || root.parent == null || host.currentScreen != AppScreen.REPORTS) return@launch
+            if (points.isEmpty()) {
+                empty.text = host.activity.getString(R.string.portfolio_performance_empty)
+                return@launch
+            }
+            val dateFormat = SimpleDateFormat("d MMM yyyy", LanguageManager.locale(host.activity))
+            val monthFormat = SimpleDateFormat("MMM", LanguageManager.locale(host.activity))
+            val performance = points.map { point ->
+                DailyPerformance(
+                    dateLabel = dateFormat.format(point.day),
+                    monthLabel = monthFormat.format(point.day),
+                    invested = point.invested.roundToLong(),
+                    current = point.current.roundToLong()
+                )
+            }
+            empty.visibility = android.view.View.GONE
+            chart.visibility = android.view.View.VISIBLE
+            setupPerformanceChart(
+                chart,
+                performance,
+                root.findViewById(R.id.reports_invested_value),
+                root.findViewById(R.id.reports_current_value)
+            )
+        }
+    }
+
     private fun setupPerformanceChart(
         chart: LineChart,
         performance: List<DailyPerformance>,
@@ -302,7 +369,9 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             setDrawMarkers(true)
             val portfolioMarker = PortfolioMarkerView(
                 host.activity,
-                dateLabels
+                dateLabels,
+                performance.map { PortfolioPerformancePoint(0L, it.invested.toDouble(), it.current.toDouble()) },
+                host.primaryCurrency
             )
             marker = portfolioMarker
             addOnLayoutChangeListener { _, left, top, right, bottom, _, _, _, _ ->
@@ -341,89 +410,6 @@ internal class ReportsRenderer(private val host: ScreenHost) {
             )
             invalidate()
         }
-    }
-
-    private fun dailyPerformanceSnapshots(
-        assets: List<AssetEntity>,
-        transactions: List<TransactionEntity>,
-        usdExchangeRate: Double,
-        displayCurrency: String
-    ): List<DailyPerformance> {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.DAY_OF_MONTH, 1)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-            add(Calendar.MONTH, -2)
-        }
-        val today = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val dateFormat = SimpleDateFormat("d MMM yyyy", LanguageManager.locale(host.activity))
-        val monthFormat = SimpleDateFormat("MMM", LanguageManager.locale(host.activity))
-        val performance = mutableListOf<DailyPerformance>()
-
-        while (!calendar.after(today)) {
-            val dayEnd = (calendar.clone() as Calendar).apply {
-                set(Calendar.HOUR_OF_DAY, 23)
-                set(Calendar.MINUTE, 59)
-                set(Calendar.SECOND, 59)
-                set(Calendar.MILLISECOND, 999)
-            }.timeInMillis
-            var invested = 0.0
-            var current = 0.0
-
-            assets.forEach { asset ->
-                if (asset.createdAt > dayEnd) return@forEach
-
-                var quantity = asset.quantity
-                var costBasis = asset.investedAmount
-                transactions.asSequence()
-                    .filter { it.assetId == asset.id && it.date > dayEnd }
-                    .sortedWith(compareByDescending<TransactionEntity> { it.date }.thenByDescending { it.id })
-                    .forEach { transaction ->
-                        val transactionAction = transaction.action.trim().uppercase(Locale.US)
-                        val transactionRate = host.exchangeRateFor(transaction.currency)
-                        val assetRate = host.exchangeRateFor(asset.currency)
-                        val transactionCost = transaction.total * transactionRate / assetRate
-                        when (transactionAction) {
-                            "BUY" -> {
-                                quantity -= transaction.quantity
-                                costBasis -= transactionCost
-                            }
-                            "SELL" -> {
-                                val sellCostBasis = if (transaction.costBasis > 0.0) {
-                                    transaction.costBasis * transactionRate / assetRate
-                                } else {
-                                    val averagePrice = if (quantity > 0.0) costBasis / quantity else 0.0
-                                    averagePrice * transaction.quantity
-                                }
-                                quantity += transaction.quantity
-                                costBasis += sellCostBasis
-                            }
-                        }
-                    }
-
-                val assetExchangeRate = if (asset.currency == "USD") usdExchangeRate else 1.0
-                val historicalQuantity = quantity.coerceAtLeast(0.0)
-                val historicalCostBasis = costBasis.coerceAtLeast(0.0)
-                invested += historicalCostBasis * assetExchangeRate
-                current += historicalQuantity * asset.currentPrice * assetExchangeRate
-            }
-
-            performance += DailyPerformance(
-                dateLabel = dateFormat.format(calendar.time),
-                monthLabel = monthFormat.format(calendar.time),
-                invested = convertCurrencyAmount(invested, "IDR", displayCurrency, usdExchangeRate).roundToLong(),
-                current = convertCurrencyAmount(current, "IDR", displayCurrency, usdExchangeRate).roundToLong()
-            )
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
-        }
-        return performance
     }
 
     private fun performanceAxisRange(values: List<Float>): AxisRange {

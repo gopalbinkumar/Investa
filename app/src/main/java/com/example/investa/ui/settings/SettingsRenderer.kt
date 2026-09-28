@@ -12,6 +12,7 @@ import android.widget.TextView
 import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.investa.data.backup.BackupJsonExporter
 import com.example.investa.data.entity.CurrencyEntity
 import com.example.investa.R
 import com.example.investa.navigation.AppScreen
@@ -19,6 +20,7 @@ import com.example.investa.navigation.ScreenHost
 import com.example.investa.ui.common.disableFontPaddingRecursively
 import com.example.investa.ui.common.setLoadingState
 import com.example.investa.utils.formatInputAmount
+import com.example.investa.utils.formatQuantityValue
 import com.example.investa.utils.installMoneyInputFormatter
 import com.example.investa.utils.parseMoneyInput
 import com.example.investa.utils.showInvestaToast
@@ -27,6 +29,8 @@ import com.example.investa.utils.ThemeManager
 import com.example.investa.utils.LanguageManager
 import com.example.investa.utils.YahooFinanceApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 
@@ -84,8 +88,22 @@ internal class SettingsRenderer(private val host: ScreenHost) {
                 }
             }
         )
-        addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_upload, host.activity.getString(R.string.data_backup), "", true)
-        addSettingsRow(root.findViewById(R.id.settings_data), R.drawable.ic_lucide_download, host.activity.getString(R.string.data_restore), "", true)
+        addSettingsRow(
+            root.findViewById(R.id.settings_data),
+            R.drawable.ic_lucide_upload,
+            host.activity.getString(R.string.data_backup),
+            "",
+            true,
+            onClick = { host.showScreen(AppScreen.EXPORT_BACKUP) }
+        )
+        addSettingsRow(
+            root.findViewById(R.id.settings_data),
+            R.drawable.ic_lucide_download,
+            host.activity.getString(R.string.data_restore),
+            "",
+            true,
+            onClick = { host.showScreen(AppScreen.RESTORE_BACKUP) }
+        )
         addSettingsRow(
             root.findViewById(R.id.settings_about),
             R.drawable.ic_lucide_info,
@@ -133,6 +151,76 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         }
     }
 
+    fun renderExportBackup() {
+        val root = host.inflate(R.layout.screen_export_backup)
+        host.attach(root)
+        root.findViewById<View>(R.id.export_backup_back)
+            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
+
+        val contents = root.findViewById<ViewGroup>(R.id.export_backup_contents)
+        val rows = (0 until contents.childCount).map { contents.getChildAt(it) }
+        fun bindRow(index: Int, label: Int, value: String) {
+            rows[index].findViewById<TextView>(R.id.detail_row_label).text = host.activity.getString(label)
+            rows[index].findViewById<TextView>(R.id.detail_row_value).text = value
+        }
+        bindRow(0, R.string.backup_assets, host.databaseAssets.size.toString())
+        bindRow(1, R.string.backup_transactions, "—")
+        bindRow(2, R.string.backup_cash_accounts, host.databaseCashAccounts.size.toString())
+        bindRow(3, R.string.backup_currencies, host.databaseCurrencies.size.toString())
+        bindRow(4, R.string.backup_preferences, "✓")
+
+        host.activity.lifecycleScope.launch {
+            val transactionCount = host.transactionViewModel.getAllTransactions().size
+            if (host.currentScreen == AppScreen.EXPORT_BACKUP) {
+                bindRow(1, R.string.backup_transactions, transactionCount.toString())
+            }
+        }
+
+        val exportButton = root.findViewById<TextView>(R.id.export_backup_create)
+        exportButton.setOnClickListener {
+            exportButton.isEnabled = false
+            exportButton.alpha = 0.55f
+            val assets = host.databaseAssets.toList()
+            val cashAccounts = host.databaseCashAccounts.toList()
+            val currencies = host.databaseCurrencies.toList()
+            val primaryCurrency = host.primaryCurrency
+            val numberFormatStyle = host.numberFormatStyle.id
+            host.activity.lifecycleScope.launch {
+                runCatching {
+                    val transactions = host.transactionViewModel.getAllTransactions()
+                    withContext(Dispatchers.Default) {
+                        BackupJsonExporter.create(
+                            assets = assets,
+                            transactions = transactions,
+                            cashAccounts = cashAccounts,
+                            currencies = currencies,
+                            primaryCurrency = primaryCurrency,
+                            numberFormatStyle = numberFormatStyle
+                        )
+                    }
+                }.onSuccess { backupContent ->
+                    exportButton.isEnabled = true
+                    exportButton.alpha = 1f
+                    host.exportBackup(BackupJsonExporter.suggestedFileName(), backupContent)
+                }.onFailure {
+                    exportButton.isEnabled = true
+                    exportButton.alpha = 1f
+                    host.activity.showInvestaToast(host.activity.getString(R.string.backup_export_failed))
+                }
+            }
+        }
+    }
+
+    fun renderRestoreBackup() {
+        val root = host.inflate(R.layout.screen_restore_backup)
+        host.attach(root)
+        root.findViewById<View>(R.id.restore_backup_back)
+            .setOnClickListener { host.showScreen(AppScreen.SETTINGS) }
+        root.findViewById<TextView>(R.id.restore_backup_select).setOnClickListener {
+            host.restoreBackup()
+        }
+    }
+
     fun renderExchangeRate() {
         val root = host.inflate(R.layout.screen_exchange_rate)
         host.attach(root)
@@ -144,6 +232,10 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         val usd = host.databaseCurrencies.firstOrNull { it.code == "USD" } ?: CurrencyEntity(
             code = "USD", name = host.activity.getString(R.string.us_dollar), symbol = "$", exchangeRate = 16500.0,
             updatedAt = 0L, isActive = true
+        )
+        exchangeRateInput.hint = host.activity.getString(
+            R.string.hint_number_example,
+            formatQuantityValue(16_500.0)
         )
         exchangeRateInput.setText(formatInputAmount(usd.exchangeRate, "IDR"))
         installMoneyInputFormatter(exchangeRateInput) { "IDR" }
@@ -291,20 +383,22 @@ internal class SettingsRenderer(private val host: ScreenHost) {
         row.findViewById<ImageView>(R.id.settings_chevron).visibility = if (chevron) View.VISIBLE else View.GONE
         val themeSwitch = row.findViewById<SwitchMaterial>(R.id.settings_switch)
         themeSwitch.visibility = if (switchVisible) View.VISIBLE else View.GONE
-        // Theme changes recreate the activity. Restoring this view's old checked
-        // state would overwrite the value just loaded from theme preferences.
+        // Theme changes update the configuration. Restoring this view's old checked
+        // state must not trigger a second theme change.
         themeSwitch.isSaveEnabled = false
         themeSwitch.isChecked = switchChecked
         if (switchVisible) {
-            // Handle only a direct click on the switch. A checked-change listener
-            // can also run for programmatic state restoration during recreation.
-            themeSwitch.setOnCheckedChangeListener(null)
-            themeSwitch.setOnClickListener {
-                val requestedDarkMode = themeSwitch.isChecked
+            var applyingSwitchChange = false
+            // Checked-change is emitted for both a tap and a manual thumb drag.
+            // Install it only after the initial checked state above is restored.
+            themeSwitch.setOnCheckedChangeListener { _, requestedDarkMode ->
+                if (applyingSwitchChange) return@setOnCheckedChangeListener
+                applyingSwitchChange = true
                 themeSwitch.isClickable = false
                 themeSwitch.postDelayed({
                     onSwitchChanged?.invoke(requestedDarkMode)
                     themeSwitch.isClickable = true
+                    applyingSwitchChange = false
                 }, THEME_SWITCH_ANIMATION_DELAY_MS)
             }
             themeSwitch.isClickable = true

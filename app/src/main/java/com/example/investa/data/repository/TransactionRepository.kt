@@ -4,7 +4,11 @@ import androidx.room.withTransaction
 import com.example.investa.data.InvestaDatabase
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.TransactionEntity
+import com.example.investa.data.entity.CashBalanceSnapshotEntity
+import com.example.investa.data.entity.AssetPriceSnapshotEntity
+import com.example.investa.data.entity.CurrencyRateSnapshotEntity
 import kotlinx.coroutines.flow.Flow
+import java.util.Calendar
 
 class TransactionRepository(private val database: InvestaDatabase) {
     private val assetDao = database.assetDao()
@@ -142,6 +146,24 @@ class TransactionRepository(private val database: InvestaDatabase) {
         }
         if (cashBalance < 0.0) error("Cash balance cannot be negative")
         cashDao.updateBalance(cash.id, cashBalance, System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        database.performanceSnapshotDao().upsertCashBalance(
+            CashBalanceSnapshotEntity(cash.currencyCode, startOfDay(now), cashBalance, now)
+        )
+        val priceInAssetCurrency = when {
+            transaction.currency == asset.currency -> transaction.price
+            transaction.currency == "USD" && asset.currency == "IDR" -> transaction.price * transaction.exchangeRateToIdr
+            transaction.currency == "IDR" && asset.currency == "USD" -> transaction.price / transaction.exchangeRateToIdr
+            else -> transaction.price
+        }
+        database.performanceSnapshotDao().upsertAssetPrices(
+            listOf(AssetPriceSnapshotEntity(asset.id, startOfDay(transaction.date), priceInAssetCurrency, now))
+        )
+        if (transaction.currency == "USD" && transaction.exchangeRateToIdr > 0.0) {
+            database.performanceSnapshotDao().upsertCurrencyRates(
+                listOf(CurrencyRateSnapshotEntity("USD", startOfDay(transaction.date), transaction.exchangeRateToIdr, now))
+            )
+        }
         assetDao.update(updatedAsset)
         return transaction.copy(costBasis = costBasis)
     }
@@ -192,6 +214,10 @@ class TransactionRepository(private val database: InvestaDatabase) {
             0.0
         }
         cashDao.updateBalance(cash.id, cashBalance, System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        database.performanceSnapshotDao().upsertCashBalance(
+            CashBalanceSnapshotEntity(cash.currencyCode, startOfDay(now), cashBalance, now)
+        )
         assetDao.update(updatedAsset.copy(averagePrice = updatedAverage))
     }
 
@@ -208,6 +234,11 @@ class TransactionRepository(private val database: InvestaDatabase) {
         }
         currencyRate(transaction.currency)
     }
+
+    private fun startOfDay(time: Long): Long = Calendar.getInstance().apply {
+        timeInMillis = time
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
     private suspend fun currencyRate(code: String): Double =
         currencyDao.findByCode(code)?.exchangeRate?.takeIf { it > 0.0 }

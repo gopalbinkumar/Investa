@@ -43,7 +43,7 @@
             android:gravity="center"
             android:minWidth="88dp"
             android:text="@string/cancel"
-            android:textColor="@color/investa_background"
+            android:textColor="@color/investa_on_primary"
             android:textSize="13sp"
             android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text" />
@@ -61,7 +61,7 @@
             android:gravity="center"
             android:minWidth="88dp"
             android:text="@string/delete"
-            android:textColor="@color/investa_background"
+            android:textColor="@color/investa_on_primary"
             android:textSize="13sp"
             android:fontFamily="@font/poppins_semibold"
         android:tag="investa_semibold_text" />

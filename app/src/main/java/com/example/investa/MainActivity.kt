@@ -6,8 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.EditText
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
@@ -18,6 +20,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.investa.data.InvestaDatabase
+import com.example.investa.data.backup.BackupJsonRestorer
 import com.example.investa.data.entity.AssetEntity
 import com.example.investa.data.entity.CashAccountEntity
 import com.example.investa.data.entity.CurrencyEntity
@@ -27,6 +30,7 @@ import com.example.investa.data.repository.CashRepository
 import com.example.investa.data.repository.CurrencyRepository
 import com.example.investa.data.repository.TransactionRepository
 import com.example.investa.data.repository.AppPreferenceRepository
+import com.example.investa.data.repository.PortfolioPerformanceRepository
 import com.example.investa.model.Asset
 import com.example.investa.navigation.AppNavigator
 import com.example.investa.navigation.AppScreen
@@ -38,6 +42,7 @@ import com.example.investa.ui.assets.AssetsRenderer
 import com.example.investa.ui.cash.CashRenderer
 import com.example.investa.ui.common.disableFontPaddingRecursively
 import com.example.investa.ui.common.applyElevatedCards
+import com.example.investa.ui.common.showInvestaConfirmationDialog
 import com.example.investa.ui.home.HomeRenderer
 import com.example.investa.ui.reports.ReportsRenderer
 import com.example.investa.ui.settings.SettingsRenderer
@@ -59,6 +64,8 @@ import com.example.investa.viewmodel.TransactionViewModelFactory
 import com.example.investa.viewmodel.AppPreferenceViewModel
 import com.example.investa.viewmodel.AppPreferenceViewModelFactory
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity(), ScreenHost {
     companion object {
@@ -86,13 +93,13 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     }
 
     override val assetViewModel: AssetViewModel by viewModels {
-        AssetViewModelFactory(AssetRepository(database.assetDao()))
+        AssetViewModelFactory(AssetRepository(database))
     }
     override val transactionViewModel: TransactionViewModel by viewModels {
         TransactionViewModelFactory(TransactionRepository(database))
     }
     override val currencyViewModel: CurrencyViewModel by viewModels {
-        CurrencyViewModelFactory(CurrencyRepository(database.currencyDao()))
+        CurrencyViewModelFactory(CurrencyRepository(database))
     }
     override val appPreferenceViewModel: AppPreferenceViewModel by viewModels {
         AppPreferenceViewModelFactory(AppPreferenceRepository(database.appPreferenceDao()))
@@ -100,6 +107,7 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     override val cashViewModel: CashViewModel by viewModels {
         CashViewModelFactory(CashRepository(database))
     }
+    override val portfolioPerformanceRepository by lazy { PortfolioPerformanceRepository(database) }
 
     private lateinit var navigator: AppNavigator
     private lateinit var homeRenderer: HomeRenderer
@@ -111,6 +119,60 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     private lateinit var assetFormHandler: AssetFormHandler
     private lateinit var reportsRenderer: ReportsRenderer
     private lateinit var settingsRenderer: SettingsRenderer
+    private var wasKeyboardVisible = false
+    private var pendingBackupContent: String? = null
+    private val createBackupDocument = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        val content = pendingBackupContent
+        pendingBackupContent = null
+        if (uri == null || content == null) return@registerForActivityResult
+        lifecycleScope.launch {
+            val didExport = runCatching {
+                withContext(Dispatchers.IO) {
+                    contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
+                        writer.write(content)
+                    } ?: error("Unable to open the selected backup file")
+                }
+            }.isSuccess
+            showInvestaToast(getString(if (didExport) R.string.backup_exported else R.string.backup_export_failed))
+        }
+    }
+    private val openBackupDocument = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        lifecycleScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                        BackupJsonRestorer.parse(reader.readText())
+                    } ?: error("Unable to open the selected backup file")
+                }
+            }.onSuccess { backup ->
+                showInvestaConfirmationDialog(
+                    activity = this@MainActivity,
+                    title = getString(R.string.restore_backup),
+                    message = getString(R.string.restore_backup_confirmation),
+                    confirmLabel = getString(R.string.restore_backup_action)
+                ) {
+                    lifecycleScope.launch {
+                        val didRestore = runCatching {
+                            withContext(Dispatchers.IO) {
+                                BackupJsonRestorer.restore(database, backup)
+                            }
+                        }.isSuccess
+                        showInvestaToast(
+                            getString(if (didRestore) R.string.backup_restored else R.string.backup_restore_failed)
+                        )
+                        if (didRestore) showScreen(AppScreen.SETTINGS)
+                    }
+                }
+            }.onFailure {
+                showInvestaToast(getString(R.string.invalid_backup_file))
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         LanguageManager.apply(this)
@@ -235,6 +297,11 @@ class MainActivity : AppCompatActivity(), ScreenHost {
     private fun setupSystemBarInsets() {
         val root = findViewById<View>(android.R.id.content)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            if (wasKeyboardVisible && !isKeyboardVisible) {
+                (currentFocus as? EditText)?.clearFocus()
+            }
+            wasKeyboardVisible = isKeyboardVisible
             val isEdgeToEdgeDevice = android.os.Build.VERSION.SDK_INT >= 35
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             systemNavigationInset = if (isEdgeToEdgeDevice) {
@@ -321,6 +388,15 @@ class MainActivity : AppCompatActivity(), ScreenHost {
 
     override fun showScreen(screen: AppScreen) = navigator.showScreen(screen)
 
+    override fun exportBackup(fileName: String, content: String) {
+        pendingBackupContent = content
+        createBackupDocument.launch(fileName)
+    }
+
+    override fun restoreBackup() {
+        openBackupDocument.launch(arrayOf("application/json", "text/plain"))
+    }
+
     private fun renderScreen(screen: AppScreen) {
         when (screen) {
             AppScreen.HOME -> homeRenderer.render()
@@ -338,6 +414,8 @@ class MainActivity : AppCompatActivity(), ScreenHost {
                 }, 240L)
             }
             AppScreen.SETTINGS -> settingsRenderer.render()
+            AppScreen.EXPORT_BACKUP -> settingsRenderer.renderExportBackup()
+            AppScreen.RESTORE_BACKUP -> settingsRenderer.renderRestoreBackup()
             AppScreen.LANGUAGE -> settingsRenderer.renderLanguage()
             AppScreen.EXCHANGE_RATE -> settingsRenderer.renderExchangeRate()
             AppScreen.PRIMARY_CURRENCY -> settingsRenderer.renderPrimaryCurrency()

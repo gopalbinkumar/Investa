@@ -1,11 +1,13 @@
 package com.example.investa.data.repository
 
-import com.example.investa.data.dao.CurrencyDao
+import com.example.investa.data.InvestaDatabase
 import com.example.investa.data.entity.CurrencyEntity
+import com.example.investa.data.entity.CurrencyRateSnapshotEntity
 
 import kotlinx.coroutines.flow.Flow
 
-class CurrencyRepository(private val currencyDao: CurrencyDao) {
+class CurrencyRepository(private val database: InvestaDatabase) {
+    private val currencyDao = database.currencyDao()
     fun observeActiveCurrencies(): Flow<List<CurrencyEntity>> =
         currencyDao.observeActiveCurrencies()
 
@@ -33,5 +35,19 @@ class CurrencyRepository(private val currencyDao: CurrencyDao) {
         )
     }
 
-    suspend fun update(currency: CurrencyEntity) = currencyDao.upsert(currency)
+    suspend fun update(currency: CurrencyEntity) {
+        currencyDao.upsert(currency)
+        if (currency.code == "USD") {
+            val now = System.currentTimeMillis()
+            database.performanceSnapshotDao().upsertCurrencyRates(
+                listOf(CurrencyRateSnapshotEntity("USD", startOfDay(now), currency.exchangeRate, now))
+            )
+        }
+    }
+
+    private fun startOfDay(time: Long): Long = java.util.Calendar.getInstance().apply {
+        timeInMillis = time
+        set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+    }.timeInMillis
 }
